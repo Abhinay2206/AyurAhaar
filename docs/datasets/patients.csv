@@ -1,0 +1,543 @@
+patient_id,age,gender,weight_kg,height_cm,BMI,lifestyle,prakriti,health_conditions,allergies,preferred_cuisine
+P0001,56,M,76.2,171,26.1,sedentary,Kapha,None,None,Chinese
+P0002,36,M,61.4,174,20.3,sedentary,Vata,Obesity,peanuts,North Indian
+P0003,20,F,66.2,159,26.2,sedentary,Vata,Hypertension,peanuts,North Indian
+P0004,29,M,68.3,175,22.3,sedentary,Vata,Obesity,milk,Chinese
+P0005,33,F,59.8,160,23.4,sedentary,Mixed,None,None,Italian
+P0006,69,M,71.5,171,24.5,sedentary,Mixed,None,peanuts,Mediterranean
+P0007,56,F,64.1,150,28.5,sedentary,Pitta,Diabetes,gluten,Mediterranean
+P0008,45,M,65.1,167,23.3,sedentary,Mixed,Kidney Issues,milk,North Indian
+P0009,31,F,53,154,22.3,active,Kapha,None,None,South Indian
+P0010,59,F,61.3,159,24.2,moderate,Vata,None,None,Thai
+P0011,27,M,86.2,177,27.5,moderate,Kapha,None,milk,Mediterranean
+P0012,40,M,78.1,180,24.1,moderate,Vata,None,None,South Indian
+P0013,64,M,82.5,171,28.2,active,Vata,Hypertension,None,Chinese
+P0014,58,M,61.9,168,21.9,active,Kapha,Diabetes,None,Mexican
+P0015,18,F,75.9,166,27.5,sedentary,Kapha,None,None,Mediterranean
+P0016,22,M,82.7,177,26.4,moderate,Kapha,None,None,North Indian
+P0017,29,M,68,171,23.3,moderate,Pitta,Obesity,gluten,Continental
+P0018,52,F,60.5,151,26.5,active,Kapha,None,None,Chinese
+P0019,64,F,77.6,169,27.2,sedentary,Pitta,None,None,South Indian
+P0020,56,F,52.2,161,20.1,active,Kapha,Hypertension,None,North Indian
+P0021,66,M,49.7,176,16,moderate,Kapha,None,gluten,Chinese
+P0022,62,F,57.2,152,24.8,active,Mixed,None,None,Continental
+P0023,68,F,78.9,166,28.6,sedentary,Pitta,None,None,Italian
+P0024,61,F,66.2,169,23.2,moderate,Mixed,Obesity,peanuts,Mediterranean
+P0025,42,M,64.8,169,22.7,sedentary,Mixed,Hypertension,None,North Indian
+P0026,69,M,53.6,164,19.9,sedentary,Pitta,Hypertension,None,Continental
+P0027,54,F,65.6,154,27.7,moderate,Vata,Hypertension,peanuts,Thai
+P0028,49,F,75.6,175,24.7,moderate,Mixed,Obesity,None,Italian
+P0029,69,M,65.5,182,19.8,moderate,Vata,None,peanuts,Italian
+P0030,34,F,59.8,159,23.7,sedentary,Kapha,Obesity,None,Thai
+P0031,19,M,71.9,155,29.9,active,Vata,None,None,Italian
+P0032,28,M,57.4,164,21.3,moderate,Vata,None,None,Italian
+P0033,51,M,106.1,180,32.7,sedentary,Kapha,Diabetes,None,Continental
+P0034,23,M,84.3,181,25.7,moderate,Kapha,Obesity,gluten,Mexican
+P0035,43,M,64.5,163,24.3,sedentary,Kapha,None,peanuts,Italian
+P0036,50,M,50.7,178,16,sedentary,Pitta,None,None,North Indian
+P0037,42,M,57.1,177,18.2,moderate,Mixed,None,gluten,North Indian
+P0038,33,M,91.6,177,29.2,sedentary,Mixed,Kidney Issues,gluten,Continental
+P0039,65,F,68.3,162,26,moderate,Mixed,None,peanuts,Chinese
+P0040,58,M,70.3,185,20.5,moderate,Kapha,None,None,Thai
+P0041,50,F,61.4,157,24.9,active,Mixed,Hypertension,None,North Indian
+P0042,37,M,73.4,160,28.7,sedentary,Vata,None,None,Mediterranean
+P0043,35,M,59.3,176,19.1,moderate,Pitta,None,None,Chinese
+P0044,58,M,64.3,164,23.9,sedentary,Vata,Obesity,None,Chinese
+P0045,20,M,104.6,182,31.6,sedentary,Kapha,Diabetes,None,North Indian
+P0046,39,M,76.3,182,23,active,Mixed,None,None,Chinese
+P0047,47,M,99.2,186,28.7,moderate,Mixed,None,gluten,Chinese
+P0048,65,F,62.3,155,25.9,active,Pitta,None,None,North Indian
+P0049,70,M,82.5,178,26,moderate,Mixed,None,gluten,Mediterranean
+P0050,63,F,68.5,159,27.1,active,Mixed,Obesity,None,South Indian
+P0051,20,M,59.6,177,19,sedentary,Mixed,None,None,Mediterranean
+P0052,57,M,81.5,166,29.6,sedentary,Pitta,Hypertension,gluten,Chinese
+P0053,43,F,79.8,168,28.3,sedentary,Mixed,None,None,Continental
+P0054,46,F,42.5,157,17.2,active,Pitta,Hypertension,None,North Indian
+P0055,24,F,71.1,172,24,moderate,Vata,None,None,South Indian
+P0056,33,M,69.3,176,22.4,sedentary,Pitta,PCOS,None,Continental
+P0057,68,F,52.4,178,16.5,active,Mixed,Hypertension,None,Chinese
+P0058,39,F,44.3,164,16.5,sedentary,Pitta,Obesity,None,Thai
+P0059,61,M,79.9,175,26.1,active,Kapha,None,peanuts,Mexican
+P0060,47,F,83.1,177,26.5,active,Mixed,None,None,Continental
+P0061,59,M,72,183,21.5,active,Pitta,Hypertension,None,South Indian
+P0062,43,M,88,179,27.5,moderate,Kapha,PCOS,peanuts,South Indian
+P0063,18,M,60.1,163,22.6,moderate,Mixed,Diabetes,peanuts,Continental
+P0064,62,M,97,178,30.6,moderate,Vata,None,None,Continental
+P0065,29,M,68.7,166,24.9,moderate,Vata,Diabetes,gluten,Chinese
+P0066,45,F,73.8,165,27.1,sedentary,Pitta,PCOS,milk,South Indian
+P0067,65,M,83,171,28.4,active,Kapha,PCOS,None,Italian
+P0068,27,M,82.8,175,27,moderate,Kapha,Kidney Issues,None,Chinese
+P0069,33,F,57.4,163,21.6,active,Pitta,Diabetes,None,Italian
+P0070,44,F,77.5,166,28.1,active,Vata,None,peanuts,South Indian
+P0071,68,F,77.7,165,28.5,moderate,Vata,None,None,North Indian
+P0072,60,M,67.4,177,21.5,moderate,Kapha,Diabetes,gluten,Continental
+P0073,43,F,69.1,154,29.1,sedentary,Pitta,Hypertension,None,Mediterranean
+P0074,70,F,64.1,166,23.3,sedentary,Mixed,Diabetes,None,Italian
+P0075,53,M,67.8,179,21.2,moderate,Kapha,None,None,North Indian
+P0076,65,M,64.5,172,21.8,active,Vata,None,None,North Indian
+P0077,49,M,85,173,28.4,active,Kapha,None,None,Chinese
+P0078,58,F,44.1,166,16,sedentary,Kapha,Kidney Issues,None,Mexican
+P0079,30,F,70.2,160,27.4,sedentary,Vata,Diabetes,None,Thai
+P0080,29,F,64,165,23.5,sedentary,Vata,None,None,Mediterranean
+P0081,64,M,110.3,184,32.6,moderate,Kapha,Hypertension,None,Continental
+P0082,33,F,59.1,157,24,moderate,Mixed,Kidney Issues,None,South Indian
+P0083,40,M,92.5,190,25.6,sedentary,Pitta,None,None,South Indian
+P0084,61,F,63.6,162,24.2,moderate,Pitta,PCOS,gluten,Thai
+P0085,26,M,88.1,179,27.5,sedentary,Kapha,Diabetes,milk,Mediterranean
+P0086,36,M,83.6,183,25,active,Pitta,None,gluten,Chinese
+P0087,24,M,66.1,169,23.1,active,Mixed,None,None,Continental
+P0088,44,M,55.2,169,19.3,sedentary,Pitta,PCOS,gluten,Thai
+P0089,67,M,68.8,170,23.8,sedentary,Kapha,Diabetes,milk,Thai
+P0090,58,M,94.5,182,28.5,active,Pitta,Hypertension,None,North Indian
+P0091,66,F,54.1,162,20.6,sedentary,Mixed,PCOS,None,Chinese
+P0092,62,M,86.5,176,27.9,active,Kapha,None,milk,Italian
+P0093,52,M,72.7,171,24.9,sedentary,Vata,Hypertension,gluten,Chinese
+P0094,32,F,65.6,177,20.9,active,Kapha,None,None,North Indian
+P0095,28,F,72.3,161,27.9,active,Mixed,None,gluten,Mediterranean
+P0096,45,M,82.6,165,30.3,sedentary,Kapha,Hypertension,gluten,Continental
+P0097,54,F,84.7,164,31.5,sedentary,Vata,Obesity,None,Thai
+P0098,45,F,55.2,157,22.4,moderate,Kapha,Diabetes,None,Thai
+P0099,68,M,98,181,29.9,active,Pitta,PCOS,None,Italian
+P0100,67,M,67.4,165,24.8,moderate,Mixed,PCOS,None,South Indian
+P0101,35,M,76.2,161,29.4,active,Mixed,None,None,North Indian
+P0102,30,F,59.3,164,22,moderate,Kapha,Kidney Issues,None,North Indian
+P0103,20,F,75.6,173,25.3,moderate,Kapha,None,None,Thai
+P0104,34,F,52.8,157,21.4,active,Kapha,Hypertension,gluten,Continental
+P0105,21,M,63.9,181,19.5,active,Mixed,None,None,Continental
+P0106,25,F,58.5,162,22.3,active,Vata,PCOS,None,Italian
+P0107,67,F,76,163,28.6,sedentary,Mixed,None,None,Mediterranean
+P0108,34,F,82.2,167,29.5,active,Mixed,None,gluten,Chinese
+P0109,55,F,64.3,163,24.2,moderate,Pitta,None,None,North Indian
+P0110,32,F,66.2,168,23.5,moderate,Kapha,Obesity,None,North Indian
+P0111,41,M,78.2,173,26.1,moderate,Kapha,Kidney Issues,None,Chinese
+P0112,46,M,61.6,161,23.8,sedentary,Vata,PCOS,None,South Indian
+P0113,70,M,59.5,166,21.6,active,Vata,None,gluten,Mexican
+P0114,64,F,61.5,154,25.9,moderate,Pitta,Obesity,None,Thai
+P0115,20,F,65.5,165,24.1,active,Pitta,None,gluten,Continental
+P0116,38,M,60.9,171,20.8,sedentary,Mixed,Hypertension,milk,Chinese
+P0117,18,M,65,158,26,moderate,Mixed,None,peanuts,South Indian
+P0118,43,M,73.2,174,24.2,sedentary,Mixed,None,None,Continental
+P0119,64,F,56.6,153,24.2,moderate,Kapha,Obesity,milk,Mexican
+P0120,53,F,74.5,166,27,moderate,Mixed,Hypertension,gluten,Continental
+P0121,39,F,58.2,167,20.9,active,Kapha,Kidney Issues,None,Chinese
+P0122,43,F,69.6,166,25.3,moderate,Mixed,Kidney Issues,None,Chinese
+P0123,62,F,69.8,159,27.6,active,Vata,Obesity,milk,Italian
+P0124,54,M,59,177,18.8,active,Kapha,None,milk,Mediterranean
+P0125,61,M,54.9,169,19.2,sedentary,Pitta,PCOS,None,Chinese
+P0126,58,F,58.4,156,24,moderate,Pitta,Kidney Issues,None,Chinese
+P0127,25,M,111.7,187,31.9,active,Mixed,Obesity,gluten,Mediterranean
+P0128,69,F,89.3,168,31.6,active,Vata,Obesity,None,Chinese
+P0129,54,F,47.3,158,18.9,active,Vata,Kidney Issues,None,Thai
+P0130,47,F,54.3,162,20.7,sedentary,Kapha,PCOS,None,Italian
+P0131,48,F,73.4,163,27.6,active,Pitta,None,milk,Mexican
+P0132,66,M,84.7,189,23.7,active,Mixed,None,None,Mexican
+P0133,28,M,68.7,162,26.2,active,Kapha,None,peanuts,Thai
+P0134,21,M,50.1,177,16,active,Pitta,Hypertension,milk,South Indian
+P0135,43,F,63.6,161,24.5,moderate,Vata,Kidney Issues,None,North Indian
+P0136,30,F,59.6,157,24.2,sedentary,Mixed,Obesity,peanuts,Continental
+P0137,40,M,67,164,24.9,active,Mixed,None,milk,Mediterranean
+P0138,54,M,81.2,194,21.6,active,Kapha,None,milk,Mediterranean
+P0139,22,F,58.8,165,21.6,active,Mixed,None,peanuts,Italian
+P0140,52,M,78.7,176,25.4,active,Vata,Diabetes,None,South Indian
+P0141,28,F,65.8,158,26.4,sedentary,Vata,Hypertension,peanuts,South Indian
+P0142,22,M,61,180,18.8,sedentary,Pitta,None,gluten,South Indian
+P0143,59,M,76.6,185,22.4,sedentary,Pitta,PCOS,None,Mexican
+P0144,68,M,107.6,181,32.8,moderate,Pitta,PCOS,None,Mexican
+P0145,34,F,69.9,160,27.3,active,Pitta,Kidney Issues,None,North Indian
+P0146,68,M,73.3,157,29.7,active,Vata,Obesity,None,South Indian
+P0147,59,F,60.1,164,22.3,moderate,Mixed,None,None,Thai
+P0148,56,M,92.9,182,28,sedentary,Pitta,None,peanuts,North Indian
+P0149,21,F,76.6,173,25.6,moderate,Vata,None,gluten,South Indian
+P0150,55,F,60.1,150,26.7,moderate,Mixed,PCOS,None,Mediterranean
+P0151,32,M,74.6,171,25.5,moderate,Kapha,Hypertension,None,South Indian
+P0152,19,F,61.6,162,23.5,active,Vata,None,None,Thai
+P0153,44,F,52.7,155,21.9,moderate,Mixed,None,None,Continental
+P0154,25,F,48.6,150,21.6,sedentary,Kapha,None,None,Mexican
+P0155,57,F,78.6,179,24.5,active,Kapha,Diabetes,None,Mediterranean
+P0156,29,M,91.3,185,26.7,sedentary,Kapha,Obesity,milk,Mexican
+P0157,68,M,75.6,176,24.4,active,Mixed,None,None,Mediterranean
+P0158,63,M,63.6,170,22,active,Kapha,Hypertension,None,Continental
+P0159,18,F,74.5,162,28.4,sedentary,Kapha,None,None,Italian
+P0160,26,F,64.8,156,26.6,active,Kapha,None,None,South Indian
+P0161,52,M,53,182,16,sedentary,Pitta,None,gluten,Thai
+P0162,35,F,67.3,168,23.8,moderate,Pitta,None,milk,Mexican
+P0163,68,F,48.7,165,17.9,active,Vata,Hypertension,milk,North Indian
+P0164,50,F,48,170,16.6,sedentary,Mixed,None,milk,Chinese
+P0165,38,F,65.5,165,24.1,moderate,Kapha,PCOS,None,Mexican
+P0166,39,F,78.5,180,24.2,active,Kapha,Diabetes,None,Mediterranean
+P0167,36,F,40.4,159,16,active,Kapha,None,None,Italian
+P0168,33,M,69.8,169,24.4,sedentary,Pitta,None,None,Mediterranean
+P0169,19,M,93.5,163,35.2,moderate,Pitta,Kidney Issues,None,Chinese
+P0170,21,M,72,177,23,moderate,Mixed,None,None,Italian
+P0171,27,F,73,162,27.8,sedentary,Pitta,None,None,Italian
+P0172,49,M,96.3,182,29.1,active,Pitta,Diabetes,gluten,Italian
+P0173,41,M,56.2,175,18.4,moderate,Pitta,None,gluten,Italian
+P0174,54,M,63.4,179,19.8,sedentary,Kapha,Hypertension,milk,Continental
+P0175,49,F,63.6,162,24.2,sedentary,Vata,None,None,Italian
+P0176,69,F,62.8,154,26.5,active,Mixed,Hypertension,None,Mediterranean
+P0177,24,M,93.7,186,27.1,sedentary,Kapha,None,peanuts,Mexican
+P0178,36,M,81.5,162,31.1,sedentary,Mixed,None,None,Mexican
+P0179,37,M,73.6,183,22,moderate,Vata,Obesity,milk,Continental
+P0180,37,M,84.4,165,31,moderate,Kapha,None,None,North Indian
+P0181,61,M,74,172,25,sedentary,Mixed,None,None,Chinese
+P0182,40,F,75.2,160,29.4,active,Mixed,Diabetes,gluten,Italian
+P0183,57,F,74.2,156,30.5,active,Vata,Hypertension,None,North Indian
+P0184,63,M,77.8,175,25.4,moderate,Pitta,Hypertension,gluten,Italian
+P0185,28,M,90.6,176,29.2,sedentary,Pitta,None,None,Continental
+P0186,51,M,98,191,26.9,sedentary,Vata,None,gluten,Thai
+P0187,59,F,54.1,159,21.4,moderate,Mixed,Hypertension,None,Italian
+P0188,51,M,99.2,188,28.1,sedentary,Kapha,Hypertension,None,Italian
+P0189,43,F,65.1,172,22,sedentary,Pitta,PCOS,None,Italian
+P0190,60,M,86.3,173,28.8,active,Vata,None,None,Chinese
+P0191,57,M,96.3,167,34.5,active,Pitta,None,None,North Indian
+P0192,22,M,60.9,161,23.5,sedentary,Kapha,Kidney Issues,peanuts,Italian
+P0193,69,F,56.1,162,21.4,sedentary,Mixed,None,gluten,Italian
+P0194,43,F,50.8,150,22.6,active,Mixed,Obesity,None,Mexican
+P0195,60,M,92.6,167,33.2,moderate,Vata,Diabetes,milk,Thai
+P0196,61,F,65.7,154,27.7,moderate,Kapha,None,None,South Indian
+P0197,61,M,90.9,180,28.1,sedentary,Vata,Kidney Issues,milk,Italian
+P0198,33,M,83.8,178,26.4,sedentary,Mixed,None,None,Mexican
+P0199,33,F,67.1,159,26.5,sedentary,Mixed,Kidney Issues,gluten,Mexican
+P0200,43,M,69.6,176,22.5,active,Kapha,Diabetes,None,Thai
+P0201,34,F,50.8,164,18.9,active,Vata,None,milk,Continental
+P0202,70,F,64.4,156,26.5,active,Mixed,Diabetes,None,Italian
+P0203,46,F,68.4,170,23.7,moderate,Vata,None,gluten,Mexican
+P0204,59,M,101,186,29.2,active,Kapha,Obesity,None,Mediterranean
+P0205,62,M,69.2,177,22.1,active,Vata,Obesity,None,Mexican
+P0206,61,F,73.9,171,25.3,sedentary,Pitta,Kidney Issues,None,Mediterranean
+P0207,30,F,70.9,168,25.1,moderate,Mixed,None,gluten,South Indian
+P0208,52,M,87.5,176,28.2,active,Pitta,None,None,Italian
+P0209,56,F,69.3,180,21.4,moderate,Mixed,Hypertension,None,North Indian
+P0210,47,M,44.5,162,17,moderate,Pitta,None,gluten,Continental
+P0211,20,F,51.3,150,22.8,moderate,Vata,None,None,Thai
+P0212,54,M,76.4,175,24.9,sedentary,Vata,Obesity,None,Mexican
+P0213,29,M,57.9,180,17.9,moderate,Pitta,None,None,Mexican
+P0214,41,F,67.6,178,21.3,moderate,Kapha,Hypertension,None,Thai
+P0215,25,F,69,163,26,active,Pitta,None,None,Mexican
+P0216,27,M,66.6,174,22,active,Pitta,Diabetes,None,Continental
+P0217,23,M,92.2,179,28.8,active,Mixed,Hypertension,None,Mediterranean
+P0218,37,F,64.2,172,21.7,sedentary,Kapha,None,peanuts,Italian
+P0219,49,F,67.6,178,21.3,sedentary,Mixed,None,milk,Mexican
+P0220,21,F,60,156,24.7,active,Mixed,None,gluten,Mexican
+P0221,45,F,59.6,158,23.9,sedentary,Pitta,None,milk,Thai
+P0222,32,M,103.8,180,32,active,Vata,Diabetes,None,Mediterranean
+P0223,32,F,56.4,162,21.5,moderate,Mixed,None,milk,Thai
+P0224,45,M,46.2,150,20.5,active,Vata,None,None,Continental
+P0225,57,F,87.5,167,31.4,sedentary,Mixed,Hypertension,None,North Indian
+P0226,36,F,66.2,159,26.2,sedentary,Pitta,Hypertension,peanuts,Thai
+P0227,30,M,87.9,179,27.4,sedentary,Mixed,None,None,Italian
+P0228,55,F,62.1,163,23.4,moderate,Mixed,None,None,North Indian
+P0229,48,F,63.7,161,24.6,moderate,Mixed,Obesity,None,Mediterranean
+P0230,48,F,66.8,156,27.4,moderate,Vata,Hypertension,milk,North Indian
+P0231,44,M,74.6,175,24.4,moderate,Kapha,Hypertension,None,Chinese
+P0232,41,M,74.1,173,24.8,active,Vata,Hypertension,milk,North Indian
+P0233,58,F,65.1,161,25.1,sedentary,Kapha,None,None,South Indian
+P0234,46,M,75.9,171,26,active,Vata,None,None,Italian
+P0235,34,F,77.8,167,27.9,active,Mixed,PCOS,milk,Continental
+P0236,35,M,69.4,178,21.9,moderate,Mixed,Diabetes,milk,Continental
+P0237,23,M,75.1,184,22.2,sedentary,Vata,Hypertension,milk,Thai
+P0238,51,M,42.5,163,16,active,Pitta,Hypertension,None,Chinese
+P0239,46,F,62.2,168,22,moderate,Kapha,None,gluten,Mexican
+P0240,28,F,49.7,160,19.4,moderate,Vata,None,None,Mexican
+P0241,37,F,48.4,151,21.2,moderate,Pitta,None,None,North Indian
+P0242,55,F,52.6,157,21.3,active,Kapha,Diabetes,None,Thai
+P0243,29,F,81.2,154,34.2,active,Kapha,Kidney Issues,peanuts,Chinese
+P0244,42,F,69.5,164,25.8,active,Vata,None,None,Chinese
+P0245,69,F,63.3,166,23,moderate,Kapha,None,peanuts,Italian
+P0246,32,F,57.2,155,23.8,sedentary,Mixed,Diabetes,None,Italian
+P0247,53,M,67.1,163,25.3,moderate,Vata,Hypertension,None,Mexican
+P0248,70,F,60.4,168,21.4,sedentary,Kapha,Obesity,None,Chinese
+P0249,25,M,81.9,191,22.5,moderate,Kapha,Obesity,None,Continental
+P0250,55,M,65.7,183,19.6,moderate,Vata,None,None,Italian
+P0251,25,F,78.2,169,27.4,sedentary,Kapha,Diabetes,milk,Continental
+P0252,63,M,59.3,175,19.4,active,Kapha,None,None,Thai
+P0253,27,M,64.7,176,20.9,sedentary,Pitta,None,milk,Mediterranean
+P0254,30,F,54.6,161,21.1,sedentary,Kapha,Diabetes,None,Mexican
+P0255,63,F,74,168,26.2,moderate,Kapha,Diabetes,None,North Indian
+P0256,57,F,81.9,172,27.7,sedentary,Pitta,Diabetes,None,Chinese
+P0257,56,F,62.6,151,27.5,moderate,Kapha,None,None,North Indian
+P0258,45,F,70.8,158,28.4,sedentary,Kapha,None,milk,North Indian
+P0259,37,F,89.9,177,28.7,active,Kapha,None,None,Thai
+P0260,58,F,49,160,19.1,sedentary,Pitta,None,None,Mexican
+P0261,29,M,61,167,21.9,moderate,Kapha,None,None,Chinese
+P0262,68,M,78.4,165,28.8,moderate,Mixed,Kidney Issues,None,Italian
+P0263,45,F,54.9,166,19.9,sedentary,Pitta,Diabetes,milk,South Indian
+P0264,50,M,75.2,172,25.4,active,Mixed,None,None,North Indian
+P0265,41,M,52.2,160,20.4,sedentary,Pitta,Obesity,None,Thai
+P0266,41,F,102.2,169,35.8,active,Mixed,None,milk,Continental
+P0267,51,F,68.9,170,23.8,moderate,Vata,None,None,Mexican
+P0268,59,F,41.7,153,17.8,active,Vata,PCOS,None,Mediterranean
+P0269,50,M,67.4,178,21.3,active,Mixed,None,peanuts,Chinese
+P0270,61,F,43,164,16,sedentary,Kapha,PCOS,milk,Mediterranean
+P0271,58,M,72.1,179,22.5,active,Kapha,PCOS,None,Chinese
+P0272,42,M,72.5,170,25.1,active,Vata,None,gluten,Chinese
+P0273,45,M,62.3,181,19,sedentary,Kapha,Obesity,None,Chinese
+P0274,53,M,79.3,175,25.9,moderate,Pitta,Hypertension,milk,North Indian
+P0275,31,M,46.8,170,16.2,moderate,Pitta,None,peanuts,Chinese
+P0276,22,F,51.4,167,18.4,sedentary,Vata,None,peanuts,Italian
+P0277,37,M,60.8,186,17.6,sedentary,Kapha,Obesity,None,Continental
+P0278,66,M,81.5,178,25.7,moderate,Vata,None,None,Continental
+P0279,61,M,70.7,171,24.2,active,Pitta,None,peanuts,Mediterranean
+P0280,54,M,60.1,174,19.9,sedentary,Kapha,None,gluten,South Indian
+P0281,66,M,96.8,189,27.1,moderate,Mixed,Obesity,None,North Indian
+P0282,60,M,79.3,176,25.6,active,Mixed,Hypertension,None,Mediterranean
+P0283,40,M,72.3,168,25.6,active,Pitta,Diabetes,gluten,South Indian
+P0284,33,F,64.3,162,24.5,active,Vata,Hypertension,peanuts,South Indian
+P0285,25,F,54.7,159,21.6,active,Mixed,None,gluten,North Indian
+P0286,18,F,84,162,32,moderate,Mixed,None,None,North Indian
+P0287,57,M,74.3,172,25.1,active,Pitta,None,None,North Indian
+P0288,18,M,62.9,180,19.4,active,Kapha,Obesity,None,Thai
+P0289,43,F,53.4,155,22.2,active,Mixed,None,gluten,North Indian
+P0290,50,M,77,183,23,moderate,Pitta,None,None,Thai
+P0291,58,F,56.1,164,20.9,sedentary,Mixed,None,None,Mediterranean
+P0292,36,F,73.9,166,26.8,active,Mixed,None,None,North Indian
+P0293,28,F,47.1,152,20.4,active,Kapha,None,gluten,Italian
+P0294,18,F,40.8,153,17.4,sedentary,Mixed,None,None,North Indian
+P0295,42,M,111.7,184,33,sedentary,Vata,PCOS,milk,Thai
+P0296,28,M,99.1,188,28,moderate,Kapha,None,None,Continental
+P0297,20,M,78.5,180,24.2,moderate,Kapha,None,None,North Indian
+P0298,46,F,42.4,154,17.9,active,Mixed,Obesity,None,South Indian
+P0299,61,F,49.2,150,21.9,moderate,Kapha,Kidney Issues,None,Mediterranean
+P0300,61,M,82.3,181,25.1,moderate,Pitta,Hypertension,None,Continental
+P0301,32,F,47.6,161,18.4,sedentary,Vata,Hypertension,peanuts,Mediterranean
+P0302,21,F,48.8,156,20.1,sedentary,Kapha,Obesity,None,Chinese
+P0303,52,F,60,156,24.7,moderate,Vata,None,None,Italian
+P0304,30,M,64.4,167,23.1,sedentary,Kapha,Hypertension,None,Italian
+P0305,27,F,65,158,26,active,Vata,Hypertension,None,Continental
+P0306,59,M,82.3,174,27.2,moderate,Mixed,Diabetes,None,North Indian
+P0307,61,M,69,176,22.3,moderate,Vata,None,None,North Indian
+P0308,38,M,76.6,173,25.6,active,Mixed,Hypertension,None,Mexican
+P0309,59,F,69.1,160,27,sedentary,Kapha,Hypertension,None,Italian
+P0310,67,F,72,167,25.8,moderate,Vata,None,None,South Indian
+P0311,36,M,92,168,32.6,sedentary,Vata,None,peanuts,North Indian
+P0312,52,F,73.5,161,28.4,active,Mixed,Kidney Issues,peanuts,Mexican
+P0313,54,F,89.2,171,30.5,active,Kapha,Kidney Issues,gluten,Chinese
+P0314,31,M,72.1,171,24.7,active,Mixed,Diabetes,gluten,North Indian
+P0315,24,F,74.4,156,30.6,moderate,Mixed,PCOS,None,Italian
+P0316,66,M,91.3,178,28.8,sedentary,Mixed,Obesity,None,South Indian
+P0317,62,M,58.3,166,21.2,sedentary,Kapha,Obesity,milk,Chinese
+P0318,66,M,89.3,179,27.9,active,Kapha,Diabetes,None,Mediterranean
+P0319,25,M,86.6,178,27.3,sedentary,Mixed,Kidney Issues,gluten,Thai
+P0320,20,M,49.6,163,18.7,sedentary,Mixed,None,None,Chinese
+P0321,69,F,56.5,163,21.3,sedentary,Mixed,None,peanuts,South Indian
+P0322,48,F,64.3,157,26.1,sedentary,Mixed,PCOS,None,North Indian
+P0323,33,F,67,162,25.5,moderate,Mixed,Obesity,milk,Thai
+P0324,68,F,72.1,163,27.1,active,Vata,None,None,Thai
+P0325,23,M,70.4,182,21.3,active,Pitta,None,None,Mexican
+P0326,29,F,77.6,167,27.8,sedentary,Mixed,Diabetes,gluten,North Indian
+P0327,67,M,49.2,166,17.9,active,Mixed,Obesity,gluten,North Indian
+P0328,18,F,42.8,156,17.6,active,Kapha,PCOS,None,Chinese
+P0329,23,F,71.8,162,27.4,sedentary,Vata,None,None,North Indian
+P0330,59,M,57.9,155,24.1,active,Kapha,Kidney Issues,None,Continental
+P0331,47,M,85.5,180,26.4,sedentary,Pitta,Obesity,milk,Italian
+P0332,38,M,80.2,181,24.5,sedentary,Pitta,None,None,North Indian
+P0333,50,M,83.5,175,27.3,moderate,Mixed,None,None,Mexican
+P0334,69,F,54.6,150,24.3,moderate,Kapha,Diabetes,None,Mediterranean
+P0335,25,M,53.6,183,16,active,Vata,Hypertension,milk,Mexican
+P0336,29,F,68.1,162,25.9,moderate,Kapha,Obesity,None,Italian
+P0337,35,M,72.6,181,22.2,active,Vata,Diabetes,milk,Italian
+P0338,19,F,61.7,155,25.7,active,Vata,Diabetes,None,South Indian
+P0339,27,F,46.9,161,18.1,active,Vata,None,None,North Indian
+P0340,32,F,56.9,158,22.8,active,Vata,None,milk,Mexican
+P0341,21,M,72.2,165,26.5,active,Mixed,Hypertension,gluten,Continental
+P0342,46,M,106.2,179,33.1,active,Vata,PCOS,peanuts,Mediterranean
+P0343,69,M,70.6,189,19.8,moderate,Pitta,Obesity,None,South Indian
+P0344,39,M,86.6,179,27,moderate,Mixed,None,milk,Mexican
+P0345,19,M,59.3,173,19.8,active,Kapha,None,None,Italian
+P0346,40,F,51.9,163,19.5,active,Kapha,Hypertension,milk,South Indian
+P0347,67,F,61.8,154,26.1,sedentary,Kapha,Diabetes,milk,North Indian
+P0348,34,F,53.4,163,20.1,active,Kapha,PCOS,None,Continental
+P0349,70,F,56.5,154,23.8,sedentary,Pitta,Obesity,None,Mediterranean
+P0350,57,F,78.5,165,28.8,moderate,Mixed,None,None,Continental
+P0351,59,M,81.4,170,28.2,active,Mixed,None,None,Mediterranean
+P0352,46,M,73.9,178,23.3,moderate,Vata,Hypertension,None,Thai
+P0353,45,F,85.4,172,28.9,sedentary,Kapha,None,None,Italian
+P0354,32,M,84.5,174,27.9,sedentary,Kapha,None,milk,Mexican
+P0355,61,M,89.5,191,24.5,sedentary,Pitta,Diabetes,milk,Continental
+P0356,60,M,89,184,26.3,active,Vata,Diabetes,milk,South Indian
+P0357,37,F,71,156,29.2,moderate,Pitta,Hypertension,gluten,Thai
+P0358,32,M,46.5,166,16.9,sedentary,Pitta,Kidney Issues,None,Continental
+P0359,25,F,59.9,169,21,sedentary,Mixed,None,None,Mediterranean
+P0360,67,M,70.4,173,23.5,active,Kapha,None,None,Mexican
+P0361,67,M,64.3,169,22.5,moderate,Pitta,PCOS,milk,Italian
+P0362,30,F,77.9,173,26,sedentary,Kapha,None,None,Mexican
+P0363,28,F,60.4,156,24.8,active,Mixed,Obesity,None,Thai
+P0364,42,M,61.3,171,21,sedentary,Pitta,None,None,Italian
+P0365,68,M,85.4,177,27.3,moderate,Mixed,Hypertension,None,Mediterranean
+P0366,56,M,68.7,182,20.7,moderate,Vata,PCOS,None,Italian
+P0367,57,M,67.9,165,24.9,sedentary,Kapha,Diabetes,gluten,Mexican
+P0368,39,M,67.8,178,21.4,active,Vata,None,gluten,Chinese
+P0369,68,F,51.2,159,20.3,active,Vata,PCOS,None,Thai
+P0370,50,M,62.2,160,24.3,active,Kapha,None,None,Chinese
+P0371,56,F,70.9,169,24.8,sedentary,Kapha,PCOS,peanuts,Chinese
+P0372,33,M,87.7,180,27.1,active,Vata,None,gluten,Mediterranean
+P0373,52,M,76.4,185,22.3,sedentary,Vata,Hypertension,None,Italian
+P0374,63,F,61.1,154,25.8,moderate,Pitta,Obesity,None,Mexican
+P0375,69,F,70.3,170,24.3,moderate,Vata,None,None,North Indian
+P0376,31,M,52,163,19.6,active,Pitta,Diabetes,gluten,Continental
+P0377,36,F,67.8,174,22.4,sedentary,Kapha,None,None,Chinese
+P0378,54,F,56.5,159,22.3,sedentary,Vata,Obesity,None,Chinese
+P0379,24,F,71.5,177,22.8,moderate,Mixed,Diabetes,None,North Indian
+P0380,69,M,105.2,191,28.8,active,Vata,None,None,Chinese
+P0381,48,M,71.2,167,25.5,active,Mixed,None,None,South Indian
+P0382,55,F,60.7,166,22,sedentary,Mixed,Kidney Issues,None,Continental
+P0383,47,M,47.2,169,16.5,moderate,Kapha,Diabetes,gluten,North Indian
+P0384,45,M,82.4,177,26.3,active,Mixed,PCOS,None,South Indian
+P0385,65,F,55.7,166,20.2,active,Kapha,None,None,South Indian
+P0386,56,F,92.4,175,30.2,sedentary,Kapha,Hypertension,None,Chinese
+P0387,67,M,65.9,179,20.6,moderate,Kapha,None,None,Continental
+P0388,23,M,63.2,160,24.7,active,Kapha,None,gluten,Continental
+P0389,63,F,46.9,158,18.8,moderate,Mixed,PCOS,None,Continental
+P0390,38,M,44.1,166,16,sedentary,Mixed,Diabetes,milk,South Indian
+P0391,56,F,51.2,160,20,sedentary,Vata,None,None,Chinese
+P0392,38,M,57,167,20.4,active,Kapha,Hypertension,None,Thai
+P0393,27,F,58.7,168,20.8,active,Vata,PCOS,None,Chinese
+P0394,61,F,62,163,23.3,active,Vata,Diabetes,None,Mediterranean
+P0395,60,F,51.7,163,19.5,sedentary,Kapha,PCOS,gluten,Thai
+P0396,32,F,68.4,162,26.1,moderate,Mixed,None,milk,Thai
+P0397,61,F,80,166,29,sedentary,Mixed,Kidney Issues,None,Mexican
+P0398,22,F,62.3,154,26.3,moderate,Kapha,None,None,North Indian
+P0399,42,F,76.2,158,30.5,sedentary,Mixed,Diabetes,None,Continental
+P0400,50,F,58.3,155,24.3,active,Vata,None,None,North Indian
+P0401,45,F,38.3,153,16.4,active,Mixed,None,peanuts,Thai
+P0402,46,M,45.8,167,16.4,moderate,Vata,Obesity,None,Mediterranean
+P0403,23,F,46.9,170,16.2,sedentary,Vata,Diabetes,None,Mexican
+P0404,56,F,46.9,169,16.4,sedentary,Kapha,None,None,Continental
+P0405,53,M,47.4,172,16,sedentary,Pitta,None,peanuts,Thai
+P0406,40,F,40.9,159,16.2,active,Vata,None,None,South Indian
+P0407,35,F,37,150,16.4,moderate,Kapha,Kidney Issues,None,Thai
+P0408,67,M,60.8,185,17.8,active,Pitta,None,None,Chinese
+P0409,22,F,50.5,167,18.1,sedentary,Kapha,None,milk,Mediterranean
+P0410,23,M,53.2,181,16.2,active,Kapha,Hypertension,None,Continental
+P0411,41,F,41.2,158,16.5,sedentary,Mixed,None,None,Mexican
+P0412,50,F,39.8,154,16.8,moderate,Vata,Kidney Issues,None,Mexican
+P0413,33,M,58.9,185,17.2,active,Vata,Diabetes,None,Continental
+P0414,51,M,54.5,174,18,active,Pitta,None,None,Italian
+P0415,62,M,46.1,167,16.5,moderate,Kapha,None,None,Continental
+P0416,44,M,47.4,172,16,sedentary,Kapha,None,None,Italian
+P0417,63,F,55.1,176,17.8,moderate,Pitta,None,None,South Indian
+P0418,40,M,54.9,178,17.3,moderate,Vata,None,None,South Indian
+P0419,42,F,39.7,150,17.6,active,Pitta,Hypertension,None,Chinese
+P0420,21,F,40.6,159,16.1,active,Vata,None,None,North Indian
+P0421,34,F,41.3,157,16.8,active,Pitta,None,milk,Italian
+P0422,51,M,46.9,168,16.6,active,Vata,None,None,South Indian
+P0423,20,M,53.7,172,18.2,active,Mixed,None,milk,Thai
+P0424,44,M,51,170,17.6,moderate,Vata,None,None,South Indian
+P0425,27,M,50.6,176,16.3,sedentary,Kapha,Hypertension,None,Continental
+P0426,50,F,44.4,166,16.1,sedentary,Kapha,Hypertension,gluten,Mexican
+P0427,47,F,46.1,165,16.9,sedentary,Pitta,None,gluten,Italian
+P0428,30,M,45,162,17.1,moderate,Mixed,Obesity,gluten,North Indian
+P0429,36,M,51.7,173,17.3,sedentary,Mixed,None,None,Thai
+P0430,42,F,48.2,170,16.7,moderate,Pitta,PCOS,gluten,Continental
+P0431,50,F,45.6,160,17.8,active,Vata,PCOS,None,Mexican
+P0432,31,F,48.2,162,18.4,moderate,Pitta,None,None,Continental
+P0433,55,F,46.9,170,16.2,active,Kapha,None,gluten,North Indian
+P0434,58,F,41.3,158,16.5,moderate,Kapha,None,None,North Indian
+P0435,38,M,57.3,182,17.3,moderate,Vata,None,None,Continental
+P0436,44,F,49.9,176,16.1,active,Kapha,None,gluten,Mexican
+P0437,56,M,55.4,180,17.1,sedentary,Kapha,None,gluten,Continental
+P0438,41,M,61,186,17.6,sedentary,Vata,None,None,Thai
+P0439,31,M,56.6,183,16.9,sedentary,Vata,None,None,North Indian
+P0440,53,M,50.5,172,17.1,active,Vata,Hypertension,None,Continental
+P0441,28,F,40.1,153,17.1,moderate,Vata,PCOS,None,Continental
+P0442,44,M,51.4,168,18.2,sedentary,Mixed,None,None,North Indian
+P0443,41,M,43,158,17.2,moderate,Mixed,None,milk,Continental
+P0444,52,F,51.8,176,16.7,sedentary,Mixed,None,None,Mediterranean
+P0445,27,M,57.3,185,16.7,sedentary,Vata,None,None,Mediterranean
+P0446,41,F,47.8,167,17.1,sedentary,Mixed,None,None,Continental
+P0447,64,M,54.2,174,17.9,sedentary,Mixed,None,peanuts,Mexican
+P0448,47,F,43.5,159,17.2,active,Pitta,None,None,South Indian
+P0449,52,F,52.3,174,17.3,moderate,Mixed,None,None,Thai
+P0450,46,F,42.6,157,17.3,active,Kapha,PCOS,None,Thai
+P0451,29,M,46.9,162,17.9,active,Vata,None,peanuts,Mediterranean
+P0452,24,M,55.5,184,16.4,sedentary,Vata,None,None,Continental
+P0453,57,M,58.1,184,17.2,sedentary,Mixed,None,gluten,Mexican
+P0454,52,F,44.5,161,17.2,moderate,Vata,None,None,Mediterranean
+P0455,25,F,51.3,169,18,active,Pitta,None,None,North Indian
+P0456,19,M,48.8,172,16.5,active,Pitta,None,None,Mexican
+P0457,39,M,56.4,182,17,moderate,Mixed,None,None,Mexican
+P0458,53,F,38.7,154,16.3,active,Kapha,Hypertension,gluten,Thai
+P0459,36,M,69.1,198,17.6,active,Mixed,None,None,South Indian
+P0460,64,M,56,182,16.9,moderate,Mixed,Hypertension,None,Mexican
+P0461,28,M,61.8,185,18.1,sedentary,Mixed,None,None,North Indian
+P0462,61,F,49.6,176,16,sedentary,Mixed,None,None,Mediterranean
+P0463,19,F,49,168,17.4,moderate,Vata,None,None,Italian
+P0464,61,F,39.5,150,17.6,sedentary,Pitta,None,peanuts,Mexican
+P0465,37,F,53.4,173,17.8,sedentary,Kapha,Kidney Issues,gluten,Italian
+P0466,22,F,45.2,164,16.8,active,Vata,None,None,Mexican
+P0467,30,M,61.3,190,17,moderate,Vata,None,milk,Mediterranean
+P0468,51,M,50,171,17.1,sedentary,Kapha,None,None,Thai
+P0469,23,F,40.4,154,17,moderate,Kapha,None,None,South Indian
+P0470,69,M,89.2,164,33.2,sedentary,Vata,PCOS,None,South Indian
+P0471,62,M,120.8,176,39,moderate,Vata,Obesity,None,Mediterranean
+P0472,56,M,119.6,173,40,moderate,Kapha,Hypertension,None,South Indian
+P0473,48,F,99.4,173,33.2,active,Kapha,Obesity,gluten,Thai
+P0474,33,F,102.1,164,38,sedentary,Vata,None,None,Thai
+P0475,26,F,87.3,163,32.9,active,Pitta,Hypertension,None,Continental
+P0476,25,F,88.5,155,36.8,sedentary,Pitta,Diabetes,None,Mexican
+P0477,65,F,89.6,159,35.4,sedentary,Pitta,None,gluten,Continental
+P0478,61,M,104.6,176,33.8,active,Mixed,None,None,Continental
+P0479,29,F,88.7,161,34.2,moderate,Pitta,PCOS,milk,Mediterranean
+P0480,69,M,106.7,183,31.9,sedentary,Mixed,Obesity,None,South Indian
+P0481,60,M,98.9,171,33.8,active,Pitta,Obesity,peanuts,North Indian
+P0482,18,M,112.3,171,38.4,moderate,Vata,None,peanuts,Continental
+P0483,40,F,102,161,39.4,moderate,Pitta,Kidney Issues,None,Continental
+P0484,32,F,83.9,155,34.9,moderate,Mixed,Obesity,None,North Indian
+P0485,58,M,124.9,179,39,active,Pitta,Kidney Issues,None,Mediterranean
+P0486,55,F,89.4,166,32.4,moderate,Vata,Hypertension,milk,Continental
+P0487,37,M,99.6,165,36.6,sedentary,Pitta,Diabetes,None,Chinese
+P0488,27,M,110.5,176,35.7,sedentary,Mixed,Hypertension,None,North Indian
+P0489,25,M,123.4,188,34.9,active,Vata,Hypertension,None,Italian
+P0490,49,F,96.9,164,36,moderate,Vata,Hypertension,gluten,Mexican
+P0491,38,M,85,168,30.1,moderate,Vata,Hypertension,None,Chinese
+P0492,49,M,123.1,176,39.7,sedentary,Mixed,Diabetes,None,Continental
+P0493,63,M,100.6,176,32.5,sedentary,Pitta,Hypertension,None,Italian
+P0494,21,F,106.4,168,37.7,moderate,Vata,Obesity,None,Thai
+P0495,26,M,110,179,34.3,moderate,Mixed,Diabetes,gluten,Continental
+P0496,45,M,102.1,169,35.7,active,Pitta,Obesity,None,Thai
+P0497,60,M,89,170,30.8,moderate,Kapha,Kidney Issues,None,North Indian
+P0498,44,F,101,164,37.6,moderate,Vata,Hypertension,None,Continental
+P0499,26,F,105.7,165,38.8,sedentary,Kapha,Obesity,None,Mexican
+P0500,20,F,79.2,155,33,sedentary,Pitta,Obesity,None,Italian
+P0501,64,M,108.2,169,37.9,moderate,Pitta,Hypertension,gluten,Italian
+P0502,59,F,102.3,160,40,active,Pitta,PCOS,milk,South Indian
+P0503,34,F,92.4,164,34.4,active,Pitta,Obesity,milk,Mexican
+P0504,67,F,89.2,152,38.6,active,Kapha,PCOS,None,Italian
+P0505,58,F,76.3,150,33.9,moderate,Kapha,Diabetes,None,North Indian
+P0506,45,F,103.8,165,38.1,moderate,Mixed,Hypertension,gluten,Chinese
+P0507,62,M,107,178,33.8,active,Mixed,Kidney Issues,None,Mediterranean
+P0508,36,M,86.2,167,30.9,active,Pitta,Kidney Issues,gluten,South Indian
+P0509,44,M,118.9,174,39.3,active,Pitta,Obesity,None,Chinese
+P0510,48,F,85.5,160,33.4,active,Vata,Hypertension,None,Continental
+P0511,51,M,90.3,171,30.9,moderate,Pitta,Hypertension,None,Continental
+P0512,23,M,95.8,170,33.1,moderate,Mixed,Diabetes,None,Italian
+P0513,30,M,125.8,185,36.8,active,Kapha,Diabetes,None,Chinese
+P0514,26,M,143.2,193,38.4,moderate,Vata,Diabetes,None,Mediterranean
+P0515,22,M,103.2,167,37,moderate,Vata,None,gluten,South Indian
+P0516,48,M,98.6,166,35.8,moderate,Kapha,Kidney Issues,None,Italian
+P0517,23,F,96.6,161,37.3,active,Kapha,Kidney Issues,None,Italian
+P0518,38,F,86.4,150,38.4,active,Pitta,Hypertension,milk,Thai
+P0519,23,F,105.2,168,37.3,active,Vata,None,None,Chinese
+P0520,47,F,77,152,33.3,sedentary,Vata,PCOS,None,Thai
+P0521,66,F,95.2,168,33.7,active,Kapha,Obesity,None,Mediterranean
+P0522,51,M,99.3,165,36.5,moderate,Mixed,Hypertension,None,Continental
+P0523,42,F,83.7,158,33.5,moderate,Mixed,Diabetes,None,Mediterranean
+P0524,52,F,78.2,155,32.5,active,Mixed,Obesity,None,South Indian
+P0525,31,M,97.8,174,32.3,active,Vata,Obesity,gluten,North Indian
+P0526,41,F,105.2,164,39.1,active,Kapha,Obesity,gluten,Thai
+P0527,56,F,97.6,170,33.8,active,Pitta,Hypertension,milk,Thai
+P0528,22,F,86.4,168,30.6,sedentary,Pitta,Diabetes,peanuts,North Indian
+P0529,21,F,92.7,170,32.1,sedentary,Kapha,Diabetes,None,Italian
+P0530,50,F,79,161,30.5,moderate,Kapha,Obesity,None,Continental
+P0531,58,M,93.3,155,38.8,active,Pitta,Obesity,milk,Mexican
+P0532,47,F,89.1,155,37.1,moderate,Pitta,Obesity,peanuts,South Indian
+P0533,22,F,82.2,164,30.6,active,Pitta,Obesity,peanuts,Mexican
+P0534,51,M,104.3,169,36.5,active,Vata,Obesity,None,Mediterranean
+P0535,40,M,81.8,165,30,sedentary,Mixed,Hypertension,gluten,Italian
+P0536,48,M,100,168,35.4,sedentary,Kapha,Diabetes,milk,Thai
+P0537,20,M,125,182,37.7,moderate,Kapha,Diabetes,None,South Indian
+P0538,64,M,100.4,169,35.2,active,Vata,Hypertension,gluten,Mediterranean
+P0539,22,M,112.5,174,37.2,sedentary,Pitta,PCOS,None,Italian
+P0540,19,F,83,164,30.9,moderate,Vata,Diabetes,None,Continental
+P0541,43,M,98.5,172,33.3,active,Kapha,Diabetes,None,North Indian
+P0542,59,M,96.5,171,33,active,Kapha,Kidney Issues,peanuts,Continental
