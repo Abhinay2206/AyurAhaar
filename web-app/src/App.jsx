@@ -1,35 +1,32 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { LoginScreen } from './pages/auth';
+import { DashboardScreen } from './pages/dashboard';
+import { PatientManagementScreen } from './pages/patients';
+import { Layout } from './components';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/login" element={<LoginScreen />} />
+          <Route path="/app" element={<Layout />}>
+            <Route path="dashboard" element={<DashboardScreen />} />
+            <Route path="patients" element={<PatientManagementScreen />} />
+            <Route path="appointments" element={<div style={{padding: '2rem'}}>Appointments Page Coming Soon</div>} />
+            <Route path="meal-plans" element={<div style={{padding: '2rem'}}>Meal Plans Page Coming Soon</div>} />
+            <Route path="analytics" element={<div style={{padding: '2rem'}}>Analytics Page Coming Soon</div>} />
+            <Route path="messages" element={<div style={{padding: '2rem'}}>Messages Page Coming Soon</div>} />
+            <Route path="settings" element={<div style={{padding: '2rem'}}>Settings Page Coming Soon</div>} />
+          </Route>
+          <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+        </Routes>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;
