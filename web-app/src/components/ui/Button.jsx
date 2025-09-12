@@ -1,5 +1,4 @@
 import React from 'react';
-import { colors, typography, spacing, borderRadius, shadows, animations } from '../../theme';
 
 const Button = ({ 
   children, 
@@ -11,14 +10,78 @@ const Button = ({
   type = 'button',
   icon,
   loading = false,
+  className = '',
   ...props 
 }) => {
-  const baseStyles = {
-    fontFamily: typography.fontFamily.primary,
-    fontWeight: typography.fontWeight.normal,
+  const getVariantStyles = () => {
+    const styles = {
+      primary: {
+        background: 'linear-gradient(135deg, var(--medical-primary) 0%, var(--medical-primary-light) 100%)',
+        color: 'var(--medical-white)',
+        boxShadow: 'var(--medical-shadow-md)',
+        border: '1px solid var(--medical-primary)',
+      },
+      secondary: {
+        background: 'var(--medical-white)',
+        color: 'var(--medical-primary)',
+        border: '2px solid var(--medical-primary)',
+        boxShadow: 'var(--medical-shadow-sm)',
+      },
+      outline: {
+        background: 'transparent',
+        color: 'var(--medical-gray-600)',
+        border: '2px solid var(--medical-gray-300)',
+        boxShadow: 'none',
+      },
+      success: {
+        background: 'linear-gradient(135deg, var(--medical-secondary) 0%, var(--medical-secondary-light) 100%)',
+        color: 'var(--medical-white)',
+        boxShadow: 'var(--medical-shadow-md)',
+        border: '1px solid var(--medical-secondary)',
+      },
+      danger: {
+        background: 'linear-gradient(135deg, var(--medical-accent) 0%, var(--medical-accent-light) 100%)',
+        color: 'var(--medical-white)',
+        boxShadow: 'var(--medical-shadow-md)',
+        border: '1px solid var(--medical-accent)',
+      },
+      warning: {
+        background: 'linear-gradient(135deg, var(--medical-warning) 0%, var(--medical-warning-light) 100%)',
+        color: 'var(--medical-white)',
+        boxShadow: 'var(--medical-shadow-md)',
+        border: '1px solid var(--medical-warning)',
+      }
+    };
+    return styles[variant] || styles.primary;
+  };
+
+  const getSizeStyles = () => {
+    const styles = {
+      small: {
+        padding: '0.5rem 1rem',
+        fontSize: '0.875rem',
+        minHeight: '2.25rem',
+      },
+      medium: {
+        padding: '0.75rem 1.5rem',
+        fontSize: '0.9375rem',
+        minHeight: '2.75rem',
+      },
+      large: {
+        padding: '1rem 2rem',
+        fontSize: '1rem',
+        minHeight: '3.25rem',
+      }
+    };
+    return styles[size] || styles.medium;
+  };
+
+  const buttonStyles = {
+    fontFamily: 'var(--font-primary)',
+    fontWeight: '500',
     border: 'none',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: animations.transition.spring,
+    transition: 'all var(--transition-base)',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -28,135 +91,81 @@ const Button = ({
     width: fullWidth ? '100%' : 'auto',
     position: 'relative',
     overflow: 'hidden',
-    transform: disabled ? 'none' : 'translateY(0)',
-  };
-
-  const variants = {
-    primary: {
-      background: colors.gradient.primary,
-      color: colors.secondary.white,
-      boxShadow: `${shadows.md}, 0 0 0 rgba(45, 122, 50, 0.3)`,
-      ':hover': {
-        boxShadow: `${shadows.lg}, ${shadows.medical}`,
-        transform: 'translateY(-1px)',
-      }
-    },
-    secondary: {
-      background: colors.gradient.card,
-      color: colors.primary.herbalGreen,
-      border: `2px solid ${colors.primary.herbalGreen}`,
-      boxShadow: shadows.sm,
-      ':hover': {
-        background: colors.primary.herbalGreen,
-        color: colors.secondary.white,
-        transform: 'translateY(-1px)',
-      }
-    },
-    google: {
-      background: colors.secondary.white,
-      color: colors.secondary.charcoal,
-      border: `1px solid ${colors.secondary.mediumGray}`,
-      boxShadow: shadows.professional,
-      ':hover': {
-        boxShadow: shadows.lg,
-        transform: 'translateY(-1px)',
-      }
-    },
-    medical: {
-      background: colors.background.professional,
-      backdropFilter: 'blur(8px)',
-      color: colors.primary.medicalBlue,
-      border: `1px solid rgba(25, 118, 210, 0.2)`,
-      boxShadow: shadows.medical,
-      ':hover': {
-        background: 'rgba(255, 255, 255, 0.95)',
-        transform: 'translateY(-1px)',
-      }
-    },
-  };
-
-  const sizes = {
-    small: {
-      padding: `${spacing.xs} ${spacing.sm}`,
-      fontSize: typography.fontSize.xs,
-      borderRadius: borderRadius.sm,
-      gap: spacing.xs,
-    },
-    medium: {
-      padding: `${spacing.sm} ${spacing.lg}`,
-      fontSize: typography.fontSize.sm,
-      borderRadius: borderRadius.md,
-      gap: spacing.xs,
-    },
-    large: {
-      padding: `${spacing.md} ${spacing.xl}`,
-      fontSize: typography.fontSize.base,
-      borderRadius: borderRadius.lg,
-      gap: spacing.sm,
-    },
-  };
-
-  const buttonStyles = {
-    ...baseStyles,
-    ...variants[variant],
-    ...sizes[size],
+    borderRadius: 'var(--radius-md)',
+    letterSpacing: '0.025em',
+    textTransform: 'none',
+    gap: '0.5rem',
+    ...getVariantStyles(),
+    ...getSizeStyles()
   };
 
   const handleMouseEnter = (e) => {
     if (!disabled) {
-      e.target.style.transform = 'translateY(-2px)';
-      e.target.style.boxShadow = variant === 'primary' ? 
-        `${shadows.lg}, ${shadows.glow}` : shadows.lg;
+      const button = e.currentTarget;
+      if (variant === 'primary' || variant === 'success' || variant === 'danger' || variant === 'warning') {
+        button.style.transform = 'translateY(-2px)';
+        button.style.boxShadow = 'var(--medical-shadow-lg)';
+      } else if (variant === 'secondary') {
+        button.style.background = 'var(--medical-primary)';
+        button.style.color = 'var(--medical-white)';
+      } else if (variant === 'outline') {
+        button.style.background = 'var(--medical-gray-50)';
+        button.style.borderColor = 'var(--medical-gray-400)';
+      }
     }
   };
 
   const handleMouseLeave = (e) => {
     if (!disabled) {
-      e.target.style.transform = 'translateY(0)';
-      e.target.style.boxShadow = variants[variant].boxShadow || shadows.md;
+      const button = e.currentTarget;
+      if (variant === 'primary' || variant === 'success' || variant === 'danger' || variant === 'warning') {
+        button.style.transform = 'translateY(0)';
+        button.style.boxShadow = 'var(--medical-shadow-md)';
+      } else if (variant === 'secondary') {
+        button.style.background = 'var(--medical-white)';
+        button.style.color = 'var(--medical-primary)';
+      } else if (variant === 'outline') {
+        button.style.background = 'transparent';
+        button.style.borderColor = 'var(--medical-gray-300)';
+      }
     }
   };
 
   return (
-    <button 
+    <button
       type={type}
-      style={buttonStyles} 
-      onClick={onClick} 
+      onClick={onClick}
       disabled={disabled || loading}
+      style={buttonStyles}
+      className={`medical-button ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       {...props}
     >
-      {/* Shimmer effect */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: '-100%',
-        width: '100%',
-        height: '100%',
-        background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
-        transition: 'left 0.5s',
-        pointerEvents: 'none',
-      }} />
-      
       {loading && (
-        <div style={{
-          width: '16px',
-          height: '16px',
-          border: '2px solid transparent',
-          borderTop: `2px solid ${variant === 'primary' ? colors.secondary.white : colors.primary.herbalGreen}`,
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          marginRight: spacing.sm,
-        }} />
+        <svg
+          className="animate-spin"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          style={{ marginRight: '0.5rem' }}
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeOpacity="0.25"
+          />
+          <path
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            fill="currentColor"
+          />
+        </svg>
       )}
-      
-      {icon && !loading && (
-        <span style={{ display: 'flex', alignItems: 'center' }}>
-          {icon}
-        </span>
-      )}
-      
+      {icon && !loading && <span style={{ marginRight: '0.25rem' }}>{icon}</span>}
       {children}
     </button>
   );

@@ -1,64 +1,102 @@
 import React from 'react';
-import { colors, borderRadius, shadows, animations } from '../../theme';
 
 const Card = ({ 
   children, 
-  padding = '2rem', 
+  padding = 'medium', 
   variant = 'default',
   hover = true,
   glass = false,
+  medical = false,
+  className = '',
   ...props 
 }) => {
+  const getPaddingStyles = () => {
+    const styles = {
+      small: '1rem',
+      medium: '1.5rem',
+      large: '2rem',
+      xl: '2.5rem'
+    };
+    return styles[padding] || padding;
+  };
+
   const baseStyles = {
-    borderRadius: borderRadius['2xl'],
-    padding: padding,
-    border: '1px solid rgba(245, 245, 243, 0.8)',
-    transition: animations.transition.spring,
+    borderRadius: 'var(--radius-lg)',
+    padding: getPaddingStyles(),
+    transition: 'all var(--transition-base)',
     position: 'relative',
     overflow: 'hidden',
+    fontFamily: 'var(--font-primary)',
   };
 
   const variants = {
     default: {
-      backgroundColor: colors.background.card,
-      boxShadow: shadows.professional,
-      border: `1px solid ${colors.secondary.warmGray}`,
+      backgroundColor: 'var(--medical-white)',
+      boxShadow: 'var(--medical-shadow-md)',
+      border: '1px solid var(--medical-gray-200)',
     },
     medical: {
-      background: colors.background.professional,
+      background: 'linear-gradient(135deg, var(--medical-white) 0%, var(--medical-gray-50) 100%)',
       backdropFilter: 'blur(16px)',
-      border: '1px solid rgba(25, 118, 210, 0.1)',
-      boxShadow: shadows.medical,
-    },
-    gradient: {
-      background: colors.gradient.card,
-      boxShadow: shadows.lg,
+      border: '1px solid var(--medical-primary-light)',
+      boxShadow: 'var(--medical-shadow-lg)',
     },
     elevated: {
-      backgroundColor: colors.background.card,
-      boxShadow: shadows['2xl'],
-      transform: 'translateY(0)',
-      border: `1px solid ${colors.secondary.warmGray}`,
+      backgroundColor: 'var(--medical-white)',
+      boxShadow: 'var(--medical-shadow-xl)',
+      border: '1px solid var(--medical-gray-100)',
+    },
+    glass: {
+      background: 'rgba(255, 255, 255, 0.85)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.3)',
+      boxShadow: 'var(--medical-shadow-glass)',
+    },
+    info: {
+      backgroundColor: 'var(--medical-info-light)',
+      border: '1px solid var(--medical-info)',
+      boxShadow: 'var(--medical-shadow-md)',
+    },
+    success: {
+      backgroundColor: 'var(--medical-secondary-light)',
+      border: '1px solid var(--medical-secondary)',
+      boxShadow: 'var(--medical-shadow-md)',
+    },
+    warning: {
+      backgroundColor: 'var(--medical-warning-light)',
+      border: '1px solid var(--medical-warning)',
+      boxShadow: 'var(--medical-shadow-md)',
+    },
+    danger: {
+      backgroundColor: 'var(--medical-accent-light)',
+      border: '1px solid var(--medical-accent)',
+      boxShadow: 'var(--medical-shadow-md)',
     }
   };
 
   const cardStyles = {
     ...baseStyles,
-    ...variants[glass ? 'medical' : variant],
+    ...variants[glass ? 'glass' : (medical ? 'medical' : variant)],
     ...props.style,
   };
 
   const handleMouseEnter = (e) => {
     if (hover) {
-      e.target.style.transform = 'translateY(-4px)';
-      e.target.style.boxShadow = shadows.lg;
+      const card = e.currentTarget;
+      card.style.transform = 'translateY(-4px)';
+      card.style.boxShadow = 'var(--medical-shadow-xl)';
+      
+      // Add subtle scale effect
+      card.style.scale = '1.02';
     }
   };
 
   const handleMouseLeave = (e) => {
     if (hover) {
-      e.target.style.transform = 'translateY(0)';
-      e.target.style.boxShadow = variants[glass ? 'medical' : variant].boxShadow;
+      const card = e.currentTarget;
+      card.style.transform = 'translateY(0)';
+      card.style.scale = '1';
+      card.style.boxShadow = variants[glass ? 'glass' : (medical ? 'medical' : variant)].boxShadow;
     }
   };
 
@@ -67,36 +105,83 @@ const Card = ({
       style={cardStyles} 
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`animate-scale-in ${glass ? 'glass-effect' : ''}`}
+      className={`medical-card ${medical ? 'medical-theme' : ''} ${className}`}
       {...props}
     >
-      {/* Subtle medical accent line */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '2px',
-        background: 'linear-gradient(90deg, transparent, rgba(45, 122, 50, 0.4), transparent)',
-        zIndex: 1,
-      }} />
+      {/* Medical accent border - only for medical variant */}
+      {(medical || variant === 'medical') && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: 'linear-gradient(90deg, var(--medical-primary), var(--medical-secondary), var(--medical-primary))',
+          borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+          zIndex: 1,
+        }} />
+      )}
+      
+      {/* Success/Info accent border */}
+      {variant === 'success' && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: 'var(--medical-secondary)',
+          borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+          zIndex: 1,
+        }} />
+      )}
+      
+      {variant === 'warning' && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: 'var(--medical-warning)',
+          borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+          zIndex: 1,
+        }} />
+      )}
+      
+      {variant === 'danger' && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: 'var(--medical-accent)',
+          borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+          zIndex: 1,
+        }} />
+      )}
       
       {/* Content */}
-      <div style={{ position: 'relative', zIndex: 2 }}>
+      <div style={{ 
+        position: 'relative', 
+        zIndex: 2,
+        color: 'var(--medical-gray-800)'
+      }}>
         {children}
       </div>
       
-      {/* Subtle shine effect */}
+      {/* Subtle professional shine effect */}
       <div style={{
         position: 'absolute',
         top: '-50%',
         left: '-50%',
         width: '200%',
         height: '200%',
-        background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%)',
+        background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)',
         transform: 'rotate(45deg)',
         pointerEvents: 'none',
-        opacity: 0.5,
+        opacity: 0.7,
       }} />
     </div>
   );
