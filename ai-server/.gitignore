@@ -1,0 +1,10 @@
+venv/
+datasets/
+models/
+__pycache__/
+*.pyc
+*.pkl
+*.log
+.DS_Store
+.ipynb_checkpoints/
+.env
