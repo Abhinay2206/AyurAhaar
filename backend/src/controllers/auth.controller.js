@@ -77,7 +77,14 @@ async function login(req, res) {
     if (!match) return res.status(401).json({ message: 'Invalid credentials' });
 
     const token = signToken({ sub: user._id, role: user.role });
-    res.json({ user: pickUser(user), token });
+    
+    // For patients, include survey completion status
+    const response = { user: pickUser(user), token };
+    if (role === 'patient') {
+      response.surveyCompleted = user.surveyCompleted || false;
+    }
+    
+    res.json(response);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

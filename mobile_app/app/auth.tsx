@@ -19,6 +19,8 @@ import {
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
+import { AuthService } from '@/src/services/auth';
+import { testApiConnection, resetApiUrlCache, rediscoverApiUrl } from '@/src/services/api';
 
 type AuthMode = 'login' | 'register';
 type RegisterMode = 'patient' | 'doctor';
@@ -119,6 +121,29 @@ export default function AuthScreen() {
     setDoctorData(prev => ({ ...prev, [field]: value }));
   };
 
+  const testApiDebug = async () => {
+    console.log('🔧 Testing API connection...');
+    const result = await testApiConnection();
+    Alert.alert(
+      'API Test Result',
+      `Success: ${result.success}
+URL: ${result.url}
+Discovered IP: ${result.discoveredIp || 'None'}
+Error: ${result.error || 'None'}`,
+      [
+        { text: 'Rediscover', onPress: async () => {
+          console.log('🔄 Triggering IP rediscovery...');
+          await rediscoverApiUrl();
+        }},
+        { text: 'Reset Cache', onPress: () => {
+          resetApiUrlCache();
+          console.log('🔄 API cache reset');
+        }},
+        { text: 'OK' }
+      ]
+    );
+  };
+
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
@@ -131,7 +156,8 @@ export default function AuthScreen() {
     return password.length >= 8 && /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    console.log('🔐 handleLogin called');
     if (!loginData.emailOrPhone.trim()) {
       Alert.alert('Missing Information', 'Please enter your email or phone number');
       return;
@@ -140,13 +166,23 @@ export default function AuthScreen() {
       Alert.alert('Missing Information', 'Please enter your password');
       return;
     }
-    
-    Alert.alert('Login Successful', 'Welcome back to Ayurahaar!', [
-      { text: 'Continue', onPress: () => router.push('/plan-selection') }
-    ]);
+
+    console.log('📤 Attempting login with:', loginData.emailOrPhone);
+    try {
+      const success = await AuthService.handleLoginFlow(loginData.emailOrPhone, loginData.password);
+      
+      if (!success) {
+        Alert.alert('Login Failed', 'Invalid credentials. Please check your email and password.');
+      }
+      // Success case is handled by AuthService (redirects automatically)
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    }
   };
 
-  const handlePatientSignUp = () => {
+  const handlePatientSignUp = async () => {
+    console.log('📝 handlePatientSignUp called');
     const { fullName, mobileNumber, email, password, confirmPassword } = patientData;
     
     if (!fullName.trim()) {
@@ -169,10 +205,27 @@ export default function AuthScreen() {
       Alert.alert('Password Mismatch', 'Passwords do not match');
       return;
     }
-    
-    Alert.alert('Account Created', 'Your patient account has been created successfully! You can now choose your wellness plan.', [
-      { text: 'Continue', onPress: () => router.push('/plan-selection') }
-    ]);
+
+    console.log('📤 Attempting registration for:', email);
+    try {
+      const userData = {
+        name: fullName,
+        phone: mobileNumber,
+        email,
+        password,
+        role: 'patient'
+      };
+
+      const success = await AuthService.handleRegistrationFlow(userData);
+      
+      if (!success) {
+        Alert.alert('Registration Failed', 'Unable to create account. Please try again.');
+      }
+      // Success case is handled by AuthService (redirects to survey)
+    } catch (error) {
+      console.error('❌ Registration error:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    }
   };
 
   const handleDoctorSignUp = () => {
@@ -588,6 +641,17 @@ export default function AuthScreen() {
           <Ionicons name="arrow-forward" size={20} color="white" />
         </LinearGradient>
       </TouchableOpacity>
+
+      {/* Debug button for development */}
+      {__DEV__ && (
+        <TouchableOpacity
+          style={[styles.debugButton]}
+          onPress={testApiDebug}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.debugButtonText}>🔧 Test API Connection</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -1040,6 +1104,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   subTabText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  debugButton: {
+    backgroundColor: '#FF6B6B',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  debugButtonText: {
+    color: 'white',
     fontSize: 14,
     fontWeight: '600',
   },

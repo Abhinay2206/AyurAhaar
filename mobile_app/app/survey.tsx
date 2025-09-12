@@ -18,6 +18,8 @@ import Slider from '@react-native-community/slider';
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
+import { AuthService } from '@/src/services/auth';
+import { surveyApi } from '@/src/services/api';
 
 interface SurveyData {
   fullName: string;
@@ -224,21 +226,50 @@ export default function SurveyScreen() {
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (validateForm()) {
-      Alert.alert(
-        'Success!', 
-        'Your health survey has been completed successfully. We will now create your personalized Ayurvedic diet plan.',
-        [
-          {
-            text: 'Continue',
-            onPress: () => {
-              // Navigate to results or next screen
-              console.log('Survey Data:', surveyData);
-            }
-          }
-        ]
-      );
+      try {
+        // Convert height to cm if needed
+        let heightInCm = 0;
+        if (surveyData.heightUnit === 'cm') {
+          heightInCm = parseInt(surveyData.height) || 0;
+        } else {
+          const feet = parseInt(surveyData.heightFeet) || 0;
+          const inches = parseInt(surveyData.heightInches) || 0;
+          heightInCm = Math.round((feet * 12 + inches) * 2.54);
+        }
+
+        const submissionData = {
+          age: surveyData.age,
+          weight: parseInt(surveyData.weight) || 0,
+          height: heightInCm,
+          lifestyle: surveyData.lifestyle,
+          allergies: surveyData.allergies.filter(allergy => allergy !== 'none'),
+          healthConditions: surveyData.healthConditions.filter(condition => condition !== 'none'),
+        };
+
+        const response = await surveyApi.submitSurvey(submissionData);
+
+        if (response.success) {
+          Alert.alert(
+            'Success!', 
+            'Your health survey has been completed successfully. We will now create your personalized Ayurvedic diet plan.',
+            [
+              {
+                text: 'Continue',
+                onPress: () => {
+                  AuthService.handleSurveyCompletion();
+                }
+              }
+            ]
+          );
+        } else {
+          Alert.alert('Error', response.error || 'Failed to submit survey. Please try again.');
+        }
+      } catch (error) {
+        console.error('Survey submission error:', error);
+        Alert.alert('Error', 'Something went wrong. Please try again.');
+      }
     }
   };
 

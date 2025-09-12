@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
+import { AuthService } from '@/src/services/auth';
 
 export default function IndexScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -22,12 +23,28 @@ export default function IndexScreen() {
       }),
     ]).start();
 
-    // Redirect to home after 3 seconds
-    const timer = setTimeout(() => {
-      router.replace('/home');
-    }, 3000);
+    // Check auth status and redirect accordingly
+    const checkAuthAndRedirect = async () => {
+      const authStatus = await AuthService.checkAuthStatus();
+      
+      setTimeout(() => {
+        switch (authStatus) {
+          case 'unauthenticated':
+            router.replace('/home'); // Show home screen with login option
+            break;
+          case 'survey-pending':
+            router.replace('/survey'); // Redirect to survey
+            break;
+          case 'authenticated':
+            router.replace('/plan-selection'); // Redirect to plan selection
+            break;
+          default:
+            router.replace('/home');
+        }
+      }, 3000);
+    };
 
-    return () => clearTimeout(timer);
+    checkAuthAndRedirect();
   }, [fadeAnim, scaleAnim]);
 
   return (
