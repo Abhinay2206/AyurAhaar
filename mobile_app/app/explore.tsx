@@ -177,11 +177,6 @@ export default function ExploreScreen() {
     }
   }, [state.pagination, state.filters, state.isLoadingMore]);
 
-  const handleFoodPress = (food: Food) => {
-    // You can navigate to a detailed food screen here
-    console.log('Food selected:', food.name_en);
-  };
-
   const handleRetry = () => {
     loadInitialData();
   };
@@ -227,7 +222,6 @@ export default function ExploreScreen() {
   const renderFood = ({ item }: { item: Food }) => (
     <FoodCard
       food={item}
-      onPress={handleFoodPress}
     />
   );
 

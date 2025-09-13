@@ -9,9 +9,6 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
-  Dimensions,
-  RefreshControl,
 } from 'react-native';
 
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
@@ -137,9 +134,17 @@ export default function DashboardScreen() {
             </ThemedText>
           </View>
         </View>
-        <TouchableOpacity style={styles.profileButton} onPress={handleProfile}>
-          <Ionicons name="person-circle" size={32} color={colors.herbalGreen} />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.exploreButton} 
+            onPress={() => router.push('/explore')}
+          >
+            <Ionicons name="restaurant" size={28} color={colors.herbalGreen} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.profileButton} onPress={handleProfile}>
+            <Ionicons name="person-circle" size={32} color={colors.herbalGreen} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Scrollable Content */}
@@ -179,6 +184,52 @@ export default function DashboardScreen() {
             <View style={styles.statItem}>
               <Text style={[styles.statNumber, { color: colors.herbalGreen }]}>100%</Text>
               <Text style={[styles.statLabel, { color: colors.icon }]}>Natural</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Plan Section - Only show if patient has an active plan */}
+      {isLoadingPlan ? (
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: colors.icon }]}>Loading plan...</Text>
+        </View>
+      ) : currentPlan && currentPlan.planType !== 'none' ? (
+        <ScrollView style={styles.mealsContainer} showsVerticalScrollIndicator={false}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Your Active Plan ({currentPlan.planType === 'ai' ? 'AI Generated' : 'Doctor Prescribed'})
+          </Text>
+          <View style={[styles.mealCard, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.mealDescription, { color: colors.icon }]}>
+              {currentPlan.planType === 'ai' ? 
+                'Your personalized AI-generated meal plan is active.' : 
+                'Your doctor-prescribed plan is active.'}
+            </Text>
+          </View>
+        </ScrollView>
+      ) : (
+        <View style={styles.noPlanContainer}>
+          <View style={[styles.noPlanCard, { backgroundColor: colors.cardBackground }]}>
+            <Ionicons name="nutrition-outline" size={80} color={colors.icon} />
+            <Text style={[styles.noPlanTitle, { color: colors.text }]}>No Active Meal Plan</Text>
+            <Text style={[styles.noPlanDescription, { color: colors.icon }]}>
+              Start your Ayurvedic journey by generating a personalized AI meal plan or booking an appointment with our expert doctors.
+            </Text>
+            <View style={styles.noPlanActions}>
+              <TouchableOpacity
+                style={[styles.primaryActionButton, { backgroundColor: colors.herbalGreen }]}
+                onPress={() => router.push('/ai-plan-generation' as any)}
+              >
+                <Ionicons name="sparkles" size={20} color="white" />
+                <Text style={styles.primaryActionButtonText}>Generate AI Plan</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.secondaryActionButton, { borderColor: colors.herbalGreen }]}
+                onPress={() => router.push('/doctor-list' as any)}
+              >
+                <Ionicons name="medical" size={20} color={colors.herbalGreen} />
+                <Text style={[styles.secondaryActionButtonText, { color: colors.herbalGreen }]}>Book Appointment</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -273,52 +324,6 @@ export default function DashboardScreen() {
           </View>
         )}
       </View>
-
-      {/* Plan Section - Only show if patient has an active plan */}
-      {isLoadingPlan ? (
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.icon }]}>Loading plan...</Text>
-        </View>
-      ) : currentPlan && currentPlan.planType !== 'none' ? (
-        <ScrollView style={styles.mealsContainer} showsVerticalScrollIndicator={false}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Your Active Plan ({currentPlan.planType === 'ai' ? 'AI Generated' : 'Doctor Prescribed'})
-          </Text>
-          <View style={[styles.mealCard, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.mealDescription, { color: colors.icon }]}>
-              {currentPlan.planType === 'ai' ? 
-                'Your personalized AI-generated meal plan is active.' : 
-                'Your doctor-prescribed plan is active.'}
-            </Text>
-          </View>
-        </ScrollView>
-      ) : (
-        <View style={styles.noPlanContainer}>
-          <View style={[styles.noPlanCard, { backgroundColor: colors.cardBackground }]}>
-            <Ionicons name="nutrition-outline" size={80} color={colors.icon} />
-            <Text style={[styles.noPlanTitle, { color: colors.text }]}>No Active Meal Plan</Text>
-            <Text style={[styles.noPlanDescription, { color: colors.icon }]}>
-              Start your Ayurvedic journey by generating a personalized AI meal plan or booking an appointment with our expert doctors.
-            </Text>
-            <View style={styles.noPlanActions}>
-              <TouchableOpacity
-                style={[styles.primaryActionButton, { backgroundColor: colors.herbalGreen }]}
-                onPress={() => router.push('/ai-plan-generation' as any)}
-              >
-                <Ionicons name="sparkles" size={20} color="white" />
-                <Text style={styles.primaryActionButtonText}>Generate AI Plan</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.secondaryActionButton, { borderColor: colors.herbalGreen }]}
-                onPress={() => router.push('/doctor-list' as any)}
-              >
-                <Ionicons name="medical" size={20} color={colors.herbalGreen} />
-                <Text style={[styles.secondaryActionButtonText, { color: colors.herbalGreen }]}>Book Appointment</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
       
       </ScrollView>
 
@@ -364,6 +369,7 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   logoContainer: {
     width: 40,
@@ -384,7 +390,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   profileButton: {
-    padding: 4,
+    padding: 1,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  exploreButton: {
+    padding: 1,
   },
   planCard: {
     marginHorizontal: 20,

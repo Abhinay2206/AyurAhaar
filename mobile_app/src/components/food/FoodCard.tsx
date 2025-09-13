@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import React from 'react';
 import {
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Alert,
 } from 'react-native';
 
 import { Colors } from '@/src/constants/Colors';
@@ -27,62 +27,77 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, onPress, style }) => {
     if (onPress) {
       onPress(food);
     } else {
-      // Default action - show detailed alert
-      showFoodDetails();
+      // Navigate to detailed food screen
+      router.push(`/food-details?foodId=${food._id}` as any);
     }
-  };
-
-  const showFoodDetails = () => {
-    const nutrition = FoodService.formatNutrition(food);
-    const doshaInfo = FoodService.getDoshaCompatibility(food);
-    const healthTags = FoodService.getHealthTags(food);
-
-    let message = `Category: ${food.category || 'Not specified'}\n\n`;
-    
-    if (nutrition) {
-      message += `Nutrition (per 100g):\n${nutrition}\n\n`;
-    }
-
-    message += `Ayurveda Properties:\n`;
-    message += `• Vata: ${doshaInfo.vata}\n`;
-    message += `• Pitta: ${doshaInfo.pitta}\n`;
-    message += `• Kapha: ${doshaInfo.kapha}\n\n`;
-
-    if (food.ayurveda_rasa) {
-      message += `Rasa (Taste): ${food.ayurveda_rasa}\n`;
-    }
-    if (food.ayurveda_virya) {
-      message += `Virya (Potency): ${food.ayurveda_virya}\n`;
-    }
-    if (food.ayurveda_vipaka) {
-      message += `Vipaka (Post-digestive effect): ${food.ayurveda_vipaka}\n`;
-    }
-
-    if (healthTags.length > 0) {
-      message += `\nHealth Benefits:\n${healthTags.slice(0, 3).join(', ')}`;
-    }
-
-    if (food.medical_usage) {
-      message += `\n\nMedicinal Uses:\n${food.medical_usage.substring(0, 200)}${food.medical_usage.length > 200 ? '...' : ''}`;
-    }
-
-    Alert.alert(
-      food.name_en,
-      message,
-      [{ text: 'Close', style: 'cancel' }]
-    );
   };
 
   const getDoshaColor = (doshaValue: string): string => {
     if (!doshaValue) return colors.icon;
     const lower = doshaValue.toLowerCase();
-    if (lower.includes('beneficial') || lower.includes('pacify') || lower.includes('good')) {
+    
+    // Beneficial/pacifying effects (green)
+    if (lower.includes('beneficial') || lower.includes('pacify') || 
+        lower.includes('good') || lower.includes('balance') || 
+        lower.includes('reduce') || lower.includes('calm') ||
+        lower.includes('decrease') || lower.includes('lower')) {
       return colors.herbalGreen;
     }
-    if (lower.includes('aggravate') || lower.includes('increase')) {
+    
+    // Aggravating/increasing effects (orange/red)
+    if (lower.includes('aggravate') || lower.includes('increase') || 
+        lower.includes('worsen') || lower.includes('elevate') ||
+        lower.includes('provoke') || lower.includes('excess')) {
       return colors.softOrange;
     }
+    
     return colors.icon;
+  };
+
+  const getDoshaIcon = (doshaValue: string): string => {
+    if (!doshaValue) return 'help-circle';
+    const lower = doshaValue.toLowerCase();
+    
+    // Beneficial/pacifying effects
+    if (lower.includes('beneficial') || lower.includes('pacify') || 
+        lower.includes('good') || lower.includes('balance') || 
+        lower.includes('reduce') || lower.includes('calm') ||
+        lower.includes('decrease') || lower.includes('lower')) {
+      return 'checkmark-circle';
+    }
+    
+    // Aggravating/increasing effects  
+    if (lower.includes('aggravate') || lower.includes('increase') || 
+        lower.includes('worsen') || lower.includes('elevate') ||
+        lower.includes('provoke') || lower.includes('excess')) {
+      return 'close-circle';
+    }
+    
+    return 'help-circle';
+  };
+
+  const formatDoshaText = (doshaValue: string): string => {
+    if (!doshaValue) return 'Unknown';
+    
+    const lower = doshaValue.toLowerCase();
+    
+    // Format beneficial effects
+    if (lower.includes('beneficial') || lower.includes('pacify') || 
+        lower.includes('good') || lower.includes('balance') || 
+        lower.includes('reduce') || lower.includes('calm') ||
+        lower.includes('decrease') || lower.includes('lower')) {
+      return '↓ Pacifies';
+    }
+    
+    // Format aggravating effects
+    if (lower.includes('aggravate') || lower.includes('increase') || 
+        lower.includes('worsen') || lower.includes('elevate') ||
+        lower.includes('provoke') || lower.includes('excess')) {
+      return '↑ Increases';
+    }
+    
+    // Return original if no clear pattern
+    return doshaValue.length > 15 ? doshaValue.substring(0, 15) + '...' : doshaValue;
   };
 
   const getCategoryIcon = (category: string): string => {
@@ -167,17 +182,16 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, onPress, style }) => {
               </Text>
               <View style={styles.doshaIndicator}>
                 <Ionicons
-                  name={
-                    doshaCompatibility[dosha].toLowerCase().includes('beneficial') ||
-                    doshaCompatibility[dosha].toLowerCase().includes('pacify')
-                      ? 'checkmark-circle'
-                      : doshaCompatibility[dosha].toLowerCase().includes('aggravate')
-                      ? 'close-circle'
-                      : 'help-circle'
-                  }
+                  name={getDoshaIcon(doshaCompatibility[dosha]) as any}
                   size={16}
                   color={getDoshaColor(doshaCompatibility[dosha])}
                 />
+                <Text style={[
+                  styles.doshaEffectText, 
+                  { color: getDoshaColor(doshaCompatibility[dosha]) }
+                ]}>
+                  {formatDoshaText(doshaCompatibility[dosha])}
+                </Text>
               </View>
             </View>
           ))}
@@ -315,6 +329,12 @@ const styles = StyleSheet.create({
   doshaIndicator: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  doshaEffectText: {
+    fontSize: 10,
+    fontWeight: '500',
+    marginTop: 2,
+    textAlign: 'center',
   },
   tagsContainer: {
     marginBottom: 12,
