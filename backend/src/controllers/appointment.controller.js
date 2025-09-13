@@ -50,17 +50,22 @@ const createAppointment = async (req, res) => {
     });
 
     const savedAppointment = await appointment.save();
+    console.log('Appointment saved with ID:', savedAppointment._id);
 
     // Update patient and doctor records
-    await Patient.findByIdAndUpdate(
+    const patientUpdate = await Patient.findByIdAndUpdate(
       patientId,
-      { $push: { appointments: savedAppointment._id } }
+      { $push: { appointments: savedAppointment._id } },
+      { new: true }
     );
+    console.log('Patient updated with appointment. Appointments count:', patientUpdate?.appointments?.length);
 
-    await Doctor.findByIdAndUpdate(
+    const doctorUpdate = await Doctor.findByIdAndUpdate(
       doctorId,
-      { $push: { appointments: savedAppointment._id } }
+      { $push: { appointments: savedAppointment._id } },
+      { new: true }
     );
+    console.log('Doctor updated with appointment. Appointments count:', doctorUpdate?.appointments?.length);
 
     // Get patient details for notifications
     const patient = await Patient.findById(patientId);

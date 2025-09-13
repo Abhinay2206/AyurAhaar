@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { LoginScreen } from './pages/auth';
-import { DashboardScreen } from './pages/dashboard';
+import { LoginScreen, DoctorRegistrationScreen } from './pages/auth';
+import { ComprehensiveDashboard } from './pages/dashboard';
 import { PatientManagementScreen } from './pages/patients';
 import { AppointmentManagementScreen } from './pages/appointments';
 import { MealPlanGenerationScreen } from './pages/meal-plans';
@@ -23,8 +23,9 @@ function App() {
         <Routes>
           {/* Doctor Portal Routes */}
           <Route path="/login" element={<LoginScreen />} />
+          <Route path="/register" element={<DoctorRegistrationScreen />} />
           <Route path="/app" element={<Layout />}>
-            <Route path="dashboard" element={<DashboardScreen />} />
+            <Route path="dashboard" element={<ComprehensiveDashboard />} />
             <Route path="patients" element={<PatientManagementScreen />} />
             <Route path="appointments" element={<AppointmentManagementScreen />} />
             <Route path="meal-plans" element={<MealPlanGenerationScreen />} />

@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Button, 
   Input, 
   Card
 } from '../../components';
+import { AuthService } from '../../services';
 
 const LoginScreen = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,7 +25,8 @@ const LoginScreen = () => {
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
-        [field]: ''
+        [field]: '',
+        general: '' // Also clear general error when user starts typing
       }));
     }
   };
@@ -34,6 +38,9 @@ const LoginScreen = () => {
       newErrors.email = 'Email or mobile number is required';
     } else if (formData.email.includes('@') && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
+    } else if (!formData.email.includes('@') && !/^\d{10}$/.test(formData.email.trim())) {
+      // If it doesn't contain @ and is not a 10-digit number, it's invalid
+      newErrors.email = 'Please enter a valid email address or 10-digit mobile number';
     }
     
     if (!formData.password) {
@@ -52,13 +59,26 @@ const LoginScreen = () => {
     if (!validateForm()) return;
     
     setIsLoading(true);
+    setErrors({}); // Clear any previous errors
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Login attempt:', formData);
+    try {
+      const result = await AuthService.login({
+        email: formData.email.trim(),
+        password: formData.password
+      });
+
+      if (result.success) {
+        // Redirect to appropriate dashboard based on user role
+        navigate(result.redirectTo, { replace: true });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrors({
+        general: error.message || 'Login failed. Please check your credentials and try again.'
+      });
+    } finally {
       setIsLoading(false);
-      // Handle success/error here
-    }, 2000);
+    }
   };
 
   const handleGoogleSignIn = () => {
@@ -195,19 +215,6 @@ const LoginScreen = () => {
     color: 'var(--medical-gray-500)',
   };
 
-  const medicalIconStyles = {
-    fontSize: '2.5rem',
-    marginBottom: '0.5rem',
-    background: 'linear-gradient(135deg, var(--medical-white), rgba(255, 255, 255, 0.9))',
-    borderRadius: '50%',
-    width: '4rem',
-    height: '4rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: 'var(--medical-shadow-md)',
-  };
-
   return (
     <div style={containerStyles}>
       <div style={backgroundPatternStyles} />
@@ -216,9 +223,6 @@ const LoginScreen = () => {
         <Card medical={true} padding="large" hover={false}>
           <div style={headerStyles}>
             <div style={logoContainerStyles}>
-              <div style={medicalIconStyles}>
-                🕉️
-              </div>
               <h1 style={titleStyles}>AyurAhaar</h1>
             </div>
             <p style={subtitleStyles}>Healthcare Professional Portal</p>
@@ -274,6 +278,21 @@ const LoginScreen = () => {
               </a>
             </div>
 
+            {errors.general && (
+              <div style={{
+                padding: '0.75rem',
+                marginBottom: '1rem',
+                backgroundColor: 'var(--medical-error-light)',
+                border: '1px solid var(--medical-error)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--medical-error-dark)',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}>
+                {errors.general}
+              </div>
+            )}
+
             <div style={{ marginBottom: '1rem' }}>
               <Button
                 type="submit"
@@ -314,6 +333,23 @@ const LoginScreen = () => {
           </div>
 
           <div style={footerStyles}>
+            <p style={footerTextStyles}>
+              New to AyurAhaar?{' '}
+              <Link 
+                to="/register" 
+                style={linkStyles}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = 'var(--medical-primary-light)';
+                  e.target.style.color = 'var(--medical-white)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.color = 'var(--medical-primary)';
+                }}
+              >
+                Register as Doctor
+              </Link>
+            </p>
             <p style={footerTextStyles}>
               This portal is exclusively for certified Ayurvedic practitioners and licensed healthcare professionals.<br />
               Need technical assistance? <a 

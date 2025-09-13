@@ -14,3 +14,4 @@ export { default as AnimatedBackground } from './common/AnimatedBackground';
 export { default as AnimatedLogo } from './common/AnimatedLogo';
 export { default as AyurvedaAnimation } from './common/AyurvedaAnimation';
 export { default as AyurvedaIllustration } from './common/AyurvedaIllustration';
+export { default as DashboardSearch } from './DashboardSearch';

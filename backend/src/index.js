@@ -43,6 +43,7 @@ app.use('/api/auth/admin', adminAuthRoutes);
 app.use('/api/auth/super-admin', superAdminAuthRoutes);
 app.use('/api/survey', surveyRoutes);
 app.use('/api/doctors', doctorRoutes);
+app.use('/api/doctor', doctorRoutes); // Add doctor-specific authenticated routes
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/patients', patientRoutes);

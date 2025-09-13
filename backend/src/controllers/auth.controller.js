@@ -11,7 +11,7 @@ function pickUser(u) {
   return { id: u._id, name: u.name, email: u.email, role: u.role };
 }
 
-const doctorAllowed = ['name','email','password','role','phone','specialization','licenseNumber','experience','location'];
+const doctorAllowed = ['name','email','password','role','phone','specialization','licenseNumber','experience','location','consultationFee'];
 const patientAllowed = ['name','email','password','role','phone','age','weight','height','lifestyle','allergies','healthConditions'];
 const adminAllowed = ['name','email','password','role'];
 

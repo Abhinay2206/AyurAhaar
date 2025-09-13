@@ -46,4 +46,20 @@ function requirePatientRole(req, res, next) {
   next();
 }
 
-module.exports = { authenticateToken, requirePatientRole };
+// Middleware to check if user is a doctor
+function requireDoctorRole(req, res, next) {
+  if (req.user.role !== 'doctor') {
+    return res.status(403).json({ message: 'Doctor role required' });
+  }
+  next();
+}
+
+// Middleware to check if user is an admin
+function requireAdminRole(req, res, next) {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin role required' });
+  }
+  next();
+}
+
+module.exports = { authenticateToken, requirePatientRole, requireDoctorRole, requireAdminRole };

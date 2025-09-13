@@ -109,7 +109,7 @@ async function getDashboard(req, res) {
       .populate({
         path: 'appointments',
         populate: {
-          path: 'doctorId',
+          path: 'doctor',
           select: 'name specialization'
         }
       })
