@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
@@ -14,19 +16,83 @@ import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
+import { PermissionsService } from '@/src/services/permissions';
+import { DoctorService } from '@/src/services/doctor';
 
 export default function PlanSelectionScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAIPlan = () => {
-    // Navigate to AI plan generation
-    router.push('/ai-plan-generation' as any);
+    // Show Coming Soon message
+    Alert.alert(
+      'Coming Soon!',
+      'AI Personalized Plan feature is currently under development. We\'re working hard to bring you the best personalized Ayurveda meal plans. Please try the Doctor Appointment option for now.',
+      [{ text: 'OK', style: 'default' }]
+    );
   };
 
-  const handleDoctorAppointment = () => {
-    // Navigate to doctor list
-    router.push('/doctor-list' as any);
+  const handleDoctorAppointment = async () => {
+    try {
+      setIsLoading(true);
+
+      // Get current location
+      const location = await PermissionsService.getCurrentLocation();
+      
+      if (!location) {
+        // If location is not available, show alert and proceed with fallback
+        Alert.alert(
+          'Location Not Available',
+          'We couldn\'t get your current location. We\'ll show you doctors from nearby areas.',
+          [
+            {
+              text: 'Continue',
+              onPress: () => {
+                router.push('/doctor-list' as any);
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      // Find nearby doctors
+      const doctors = await DoctorService.findNearbyDoctors({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (doctors.length === 0) {
+        Alert.alert(
+          'No Doctors Found',
+          'We couldn\'t find any doctors in your area at the moment. Please try again later.',
+          [{ text: 'OK', style: 'default' }]
+        );
+        return;
+      }
+
+      // Navigate to doctor list with the found doctors
+      router.push('/doctor-list' as any);
+    } catch (error) {
+      console.error('Error finding doctors:', error);
+      Alert.alert(
+        'Error',
+        'Something went wrong while searching for doctors. Please try again.',
+        [
+          {
+            text: 'Try Again',
+            onPress: handleDoctorAppointment,
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+        ]
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -71,7 +137,11 @@ export default function PlanSelectionScreen() {
         </TouchableOpacity>
 
         {/* Doctor Appointment Card */}
-        <TouchableOpacity style={styles.cardContainer} onPress={handleDoctorAppointment}>
+        <TouchableOpacity 
+          style={[styles.cardContainer, isLoading && styles.disabledCard]} 
+          onPress={handleDoctorAppointment}
+          disabled={isLoading}
+        >
           <LinearGradient
             colors={[colors.softOrange, '#E09852']}
             style={[styles.optionCard, styles.doctorCard]}
@@ -79,16 +149,29 @@ export default function PlanSelectionScreen() {
             end={{ x: 1, y: 1 }}
           >
             <View style={styles.cardIconContainer}>
-              <Ionicons name="medical" size={32} color="white" />
-              <Ionicons name="person" size={24} color="white" style={styles.doctorIcon} />
+              {isLoading ? (
+                <ActivityIndicator size={32} color="white" />
+              ) : (
+                <>
+                  <Ionicons name="medical" size={32} color="white" />
+                  <Ionicons name="person" size={24} color="white" style={styles.doctorIcon} />
+                </>
+              )}
             </View>
-            <Text style={styles.cardTitle}>Doctor Appointment</Text>
-            <Text style={styles.cardDescription}>
-              Consult with certified Ayurveda doctors in Hyderabad
+            <Text style={styles.cardTitle}>
+              {isLoading ? 'Finding Doctors...' : 'Doctor Appointment'}
             </Text>
-            <View style={styles.cardArrow}>
-              <Ionicons name="arrow-forward" size={20} color="white" />
-            </View>
+            <Text style={styles.cardDescription}>
+              {isLoading 
+                ? 'Searching for certified Ayurveda doctors near you...'
+                : 'Consult with certified Ayurveda doctors in your area'
+              }
+            </Text>
+            {!isLoading && (
+              <View style={styles.cardArrow}>
+                <Ionicons name="arrow-forward" size={20} color="white" />
+              </View>
+            )}
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -214,5 +297,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  disabledCard: {
+    opacity: 0.7,
   },
 });

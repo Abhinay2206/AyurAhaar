@@ -14,6 +14,13 @@ const PatientSchema = new mongoose.Schema({
   surveyCompleted: { type: Boolean, default: false },
   previousPlan: { type: mongoose.Schema.Types.ObjectId, ref: 'MealPlan' },
   appointments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }],
+  currentPlan: {
+    type: { type: String, enum: ['ai', 'doctor', 'none'], default: 'none' },
+    planId: { type: mongoose.Schema.Types.ObjectId },
+    isVisible: { type: Boolean, default: false },
+    createdAt: { type: Date },
+    lastModified: { type: Date }
+  },
 }, { timestamps: true });
 
 const Patient = User.discriminator('patient', PatientSchema);

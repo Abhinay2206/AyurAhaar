@@ -39,11 +39,11 @@ export default function HomeScreen() {
         {/* Primary Action */}
         <TouchableOpacity 
           style={[styles.primaryCard, { backgroundColor: colors.herbalGreen }]}
-          onPress={() => router.push('/survey')}
+          onPress={() => router.push('/auth?mode=login')}
         >
-          <Ionicons name="sparkles" size={28} color="white" />
+          <Ionicons name="log-in" size={28} color="white" />
           <ThemedText style={styles.primaryCardTitle}>Get Started</ThemedText>
-          <ThemedText style={styles.primaryCardSubtitle}>Take your wellness assessment</ThemedText>
+          <ThemedText style={styles.primaryCardSubtitle}>Sign in to access your wellness plan</ThemedText>
         </TouchableOpacity>
 
         {/* Secondary Actions */}
@@ -60,11 +60,11 @@ export default function HomeScreen() {
 
           <TouchableOpacity 
             style={[styles.secondaryCard, { backgroundColor: colors.cardBackground }]}
-            onPress={() => router.push('/auth')}
+            onPress={() => router.push('/auth?mode=register')}
           >
-            <Ionicons name="log-in" size={24} color={colors.herbalGreen} />
+            <Ionicons name="person-add" size={24} color={colors.herbalGreen} />
             <ThemedText style={[styles.secondaryCardTitle, { color: colors.text }]}>
-              Login
+              Register
             </ThemedText>
           </TouchableOpacity>
         </View>

@@ -9,6 +9,11 @@ const patientAuthRoutes = require('./routes/patient.auth.routes');
 const adminAuthRoutes = require('./routes/admin.auth.routes');
 const superAdminAuthRoutes = require('./routes/super-admin.auth.routes');
 const surveyRoutes = require('./routes/survey.routes');
+const doctorRoutes = require('./routes/doctor.routes');
+const appointmentRoutes = require('./routes/appointment.routes');
+const planRoutes = require('./routes/plan.routes');
+const patientRoutes = require('./routes/patient.routes');
+const foodRoutes = require('./routes/food.routes');
 
 const app = express();
 
@@ -36,6 +41,11 @@ app.use('/api/auth/patient', patientAuthRoutes);
 app.use('/api/auth/admin', adminAuthRoutes);
 app.use('/api/auth/super-admin', superAdminAuthRoutes);
 app.use('/api/survey', surveyRoutes);
+app.use('/api/doctors', doctorRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/plans', planRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/foods', foodRoutes);
 
 // 404 handler
 app.use((req, res) => {

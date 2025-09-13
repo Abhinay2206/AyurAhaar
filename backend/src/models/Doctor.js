@@ -7,6 +7,7 @@ const DoctorSchema = new mongoose.Schema({
   licenseNumber: { type: String, required: true },
   experience: { type: Number },
   location: { type: String },
+  consultationFee: { type: Number, default: 500 },
   patients: [{ type: mongoose.Schema.Types.ObjectId, ref: 'patient' }],
   appointments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }],
 }, { timestamps: true });

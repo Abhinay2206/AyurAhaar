@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
-import { AuthService } from '@/src/services/auth';
+import { NavigationService } from '@/src/services/navigation';
 
 export default function IndexScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -25,23 +25,21 @@ export default function IndexScreen() {
 
     // Check auth status and redirect accordingly
     const checkAuthAndRedirect = async () => {
-      const authStatus = await AuthService.checkAuthStatus();
-      
-      setTimeout(() => {
-        switch (authStatus) {
-          case 'unauthenticated':
-            router.replace('/home'); // Show home screen with login option
-            break;
-          case 'survey-pending':
-            router.replace('/survey'); // Redirect to survey
-            break;
-          case 'authenticated':
-            router.replace('/plan-selection'); // Redirect to plan selection
-            break;
-          default:
-            router.replace('/home');
-        }
-      }, 3000);
+      try {
+        const userStatus = await NavigationService.getUserStatus();
+        
+        setTimeout(() => {
+          console.log('🔍 User status:', userStatus.type);
+          console.log('📍 Redirecting to:', userStatus.redirectPath);
+          router.replace(userStatus.redirectPath as any);
+        }, 3000);
+      } catch (error) {
+        console.error('❌ Error checking user status:', error);
+        // Fallback to home on error
+        setTimeout(() => {
+          router.replace('/home');
+        }, 3000);
+      }
     };
 
     checkAuthAndRedirect();

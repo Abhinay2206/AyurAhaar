@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -20,7 +20,7 @@ import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { AuthService } from '@/src/services/auth';
-import { testApiConnection, resetApiUrlCache, rediscoverApiUrl } from '@/src/services/api';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 type AuthMode = 'login' | 'register';
 type RegisterMode = 'patient' | 'doctor';
@@ -68,7 +68,9 @@ const specializationOptions = [
 export default function AuthScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const authContext = useAuth();
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const { mode } = useLocalSearchParams();
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -78,7 +80,9 @@ export default function AuthScreen() {
     }).start();
   }, [fadeAnim]);
 
-  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  // Set initial auth mode based on URL parameter
+  const initialMode: AuthMode = (mode === 'register' || mode === 'login') ? mode as AuthMode : 'login';
+  const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
   const [registerMode, setRegisterMode] = useState<RegisterMode>('patient');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -121,29 +125,6 @@ export default function AuthScreen() {
     setDoctorData(prev => ({ ...prev, [field]: value }));
   };
 
-  const testApiDebug = async () => {
-    console.log('🔧 Testing API connection...');
-    const result = await testApiConnection();
-    Alert.alert(
-      'API Test Result',
-      `Success: ${result.success}
-URL: ${result.url}
-Discovered IP: ${result.discoveredIp || 'None'}
-Error: ${result.error || 'None'}`,
-      [
-        { text: 'Rediscover', onPress: async () => {
-          console.log('🔄 Triggering IP rediscovery...');
-          await rediscoverApiUrl();
-        }},
-        { text: 'Reset Cache', onPress: () => {
-          resetApiUrlCache();
-          console.log('🔄 API cache reset');
-        }},
-        { text: 'OK' }
-      ]
-    );
-  };
-
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
@@ -169,7 +150,7 @@ Error: ${result.error || 'None'}`,
 
     console.log('📤 Attempting login with:', loginData.emailOrPhone);
     try {
-      const success = await AuthService.handleLoginFlow(loginData.emailOrPhone, loginData.password);
+      const success = await AuthService.handleLoginFlow(loginData.emailOrPhone, loginData.password, authContext);
       
       if (!success) {
         Alert.alert('Login Failed', 'Invalid credentials. Please check your email and password.');
@@ -641,17 +622,6 @@ Error: ${result.error || 'None'}`,
           <Ionicons name="arrow-forward" size={20} color="white" />
         </LinearGradient>
       </TouchableOpacity>
-
-      {/* Debug button for development */}
-      {__DEV__ && (
-        <TouchableOpacity
-          style={[styles.debugButton]}
-          onPress={testApiDebug}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.debugButtonText}>🔧 Test API Connection</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 
@@ -783,6 +753,13 @@ Error: ${result.error || 'None'}`,
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           {/* Header */}
           <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.push('/home')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.herbalGreen} />
+            </TouchableOpacity>
             <View style={styles.logoContainer}>
               <Ionicons name="leaf" size={48} color={colors.herbalGreen} />
               <View style={styles.titleContainer}>
@@ -846,6 +823,21 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 30,
     alignItems: 'center',
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    top: Platform.OS === 'ios' ? 60 : 40,
+    zIndex: 1,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   logoContainer: {
     flexDirection: 'row',
@@ -1117,6 +1109,19 @@ const styles = StyleSheet.create({
   },
   debugButtonText: {
     color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  demoButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  demoButtonText: {
     fontSize: 14,
     fontWeight: '600',
   },

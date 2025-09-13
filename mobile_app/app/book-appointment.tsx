@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,60 +11,67 @@ import {
   TextInput,
   Alert,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 
 import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
-
-// Dummy patient data
-const dummyPatients = [
-  {
-    id: '1',
-    name: 'Rahul Sharma',
-    email: 'rahul.sharma@example.com',
-    phone: '+91 9876543210',
-    age: 28,
-    address: 'Banjara Hills, Hyderabad',
-  },
-  {
-    id: '2',
-    name: 'Priya Patel',
-    email: 'priya.patel@example.com',
-    phone: '+91 9876543211',
-    age: 32,
-    address: 'Madhapur, Hyderabad',
-  },
-];
-
-// Dummy doctor data (matching the IDs from doctor list)
-const doctorsData = {
-  '1': {
-    name: 'Dr. Rajesh Kumar',
-    specialization: 'Panchakarma & Detoxification',
-    clinic: 'Ayurveda Wellness Center',
-    area: 'Banjara Hills',
-    consultationFee: 800,
-  },
-  '2': {
-    name: 'Dr. Priya Sharma',
-    specialization: 'Digestive Health & Nutrition',
-    clinic: 'Holistic Ayurveda Clinic',
-    area: 'Madhapur',
-    consultationFee: 1000,
-  },
-  // Add other doctors as needed
-};
+import { useAuth } from '@/src/contexts/AuthContext';
+import { AppointmentService, AppointmentData } from '@/src/services/appointment';
+import { DoctorService, Doctor } from '@/src/services/doctor';
+import { surveyApi } from '@/src/services/api';
 
 export default function BookAppointmentScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { doctorId } = useLocalSearchParams();
+  const { patient, isAuthenticated, isLoading } = useAuth();
   
-  // Use first dummy patient as default
-  const currentPatient = dummyPatients[0];
-  const doctor = (doctorsData as any)[doctorId as string] || (doctorsData as any)['1'];
+  // Doctor state
+  const [doctor, setDoctor] = useState<Doctor | null>(null);
+  const [isDoctorLoading, setIsDoctorLoading] = useState(true);
+  
+  // Redirect if not authenticated (only after loading is complete)
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !patient)) {
+      Alert.alert(
+        'Authentication Required',
+        'Please log in to book an appointment.',
+        [{ text: 'OK', onPress: () => router.replace('/auth' as any) }]
+      );
+      return;
+    }
+  }, [isAuthenticated, patient, isLoading]);
+
+  // Fetch doctor data
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      if (!doctorId) {
+        Alert.alert('Error', 'No doctor selected. Please go back and select a doctor.');
+        router.back();
+        return;
+      }
+
+      try {
+        setIsDoctorLoading(true);
+        const doctorData = await DoctorService.getDoctorById(doctorId as string);
+        setDoctor(doctorData);
+      } catch (error) {
+        console.error('Error fetching doctor:', error);
+        Alert.alert(
+          'Error',
+          'Failed to load doctor information. Please try again.',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      } finally {
+        setIsDoctorLoading(false);
+      }
+    };
+
+    fetchDoctor();
+  }, [doctorId]);
   
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -74,6 +81,60 @@ export default function BookAppointmentScreen() {
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoadingSurveyData, setIsLoadingSurveyData] = useState(true);
+  
+  // Additional patient details - initialize with stored data if available
+  const [symptoms, setSymptoms] = useState('');
+  const [medicalHistory, setMedicalHistory] = useState(patient?.medicalHistory || '');
+  const [allergies, setAllergies] = useState(patient?.allergies || '');
+  const [currentMedications, setCurrentMedications] = useState(patient?.currentMedications || '');
+  const [lifestyle, setLifestyle] = useState('');
+  const [consultationType, setConsultationType] = useState('general');
+  const [emergencyContact, setEmergencyContact] = useState(patient?.emergencyContact || '');
+  const [age, setAge] = useState(patient?.age || '');
+  const [gender, setGender] = useState(patient?.gender || '');
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
+  const [healthConditions, setHealthConditions] = useState<string[]>([]);
+
+  // Fetch existing survey data for authenticated users
+  useEffect(() => {
+    const fetchSurveyData = async () => {
+      if (!isAuthenticated || !patient) return;
+      
+      try {
+        setIsLoadingSurveyData(true);
+        const response = await surveyApi.getSurveyStatus();
+        
+        if (response.success && response.data?.surveyData) {
+          const surveyData = response.data.surveyData;
+          
+          // Pre-populate form fields with existing survey data
+          if (surveyData.age) setAge(surveyData.age.toString());
+          if (surveyData.weight) setWeight(surveyData.weight.toString());
+          if (surveyData.height) setHeight(surveyData.height.toString());
+          if (surveyData.lifestyle) setLifestyle(surveyData.lifestyle);
+          if (surveyData.allergies && surveyData.allergies.length > 0) {
+            setAllergies(surveyData.allergies.join(', '));
+          }
+          if (surveyData.healthConditions) {
+            setHealthConditions(surveyData.healthConditions);
+            // Add health conditions to medical history if available
+            if (surveyData.healthConditions.length > 0 && !medicalHistory) {
+              setMedicalHistory(surveyData.healthConditions.join(', '));
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching survey data:', error);
+        // Don't show error to user, just use default values
+      } finally {
+        setIsLoadingSurveyData(false);
+      }
+    };
+
+    fetchSurveyData();
+  }, [isAuthenticated, patient, medicalHistory]);
 
   // Available time slots
   const timeSlots = [
@@ -101,15 +162,57 @@ export default function BookAppointmentScreen() {
 
   const availableDates = getAvailableDates();
 
+  // Show loading or don't render if not authenticated
+  if (isLoading || isDoctorLoading) {
+    return (
+      <ThemedView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.herbalGreen} />
+          <Text style={[styles.loadingText, { color: colors.text }]}>
+            {isLoading ? 'Loading...' : 'Loading doctor information...'}
+          </Text>
+        </View>
+      </ThemedView>
+    );
+  }
+
+  // Don't render if patient is not authenticated or doctor not found
+  if (!isAuthenticated || !patient || !doctor) {
+    return null;
+  }
+
   const handlePayment = () => {
+    // Validate all required fields
     if (!selectedDate || !selectedTime || !paymentMethod) {
-      Alert.alert('Missing Information', 'Please fill in all required fields.');
+      Alert.alert('Missing Information', 'Please fill in all appointment details.');
       return;
     }
+    
+    if (!symptoms.trim()) {
+      Alert.alert('Missing Information', 'Please describe your symptoms or reason for consultation.');
+      return;
+    }
+    
+    if (!age.trim() || !gender.trim()) {
+      Alert.alert('Missing Information', 'Please provide your age and gender.');
+      return;
+    }
+    
+    // Validate contact information
+    if (!patient.phone && !emergencyContact.trim()) {
+      Alert.alert('Missing Information', 'Please provide an emergency contact number since your profile doesn\'t have a phone number.');
+      return;
+    }
+    
     setShowPaymentModal(true);
   };
 
-  const processPayment = () => {
+  const processPayment = async () => {
+    if (!patient) {
+      Alert.alert('Error', 'Patient information not found. Please log in again.');
+      return;
+    }
+
     if (paymentMethod === 'card' && (!cardNumber || !expiryDate || !cvv)) {
       Alert.alert('Payment Error', 'Please fill in all card details.');
       return;
@@ -117,22 +220,79 @@ export default function BookAppointmentScreen() {
 
     setIsProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Create appointment data
+      const appointmentData: AppointmentData = {
+        patientId: patient._id,
+        doctorId: doctorId as string,
+        doctorName: doctor.name,
+        doctorSpecialization: doctor.specialization || 'General Consultation',
+        consultationFee: doctor.consultationFee || 500,
+        date: selectedDate,
+        time: selectedTime,
+        patientDetails: {
+          name: patient.name,
+          email: patient.email,
+          phone: patient.phone || emergencyContact || '', // Use emergency contact as fallback
+          age: age,
+          gender: gender,
+          emergencyContact: emergencyContact,
+        },
+        consultationDetails: {
+          type: consultationType,
+          symptoms: symptoms,
+          medicalHistory: medicalHistory,
+          currentMedications: currentMedications,
+          allergies: allergies,
+          lifestyle: lifestyle,
+          weight: weight,
+          height: height,
+        },
+        paymentMethod: paymentMethod,
+        paymentStatus: 'paid',
+        appointmentId: `APT${Date.now()}`,
+      };
+
+      // Create appointment using real API
+      const createdAppointment = await AppointmentService.createAppointment(appointmentData);
+      
       setIsProcessing(false);
       setShowPaymentModal(false);
       
       Alert.alert(
-        'Appointment Booked!',
-        'Your appointment has been successfully booked. You will receive a confirmation message shortly.',
+        'Appointment Booked Successfully!',
+        `Your appointment with ${doctor.name} has been confirmed for ${new Date(selectedDate).toLocaleDateString('en-IN', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })} at ${selectedTime}.\n\nAppointment ID: ${createdAppointment.appointmentId}\n\nNote: Diet recommendations will be available after your consultation is completed.`,
         [
           {
             text: 'Go to Dashboard',
-            onPress: () => router.replace('/dashboard' as any),
+            onPress: () => {
+              router.replace('/dashboard' as any);
+            },
           },
         ]
       );
-    }, 2000);
+    } catch (error) {
+      setIsProcessing(false);
+      console.error('Error creating appointment:', error);
+      
+      // Show more specific error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      Alert.alert(
+        'Booking Failed',
+        `There was an error booking your appointment: ${errorMessage}. Please try again.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => setShowPaymentModal(false),
+          },
+        ]
+      );
+    }
   };
 
   return (
@@ -164,11 +324,11 @@ export default function BookAppointmentScreen() {
             <View style={styles.doctorDetails}>
               <Text style={[styles.doctorName, { color: colors.text }]}>{doctor.name}</Text>
               <Text style={[styles.specialization, { color: colors.herbalGreen }]}>
-                {doctor.specialization}
+                {doctor.specialization || 'General Consultation'}
               </Text>
-              <Text style={[styles.clinic, { color: colors.icon }]}>{doctor.clinic}</Text>
+              <Text style={[styles.clinic, { color: colors.icon }]}>{doctor.location || 'Ayurveda Center'}</Text>
               <Text style={[styles.fee, { color: colors.softOrange }]}>
-                Consultation Fee: ₹{doctor.consultationFee}
+                Consultation Fee: ₹{doctor.consultationFee || 500}
               </Text>
             </View>
           </View>
@@ -180,16 +340,196 @@ export default function BookAppointmentScreen() {
           <View style={styles.patientInfo}>
             <View style={styles.infoRow}>
               <Ionicons name="person" size={16} color={colors.icon} />
-              <Text style={[styles.infoText, { color: colors.text }]}>{currentPatient.name}</Text>
+              <Text style={[styles.infoText, { color: colors.text }]}>{patient?.name || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="mail" size={16} color={colors.icon} />
-              <Text style={[styles.infoText, { color: colors.text }]}>{currentPatient.email}</Text>
+              <Text style={[styles.infoText, { color: colors.text }]}>{patient?.email || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="call" size={16} color={colors.icon} />
-              <Text style={[styles.infoText, { color: colors.text }]}>{currentPatient.phone}</Text>
+              <Text style={[styles.infoText, { color: colors.text }]}>{patient?.phone || 'N/A'}</Text>
             </View>
+          </View>
+        </View>
+
+        {/* Additional Patient Details */}
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Additional Details</Text>
+          
+          <View style={styles.formRow}>
+            <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>Age *</Text>
+              <TextInput
+                style={[styles.formInput, { borderColor: colors.inputBorder, color: colors.text }]}
+                placeholder="Enter age"
+                value={age}
+                onChangeText={setAge}
+                keyboardType="numeric"
+                placeholderTextColor={colors.icon}
+              />
+            </View>
+            <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>Gender *</Text>
+              <View style={styles.genderContainer}>
+                {['Male', 'Female', 'Other'].map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.genderOption,
+                      gender === option && { backgroundColor: colors.herbalGreen },
+                      { borderColor: colors.inputBorder }
+                    ]}
+                    onPress={() => setGender(option)}
+                  >
+                    <Text style={[
+                      styles.genderText,
+                      { color: gender === option ? 'white' : colors.text }
+                    ]}>
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Emergency Contact</Text>
+            <TextInput
+              style={[styles.formInput, { borderColor: colors.inputBorder, color: colors.text }]}
+              placeholder="Emergency contact number"
+              value={emergencyContact}
+              onChangeText={setEmergencyContact}
+              keyboardType="phone-pad"
+              placeholderTextColor={colors.icon}
+            />
+          </View>
+
+          <View style={styles.rowContainer}>
+            <View style={[styles.inputContainer, { flex: 1, marginRight: 10 }]}>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>Weight (kg)</Text>
+              <TextInput
+                style={[styles.formInput, { borderColor: colors.inputBorder, color: colors.text }]}
+                placeholder="Enter weight"
+                value={weight}
+                onChangeText={setWeight}
+                keyboardType="numeric"
+                placeholderTextColor={colors.icon}
+              />
+            </View>
+            <View style={[styles.inputContainer, { flex: 1, marginLeft: 10 }]}>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>Height (cm)</Text>
+              <TextInput
+                style={[styles.formInput, { borderColor: colors.inputBorder, color: colors.text }]}
+                placeholder="Enter height"
+                value={height}
+                onChangeText={setHeight}
+                keyboardType="numeric"
+                placeholderTextColor={colors.icon}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Consultation Details */}
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Consultation Details</Text>
+          
+          <View style={styles.inputContainer}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Consultation Type</Text>
+            <View style={styles.consultationTypes}>
+              {[
+                { id: 'general', label: 'General Consultation' },
+                { id: 'followup', label: 'Follow-up' },
+                { id: 'emergency', label: 'Emergency' },
+                { id: 'wellness', label: 'Wellness Check' }
+              ].map((type) => (
+                <TouchableOpacity
+                  key={type.id}
+                  style={[
+                    styles.consultationType,
+                    consultationType === type.id && { backgroundColor: colors.lightGreen },
+                    { borderColor: colors.inputBorder }
+                  ]}
+                  onPress={() => setConsultationType(type.id)}
+                >
+                  <Text style={[
+                    styles.consultationTypeText,
+                    { color: consultationType === type.id ? colors.herbalGreen : colors.text }
+                  ]}>
+                    {type.label}
+                  </Text>
+                  {consultationType === type.id && (
+                    <Ionicons name="checkmark-circle" size={16} color={colors.herbalGreen} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Symptoms / Reason for Visit *</Text>
+            <TextInput
+              style={[styles.formTextArea, { borderColor: colors.inputBorder, color: colors.text }]}
+              placeholder="Describe your symptoms, concerns, or reason for consultation..."
+              value={symptoms}
+              onChangeText={setSymptoms}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              placeholderTextColor={colors.icon}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Medical History</Text>
+            <TextInput
+              style={[styles.formTextArea, { borderColor: colors.inputBorder, color: colors.text }]}
+              placeholder="Previous illnesses, surgeries, chronic conditions..."
+              value={medicalHistory}
+              onChangeText={setMedicalHistory}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+              placeholderTextColor={colors.icon}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Current Medications</Text>
+            <TextInput
+              style={[styles.formInput, { borderColor: colors.inputBorder, color: colors.text }]}
+              placeholder="List any medications you're currently taking..."
+              value={currentMedications}
+              onChangeText={setCurrentMedications}
+              placeholderTextColor={colors.icon}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Allergies</Text>
+            <TextInput
+              style={[styles.formInput, { borderColor: colors.inputBorder, color: colors.text }]}
+              placeholder="Food allergies, drug allergies, etc..."
+              value={allergies}
+              onChangeText={setAllergies}
+              placeholderTextColor={colors.icon}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Lifestyle Information</Text>
+            <TextInput
+              style={[styles.formTextArea, { borderColor: colors.inputBorder, color: colors.text }]}
+              placeholder="Diet preferences, exercise routine, sleep patterns, stress levels..."
+              value={lifestyle}
+              onChangeText={setLifestyle}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+              placeholderTextColor={colors.icon}
+            />
           </View>
         </View>
 
@@ -290,7 +630,7 @@ export default function BookAppointmentScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <Text style={styles.bookButtonText}>Confirm Booking - ₹{doctor.consultationFee}</Text>
+            <Text style={styles.bookButtonText}>Confirm Booking - ₹{doctor.consultationFee || 500}</Text>
             <Ionicons name="arrow-forward" size={20} color="white" />
           </LinearGradient>
         </TouchableOpacity>
@@ -374,7 +714,7 @@ export default function BookAppointmentScreen() {
                 end={{ x: 1, y: 0 }}
               >
                 <Text style={styles.payButtonText}>
-                  {isProcessing ? 'Processing...' : `Pay ₹${doctor.consultationFee}`}
+                  {isProcessing ? 'Processing...' : `Pay ₹${doctor.consultationFee || 500}`}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -627,5 +967,76 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  // New styles for additional form fields
+  formRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  formInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+  },
+  formTextArea: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    minHeight: 80,
+  },
+  genderContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  genderOption: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+  },
+  genderText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  consultationTypes: {
+    gap: 8,
+  },
+  consultationType: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+  },
+  consultationTypeText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
   },
 });

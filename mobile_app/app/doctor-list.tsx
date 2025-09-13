@@ -1,13 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
   FlatList,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 
@@ -15,124 +17,151 @@ import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
-
-// Dummy doctor data for Hyderabad
-const doctorsData = [
-  {
-    id: '1',
-    name: 'Dr. Rajesh Kumar',
-    specialization: 'Panchakarma & Detoxification',
-    clinic: 'Ayurveda Wellness Center',
-    area: 'Banjara Hills',
-    experience: '12 years',
-    rating: 4.8,
-    consultationFee: 800,
-    image: '👨‍⚕️',
-  },
-  {
-    id: '2',
-    name: 'Dr. Priya Sharma',
-    specialization: 'Digestive Health & Nutrition',
-    clinic: 'Holistic Ayurveda Clinic',
-    area: 'Madhapur',
-    experience: '15 years',
-    rating: 4.9,
-    consultationFee: 1000,
-    image: '👩‍⚕️',
-  },
-  {
-    id: '3',
-    name: 'Dr. Venkatesh Reddy',
-    specialization: 'Stress Management & Mental Wellness',
-    clinic: 'Serenity Ayurveda Hospital',
-    area: 'Secunderabad',
-    experience: '10 years',
-    rating: 4.7,
-    consultationFee: 750,
-    image: '👨‍⚕️',
-  },
-  {
-    id: '4',
-    name: 'Dr. Lakshmi Devi',
-    specialization: 'Women\'s Health & Reproductive Wellness',
-    clinic: 'Feminine Care Ayurveda',
-    area: 'Jubilee Hills',
-    experience: '18 years',
-    rating: 4.9,
-    consultationFee: 1200,
-    image: '👩‍⚕️',
-  },
-  {
-    id: '5',
-    name: 'Dr. Suresh Babu',
-    specialization: 'Joint Pain & Arthritis Treatment',
-    clinic: 'Movement Ayurveda Center',
-    area: 'Kukatpally',
-    experience: '14 years',
-    rating: 4.6,
-    consultationFee: 900,
-    image: '👨‍⚕️',
-  },
-  {
-    id: '6',
-    name: 'Dr. Kavitha Rao',
-    specialization: 'Skin Care & Beauty Treatments',
-    clinic: 'Radiant Skin Ayurveda',
-    area: 'Hitech City',
-    experience: '11 years',
-    rating: 4.8,
-    consultationFee: 850,
-    image: '👩‍⚕️',
-  },
-];
+import { DoctorService, Doctor } from '@/src/services/doctor';
+import { PermissionsService } from '@/src/services/permissions';
 
 const areas = [
   { label: 'All Areas', value: '' },
-  { label: 'Banjara Hills', value: 'Banjara Hills' },
-  { label: 'Madhapur', value: 'Madhapur' },
-  { label: 'Secunderabad', value: 'Secunderabad' },
-  { label: 'Jubilee Hills', value: 'Jubilee Hills' },
-  { label: 'Kukatpally', value: 'Kukatpally' },
-  { label: 'Hitech City', value: 'Hitech City' },
+  { label: 'Hyderabad', value: 'hyderabad' },
+  { label: 'Bangalore', value: 'bangalore' },
+  { label: 'Chennai', value: 'chennai' },
+  { label: 'Mumbai', value: 'mumbai' },
+  { label: 'Delhi', value: 'delhi' },
+  { label: 'Pune', value: 'pune' },
 ];
 
 export default function DoctorListScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const [selectedArea, setSelectedArea] = useState('');
-  
-  const filteredDoctors = selectedArea 
-    ? doctorsData.filter(doctor => doctor.area === selectedArea)
-    : doctorsData;
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleBookAppointment = (doctor: any) => {
+  useEffect(() => {
+    loadDoctors();
+  }, []);
+
+  const loadDoctors = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Get user's location
+      const location = await PermissionsService.getCurrentLocation();
+      
+      let doctorsList: Doctor[];
+      
+      if (location) {
+        // Search for nearby doctors
+        doctorsList = await DoctorService.findNearbyDoctors({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      } else {
+        // Fallback to all doctors
+        doctorsList = await DoctorService.getAllDoctors();
+      }
+
+      setDoctors(doctorsList);
+    } catch (err) {
+      console.error('Error loading doctors:', err);
+      setError('Failed to load doctors. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredDoctors = selectedArea 
+    ? doctors.filter(doctor => doctor.location?.toLowerCase().includes(selectedArea.toLowerCase()))
+    : doctors;
+
+  const handleBookAppointment = (doctor: Doctor) => {
     router.push({
       pathname: '/book-appointment' as any,
-      params: { doctorId: doctor.id }
+      params: { doctorId: doctor._id }
     });
   };
 
-  const renderDoctorCard = ({ item }: { item: any }) => (
+  const handleRetry = () => {
+    loadDoctors();
+  };
+
+  if (isLoading) {
+    return (
+      <ThemedView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.herbalGreen} />
+          <ThemedText style={[styles.loadingText, { color: colors.text }]}>
+            Finding doctors near you...
+          </ThemedText>
+        </View>
+      </ThemedView>
+    );
+  }
+
+  if (error) {
+    return (
+      <ThemedView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle" size={64} color={colors.icon} />
+          <ThemedText style={[styles.errorText, { color: colors.text }]}>
+            {error}
+          </ThemedText>
+          <TouchableOpacity
+            style={[styles.retryButton, { backgroundColor: colors.herbalGreen }]}
+            onPress={handleRetry}
+          >
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
+    );
+  }
+
+  if (doctors.length === 0) {
+    return (
+      <ThemedView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Ionicons name="medical" size={64} color={colors.icon} />
+          <ThemedText style={[styles.emptyText, { color: colors.text }]}>
+            No doctors found in your area
+          </ThemedText>
+          <ThemedText style={[styles.emptySubtext, { color: colors.icon }]}>
+            Please try again later or contact support
+          </ThemedText>
+        </View>
+      </ThemedView>
+    );
+  }
+
+  const renderDoctorCard = ({ item }: { item: Doctor }) => (
     <View style={[styles.doctorCard, { backgroundColor: colors.cardBackground }]}>
       <View style={styles.doctorHeader}>
-        <Text style={styles.doctorImage}>{item.image}</Text>
+        <Text style={styles.doctorImage}>👨‍⚕️</Text>
         <View style={styles.doctorInfo}>
           <Text style={[styles.doctorName, { color: colors.text }]}>{item.name}</Text>
           <Text style={[styles.specialization, { color: colors.herbalGreen }]}>
-            {item.specialization}
+            {item.specialization || 'Ayurveda Specialist'}
           </Text>
-          <View style={styles.clinicInfo}>
-            <Ionicons name="business" size={14} color={colors.icon} />
-            <Text style={[styles.clinicName, { color: colors.icon }]}>{item.clinic}</Text>
-          </View>
           <View style={styles.locationInfo}>
             <Ionicons name="location" size={14} color={colors.icon} />
-            <Text style={[styles.area, { color: colors.icon }]}>{item.area}</Text>
+            <Text style={[styles.area, { color: colors.icon }]}>
+              {item.location || 'Location not specified'}
+            </Text>
           </View>
+          {item.experience && (
+            <View style={styles.experienceInfo}>
+              <Ionicons name="time" size={14} color={colors.icon} />
+              <Text style={[styles.experience, { color: colors.icon }]}>
+                {item.experience} years experience
+              </Text>
+            </View>
+          )}
         </View>
         <View style={styles.ratingContainer}>
           <View style={[styles.rating, { backgroundColor: colors.herbalGreen }]}>
-            <Text style={styles.ratingText}>{item.rating}</Text>
+            <Text style={styles.ratingText}>4.5</Text>
             <Ionicons name="star" size={12} color="white" />
           </View>
         </View>
@@ -148,7 +177,7 @@ export default function DoctorListScreen() {
         <View style={styles.detailItem}>
           <Ionicons name="card" size={16} color={colors.icon} />
           <Text style={[styles.detailText, { color: colors.icon }]}>
-            ₹{item.consultationFee} consultation
+            ₹{item.consultationFee || 500} consultation
           </Text>
         </View>
       </View>
@@ -209,7 +238,7 @@ export default function DoctorListScreen() {
       <FlatList
         data={filteredDoctors}
         renderItem={renderDoctorCard}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         style={styles.doctorsList}
         contentContainerStyle={styles.doctorsListContent}
         showsVerticalScrollIndicator={false}
@@ -368,5 +397,65 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 18,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  emptySubtext: {
+    marginTop: 8,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  experienceInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 4,
+  },
+  experience: {
+    fontSize: 12,
+    marginLeft: 4,
   },
 });

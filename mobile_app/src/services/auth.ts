@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { authApi } from './api';
+import { NavigationService } from './navigation';
 
 export class AuthService {
-  static async handleLoginFlow(email: string, password: string): Promise<boolean> {
+  static async handleLoginFlow(email: string, password: string, authContext?: any): Promise<boolean> {
     try {
       console.log('🔐 Starting login flow for:', email);
       const response = await authApi.login(email, password);
@@ -13,6 +14,32 @@ export class AuthService {
       }
 
       console.log('✅ Login successful, checking survey status...');
+      
+      // Store patient data in AuthContext if available
+      if (authContext && response.data?.user) {
+        const user = response.data.user as any; // Type assertion for API response
+        const patientData = {
+          _id: user._id || user.id || 'temp_id',
+          name: user.name || user.fullName || 'User',
+          email: user.email || email,
+          phone: user.phone || user.mobileNumber || '',
+          age: user.age || '',
+          gender: user.gender || '',
+          address: user.address || '',
+          emergencyContact: user.emergencyContact || '',
+          medicalHistory: user.medicalHistory || '',
+          allergies: user.allergies || '',
+          currentMedications: user.currentMedications || '',
+          constitution: user.constitution || '',
+          surveyCompleted: response.data.surveyCompleted || false,
+        };
+        
+        await authContext.login(patientData);
+        if (response.data.token) {
+          await authContext.setToken(response.data.token);
+        }
+      }
+      
       // Check if survey is completed
       const surveyCompleted = response.data?.surveyCompleted ?? false;
       console.log('📊 Survey completed:', surveyCompleted);
@@ -22,9 +49,11 @@ export class AuthService {
         // Redirect to survey
         router.replace('/survey');
       } else {
-        console.log('🎯 Redirecting to plan selection...');
-        // Redirect to plan selection or dashboard
-        router.replace('/plan-selection');
+        console.log('🎯 Checking user status for smart redirect...');
+        // Use NavigationService to determine best redirect destination
+        const userStatus = await NavigationService.getUserStatus();
+        console.log('📍 User status:', userStatus.type, '-> Redirecting to:', userStatus.redirectPath);
+        router.replace(userStatus.redirectPath as any);
       }
 
       return true;
@@ -79,7 +108,10 @@ export class AuthService {
   }
 
   static async handleSurveyCompletion(): Promise<void> {
-    // After survey completion, redirect to plan selection
-    router.replace('/plan-selection');
+    // After survey completion, use NavigationService to determine best redirect
+    console.log('📝 Survey completed, checking user status...');
+    const userStatus = await NavigationService.getUserStatus();
+    console.log('📍 Redirecting to:', userStatus.redirectPath);
+    router.replace(userStatus.redirectPath as any);
   }
 }

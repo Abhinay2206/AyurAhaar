@@ -3,6 +3,9 @@ const Doctor = require('../models/Doctor');
 const Patient = require('../models/Patient');
 const Admin = require('../models/Admin');
 const { signToken } = require('../utils/jwt');
+const NotificationService = require('../services/notificationService');
+
+const notificationService = new NotificationService();
 
 function pickUser(u) {
   return { id: u._id, name: u.name, email: u.email, role: u.role };
@@ -53,6 +56,22 @@ async function register(req, res) {
     }
 
     const token = signToken({ sub: user._id, role: user.role });
+    
+    // Send welcome notifications for patients
+    if (role === 'patient') {
+      try {
+        await notificationService.sendRegistrationNotifications({
+          name: user.name,
+          email: user.email,
+          phone: user.phone
+        });
+        console.log('Welcome notifications sent for patient:', user.email);
+      } catch (notificationError) {
+        console.error('Failed to send welcome notifications:', notificationError);
+        // Don't fail the registration if notifications fail
+      }
+    }
+    
     res.status(201).json({ user: pickUser(user), token });
   } catch (err) {
     console.error(err);

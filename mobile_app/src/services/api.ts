@@ -2,213 +2,36 @@
 // Example: auth, survey, user profile APIs
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import * as Network from 'expo-network';
 import { API_CONFIG } from '../config/api.config';
 
-// Function to get the correct API base URL
-async function getApiBaseUrl(): Promise<string> {
-  try {
-    if (Platform.OS === 'web') {
-      return `http://${API_CONFIG.WEB_LOCALHOST}:${API_CONFIG.PORT}/api`;
-    }
-    
-    // For iOS simulator, we can use localhost
-    if (Platform.OS === 'ios' && __DEV__) {
-      return `http://${API_CONFIG.IOS_LOCALHOST}:${API_CONFIG.PORT}/api`;
-    }
-    
-    // For Android emulator, use 10.0.2.2
-    if (Platform.OS === 'android' && __DEV__) {
-      return `http://${API_CONFIG.ANDROID_LOCALHOST}:${API_CONFIG.PORT}/api`;
-    }
-    
-    // For real devices, try to get the local IP and discover server
-    const discoveredIp = await discoverDevelopmentServerIp();
-    if (discoveredIp) {
-      return `http://${discoveredIp}:${API_CONFIG.PORT}/api`;
-    }
-    
-    // Fallback to configured development IP
-    return `http://${API_CONFIG.FALLBACK_DEVELOPMENT_IP}:${API_CONFIG.PORT}/api`;
-  } catch (error) {
-    console.log('Error getting IP:', error);
-    // Fallback to configured development IP
-    return `http://${API_CONFIG.FALLBACK_DEVELOPMENT_IP}:${API_CONFIG.PORT}/api`;
-  }
-}
+// Storage keys - keep consistent with AuthContext
+const STORAGE_KEYS = {
+  AUTH_TOKEN: '@auth_token',
+  PATIENT_DATA: '@patient_data',
+  SURVEY_COMPLETED: '@survey_completed',
+  USER_DATA: '@user_data', // Legacy key for backward compatibility
+};
 
-// Dynamic IP discovery function
-async function discoverDevelopmentServerIp(): Promise<string | null> {
-  try {
-    console.log('🔍 Starting dynamic IP discovery...');
-    
-    // Get device's current IP address
-    const deviceIp = await Network.getIpAddressAsync();
-    if (!deviceIp) {
-      console.log('❌ Could not get device IP');
-      return null;
-    }
-    
-    console.log('📱 Device IP:', deviceIp);
-    
-    // Extract network base (e.g., "192.168.1.100" -> "192.168.1")
-    const networkBase = deviceIp.substring(0, deviceIp.lastIndexOf('.'));
-    console.log('🌐 Network base:', networkBase);
-    
-    // Generate potential server IPs to test
-    const potentialIps: string[] = [];
-    
-    // Add common development server IPs in the same network
-    for (const range of API_CONFIG.DISCOVERY.SCAN_RANGES) {
-      for (let i = range.start; i <= range.end; i++) {
-        potentialIps.push(`${networkBase}.${i}`);
-      }
-    }
-    
-    console.log(`🎯 Testing ${potentialIps.length} potential server IPs...`);
-    
-    // Test each potential IP
-    for (const ip of potentialIps) {
-      console.log(`🔍 Testing server IP: ${ip}`);
-      
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.DISCOVERY.TIMEOUT_MS);
-        
-        const response = await fetch(`http://${ip}:${API_CONFIG.PORT}/health`, {
-          method: 'GET',
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.status === 'ok') {
-            console.log(`✅ Found development server at: ${ip}`);
-            return ip;
-          }
-        }
-      } catch {
-        // Silent failure for individual IP tests
-        // console.log(`❌ Server not found at ${ip}`);
-      }
-    }
-    
-    console.log('⚠️ No development server found in network range');
-    return null;
-  } catch (error) {
-    console.error('❌ IP discovery error:', error);
-    return null;
+// Simple function to get the correct API base URL
+export function getApiBaseUrl(): string {
+  if (Platform.OS === 'web') {
+    return `http://${API_CONFIG.WEB_LOCALHOST}:${API_CONFIG.PORT}/api`;
   }
-}
-
-// Test multiple URLs to find working one
-async function testApiUrl(url: string): Promise<boolean> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-    
-    // Remove /api from the URL since health endpoint is at root level
-    const baseUrl = url.replace('/api', '');
-    const response = await fetch(`${baseUrl}/health`, {
-      method: 'GET',
-      signal: controller.signal,
-    });
-    
-    clearTimeout(timeoutId);
-    return response.ok;
-  } catch (error) {
-    console.log('API test failed for', url, ':', error);
-    return false;
-  }
-}
-
-async function findWorkingApiUrl(): Promise<string> {
-  console.log('🔧 Testing API connection...');
-  const baseUrls = [];
   
-  if (Platform.OS === 'ios' && __DEV__) {
-    // For iOS simulator, try localhost first, then dynamic discovery
-    baseUrls.push(`http://${API_CONFIG.IOS_LOCALHOST}:${API_CONFIG.PORT}/api`);
-    baseUrls.push(`http://127.0.0.1:${API_CONFIG.PORT}/api`);
-    
-    // Add dynamically discovered IP
-    const discoveredIp = await discoverDevelopmentServerIp();
-    if (discoveredIp) {
-      baseUrls.push(`http://${discoveredIp}:${API_CONFIG.PORT}/api`);
-    }
-    
-    // Fallback to configured IP
-    baseUrls.push(`http://${API_CONFIG.FALLBACK_DEVELOPMENT_IP}:${API_CONFIG.PORT}/api`);
-  } else if (Platform.OS === 'android' && __DEV__) {
-    // For Android emulator
-    baseUrls.push(`http://${API_CONFIG.ANDROID_LOCALHOST}:${API_CONFIG.PORT}/api`);
-    
-    // Add dynamically discovered IP
-    const discoveredIp = await discoverDevelopmentServerIp();
-    if (discoveredIp) {
-      baseUrls.push(`http://${discoveredIp}:${API_CONFIG.PORT}/api`);
-    }
-    
-    // Fallback
-    baseUrls.push(`http://${API_CONFIG.FALLBACK_DEVELOPMENT_IP}:${API_CONFIG.PORT}/api`);
-  } else if (Platform.OS === 'web') {
-    baseUrls.push(`http://${API_CONFIG.WEB_LOCALHOST}:${API_CONFIG.PORT}/api`);
-  } else {
-    // For real devices, prioritize dynamic discovery
-    const discoveredIp = await discoverDevelopmentServerIp();
-    if (discoveredIp) {
-      baseUrls.push(`http://${discoveredIp}:${API_CONFIG.PORT}/api`);
-    }
-    
-    // Fallback
-    baseUrls.push(`http://${API_CONFIG.FALLBACK_DEVELOPMENT_IP}:${API_CONFIG.PORT}/api`);
-  }
-
-  console.log(`📱 Platform: ${Platform.OS}, DEV: ${__DEV__}`);
-  console.log(`🔍 Testing ${baseUrls.length} potential API URLs...`);
-
-  for (const url of baseUrls) {
-    console.log('🔍 Testing API URL:', url);
-    const works = await testApiUrl(url);
-    if (works) {
-      console.log('✅ Found working API URL:', url);
-      return url;
+  if (__DEV__) {
+    // For development, use platform-specific localhost or static server IP
+    if (Platform.OS === 'ios') {
+      return `http://${API_CONFIG.IOS_LOCALHOST}:${API_CONFIG.PORT}/api`;
+    } else if (Platform.OS === 'android') {
+      return `http://${API_CONFIG.ANDROID_LOCALHOST}:${API_CONFIG.PORT}/api`;
+    } else {
+      // For real devices, use the static server IP
+      return `http://${API_CONFIG.SERVER_IP}:${API_CONFIG.PORT}/api`;
     }
   }
-
-  console.log('⚠️ No working API URL found, using fallback:', baseUrls[0]);
-  return baseUrls[0]; // Return first URL as fallback
-}
-
-// Cache the API URL to avoid repeated network calls
-let cachedApiUrl: string | null = null;
-
-// Function to reset cache (useful for debugging)
-export function resetApiUrlCache(): void {
-  cachedApiUrl = null;
-  console.log('🔄 API URL cache reset - will discover IP on next request');
-}
-
-// Function to manually trigger IP discovery (useful for network changes)
-export async function rediscoverApiUrl(): Promise<string> {
-  console.log('🔄 Manually triggering API URL rediscovery...');
-  cachedApiUrl = null;
-  const newUrl = await findWorkingApiUrl();
-  console.log('🎯 Rediscovered API URL:', newUrl);
-  return newUrl;
-}
-
-async function getApiUrl(): Promise<string> {
-  if (!cachedApiUrl) {
-    console.log('🔄 No cached API URL, finding working URL...');
-    cachedApiUrl = await findWorkingApiUrl();
-    console.log('✅ Cached API base URL:', cachedApiUrl);
-  } else {
-    console.log('♻️ Using cached API URL:', cachedApiUrl);
-  }
-  return cachedApiUrl;
+  
+  // For production, use the static server IP
+  return `http://${API_CONFIG.SERVER_IP}:${API_CONFIG.PORT}/api`;
 }
 
 export interface ApiResponse<T> {
@@ -243,7 +66,7 @@ export interface SurveyData {
 export const authApi = {
   async login(email: string, password: string, role: string = 'patient'): Promise<ApiResponse<LoginResponse>> {
     try {
-      const apiUrl = await getApiUrl();
+      const apiUrl = getApiBaseUrl();
       console.log('🔗 Attempting login to:', `${apiUrl}/auth/patient/login`);
       console.log('📤 Login data:', { email, role });
       
@@ -264,10 +87,10 @@ export const authApi = {
       }
 
       // Store token
-      await AsyncStorage.setItem('auth_token', data.token);
-      await AsyncStorage.setItem('user_data', JSON.stringify(data.user));
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(data.user));
       if (data.surveyCompleted !== undefined) {
-        await AsyncStorage.setItem('survey_completed', JSON.stringify(data.surveyCompleted));
+        await AsyncStorage.setItem(STORAGE_KEYS.SURVEY_COMPLETED, JSON.stringify(data.surveyCompleted));
       }
 
       return { success: true, data };
@@ -279,7 +102,7 @@ export const authApi = {
 
   async register(userData: any): Promise<ApiResponse<LoginResponse>> {
     try {
-      const apiUrl = await getApiUrl();
+      const apiUrl = getApiBaseUrl();
       console.log('🔗 Attempting registration to:', `${apiUrl}/auth/patient/register`);
       console.log('📤 Registration data:', { ...userData, password: '[HIDDEN]' });
       
@@ -300,10 +123,10 @@ export const authApi = {
       }
 
       // Store token
-      await AsyncStorage.setItem('auth_token', data.token);
-      await AsyncStorage.setItem('user_data', JSON.stringify(data.user));
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(data.user));
       // New users haven't completed survey
-      await AsyncStorage.setItem('survey_completed', 'false');
+      await AsyncStorage.setItem(STORAGE_KEYS.SURVEY_COMPLETED, 'false');
 
       return { success: true, data };
     } catch (error) {
@@ -313,13 +136,22 @@ export const authApi = {
   },
 
   async logout(): Promise<void> {
-    await AsyncStorage.multiRemove(['auth_token', 'user_data', 'survey_completed']);
+    await AsyncStorage.multiRemove([
+      STORAGE_KEYS.AUTH_TOKEN, 
+      STORAGE_KEYS.USER_DATA, 
+      STORAGE_KEYS.SURVEY_COMPLETED,
+      STORAGE_KEYS.PATIENT_DATA, // Also clear patient data
+      // Legacy keys for backward compatibility
+      'auth_token',
+      'user_data', 
+      'survey_completed'
+    ]);
   },
 
   async getStoredAuth(): Promise<{ token: string | null; user: User | null; surveyCompleted: boolean }> {
-    const token = await AsyncStorage.getItem('auth_token');
-    const userData = await AsyncStorage.getItem('user_data');
-    const surveyCompleted = await AsyncStorage.getItem('survey_completed');
+    const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+    const surveyCompleted = await AsyncStorage.getItem(STORAGE_KEYS.SURVEY_COMPLETED);
     
     return {
       token,
@@ -333,12 +165,12 @@ export const authApi = {
 export const surveyApi = {
   async submitSurvey(surveyData: SurveyData): Promise<ApiResponse<any>> {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
       if (!token) {
         return { success: false, error: 'Authentication required' };
       }
 
-      const apiUrl = await getApiUrl();
+      const apiUrl = getApiBaseUrl();
       const response = await fetch(`${apiUrl}/survey/submit`, {
         method: 'POST',
         headers: {
@@ -366,12 +198,12 @@ export const surveyApi = {
 
   async getSurveyStatus(): Promise<ApiResponse<{ surveyCompleted: boolean; surveyData?: SurveyData }>> {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
       if (!token) {
         return { success: false, error: 'Authentication required' };
       }
 
-      const apiUrl = await getApiUrl();
+      const apiUrl = getApiBaseUrl();
       const response = await fetch(`${apiUrl}/survey/status`, {
         method: 'GET',
         headers: {
@@ -399,24 +231,20 @@ export const apiService = {
   survey: surveyApi,
 };
 
-// Debug function to test API connectivity
-export async function testApiConnection(): Promise<{ success: boolean; url: string; error?: string; discoveredIp?: string }> {
+// Simple function to test API connectivity
+export async function testApiConnection(): Promise<{ success: boolean; url: string; error?: string }> {
   try {
-    // First try to discover IP dynamically
-    const discoveredIp = await discoverDevelopmentServerIp();
-    
-    const apiUrl = await getApiUrl();
+    const apiUrl = getApiBaseUrl();
     const response = await fetch(`${apiUrl.replace('/api', '')}/health`);
     const data = await response.json();
     
     return {
       success: response.ok,
       url: apiUrl,
-      discoveredIp: discoveredIp || undefined,
       ...(data && { data })
     };
   } catch (error) {
-    const apiUrl = await getApiUrl();
+    const apiUrl = getApiBaseUrl();
     return {
       success: false,
       url: apiUrl,

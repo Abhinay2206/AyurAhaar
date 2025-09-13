@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,28 +8,48 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 
 import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
-
-// Dummy patient data
-const currentPatient = {
-  name: 'Rahul Sharma',
-  email: 'rahul.sharma@example.com',
-  phone: '+91 9876543210',
-  age: 28,
-  constitution: 'Vata-Pitta',
-  address: 'Banjara Hills, Hyderabad',
-  joinDate: '2024-01-15',
-  planType: 'AI Generated',
-};
+import { useAuth } from '@/src/contexts/AuthContext';
+import { default as PatientService, PatientProfile } from '@/src/services/patient';
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { logout } = useAuth();
+  
+  const [profile, setProfile] = useState<PatientProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await PatientService.getProfile();
+      if (response.success && response.data) {
+        setProfile(response.data);
+      } else {
+        Alert.alert('Error', response.error || 'Failed to load profile');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to load profile');
+      console.error('Profile fetch error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const handleRefresh = () => {
+    setIsLoading(true);
+    fetchProfile();
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -40,8 +60,13 @@ export default function ProfileScreen() {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => {
-            router.replace('/auth');
+          onPress: async () => {
+            try {
+              await logout();
+              // Navigation is handled in the logout function
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
           },
         },
       ]
@@ -51,6 +76,65 @@ export default function ProfileScreen() {
   const handleEditProfile = () => {
     Alert.alert('Edit Profile', 'Profile editing will be available soon.');
   };
+
+  if (isLoading) {
+    return (
+      <ThemedView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <ThemedText style={[styles.title, { color: colors.text }]}>
+              Profile
+            </ThemedText>
+          </View>
+          <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+            <Ionicons name="create" size={24} color={colors.herbalGreen} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.herbalGreen} />
+          <Text style={[styles.loadingText, { color: colors.text }]}>Loading profile...</Text>
+        </View>
+      </ThemedView>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <ThemedView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <ThemedText style={[styles.title, { color: colors.text }]}>
+              Profile
+            </ThemedText>
+          </View>
+          <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+            <Ionicons name="create" size={24} color={colors.herbalGreen} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.errorText, { color: colors.text }]}>Failed to load profile</Text>
+          <TouchableOpacity 
+            style={[styles.retryButton, { backgroundColor: colors.herbalGreen }]}
+            onPress={handleRefresh}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -77,18 +161,18 @@ export default function ProfileScreen() {
         <View style={[styles.profileHeader, { backgroundColor: colors.cardBackground }]}>
           <View style={[styles.avatar, { backgroundColor: colors.herbalGreen }]}>
             <Text style={styles.avatarText}>
-              {currentPatient.name.split(' ').map(n => n[0]).join('')}
+              {profile.name.split(' ').map((n: string) => n[0]).join('')}
             </Text>
           </View>
           <Text style={[styles.profileName, { color: colors.text }]}>
-            {currentPatient.name}
+            {profile.name}
           </Text>
           <Text style={[styles.profileEmail, { color: colors.icon }]}>
-            {currentPatient.email}
+            {profile.email}
           </Text>
           <View style={[styles.constitutionBadge, { backgroundColor: colors.lightGreen }]}>
             <Text style={[styles.constitutionText, { color: colors.herbalGreen }]}>
-              {currentPatient.constitution} Constitution
+              {profile.currentPlan.type === 'none' ? 'No Plan' : `${profile.currentPlan.type.toUpperCase()} Plan`}
             </Text>
           </View>
         </View>
@@ -99,75 +183,112 @@ export default function ProfileScreen() {
             Personal Information
           </Text>
           
-          <View style={styles.infoGrid}>
+          <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Ionicons name="call" size={20} color={colors.herbalGreen} />
-              <View style={styles.infoContent}>
-                <Text style={[styles.infoLabel, { color: colors.icon }]}>Phone</Text>
-                <Text style={[styles.infoValue, { color: colors.text }]}>
-                  {currentPatient.phone}
-                </Text>
-              </View>
+              <Ionicons name="call" size={16} color={colors.herbalGreen} />
+              <Text style={[styles.infoLabel, { color: colors.icon }]}>Phone</Text>
             </View>
+            <Text style={[styles.infoValue, { color: colors.text }]}>
+              {profile.phone || 'Not provided'}
+            </Text>
+          </View>
 
+          <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Ionicons name="calendar" size={20} color={colors.herbalGreen} />
-              <View style={styles.infoContent}>
-                <Text style={[styles.infoLabel, { color: colors.icon }]}>Age</Text>
-                <Text style={[styles.infoValue, { color: colors.text }]}>
-                  {currentPatient.age} years
-                </Text>
-              </View>
+              <Ionicons name="calendar" size={16} color={colors.herbalGreen} />
+              <Text style={[styles.infoLabel, { color: colors.icon }]}>Age</Text>
             </View>
+            <Text style={[styles.infoValue, { color: colors.text }]}>
+              {profile.age ? `${profile.age} years` : 'Not provided'}
+            </Text>
+          </View>
 
+          <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Ionicons name="location" size={20} color={colors.herbalGreen} />
-              <View style={styles.infoContent}>
-                <Text style={[styles.infoLabel, { color: colors.icon }]}>Address</Text>
-                <Text style={[styles.infoValue, { color: colors.text }]}>
-                  {currentPatient.address}
-                </Text>
-              </View>
+              <Ionicons name="fitness" size={16} color={colors.herbalGreen} />
+              <Text style={[styles.infoLabel, { color: colors.icon }]}>Weight</Text>
             </View>
+            <Text style={[styles.infoValue, { color: colors.text }]}>
+              {profile.weight ? `${profile.weight} kg` : 'Not provided'}
+            </Text>
+          </View>
 
+          <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Ionicons name="time" size={20} color={colors.herbalGreen} />
-              <View style={styles.infoContent}>
-                <Text style={[styles.infoLabel, { color: colors.icon }]}>Member since</Text>
-                <Text style={[styles.infoValue, { color: colors.text }]}>
-                  {new Date(currentPatient.joinDate).toLocaleDateString('en-IN', {
-                    month: 'long',
-                    year: 'numeric'
-                  })}
-                </Text>
-              </View>
+              <Ionicons name="resize" size={16} color={colors.herbalGreen} />
+              <Text style={[styles.infoLabel, { color: colors.icon }]}>Height</Text>
             </View>
+            <Text style={[styles.infoValue, { color: colors.text }]}>
+              {profile.height ? `${profile.height} cm` : 'Not provided'}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <Ionicons name="time" size={16} color={colors.herbalGreen} />
+              <Text style={[styles.infoLabel, { color: colors.icon }]}>Member Since</Text>
+            </View>
+            <Text style={[styles.infoValue, { color: colors.text }]}>
+              {new Date(profile.createdAt).toLocaleDateString('en-IN', {
+                month: 'long',
+                year: 'numeric'
+              })}
+            </Text>
           </View>
         </View>
 
-        {/* Plan Information */}
+        {/* Health Information */}
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Health Information
+          </Text>
+          
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <Ionicons name="heart" size={16} color={colors.herbalGreen} />
+              <Text style={[styles.infoLabel, { color: colors.icon }]}>Lifestyle</Text>
+            </View>
+            <Text style={[styles.infoValue, { color: colors.text }]}>
+              {profile.lifestyle || 'Not specified'}
+            </Text>
+          </View>
+
+          {profile.allergies && profile.allergies.length > 0 && (
+            <View style={styles.infoRow}>
+              <View style={styles.infoItem}>
+                <Ionicons name="warning" size={16} color={colors.herbalGreen} />
+                <Text style={[styles.infoLabel, { color: colors.icon }]}>Allergies</Text>
+              </View>
+              <Text style={[styles.infoValue, { color: colors.text }]}>
+                {profile.allergies.join(', ')}
+              </Text>
+            </View>
+          )}
+
+          {profile.healthConditions && profile.healthConditions.length > 0 && (
+            <View style={styles.infoRow}>
+              <View style={styles.infoItem}>
+                <Ionicons name="medical" size={16} color={colors.herbalGreen} />
+                <Text style={[styles.infoLabel, { color: colors.icon }]}>Health Conditions</Text>
+              </View>
+              <Text style={[styles.infoValue, { color: colors.text }]}>
+                {profile.healthConditions.join(', ')}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Current Plan */}
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Current Plan
           </Text>
-          
-          <View style={styles.planInfo}>
-            <View style={[styles.planIcon, { backgroundColor: colors.lightGreen }]}>
-              <Ionicons name="sparkles" size={24} color={colors.herbalGreen} />
-            </View>
-            <View style={styles.planDetails}>
-              <Text style={[styles.planName, { color: colors.text }]}>
-                {currentPatient.planType}
-              </Text>
-              <Text style={[styles.planDescription, { color: colors.icon }]}>
-                Personalized Ayurveda meal plan
-              </Text>
-            </View>
-            <TouchableOpacity style={styles.planButton}>
-              <Text style={[styles.planButtonText, { color: colors.herbalGreen }]}>
-                View
-              </Text>
-            </TouchableOpacity>
+          <View style={[styles.planCard, { backgroundColor: colors.lightGreen }]}>
+            <Ionicons name="nutrition" size={24} color={colors.herbalGreen} />
+            <Text style={[styles.planText, { color: colors.herbalGreen }]}>
+              {profile.currentPlan.type === 'none' ? 'No Active Plan' : 
+               profile.currentPlan.type === 'ai' ? 'AI Generated Plan' : 'Doctor Prescribed Plan'}
+            </Text>
           </View>
         </View>
 
@@ -314,6 +435,51 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  planCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
+  },
+  planText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   infoGrid: {
     gap: 16,
