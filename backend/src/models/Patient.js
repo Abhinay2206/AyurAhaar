@@ -21,6 +21,17 @@ const PatientSchema = new mongoose.Schema({
     createdAt: { type: Date },
     lastModified: { type: Date }
   },
+  // Prakriti Assessment Integration
+  prakritiAssessments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'PrakritiAssessment' }],
+  currentPrakriti: {
+    assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'PrakritiAssessment' },
+    primaryDosha: { type: String, enum: ['Vata', 'Pitta', 'Kapha'] },
+    secondaryDosha: { type: String, enum: ['Vata', 'Pitta', 'Kapha'] },
+    isDual: { type: Boolean, default: false },
+    completedAt: { type: Date },
+    isValid: { type: Boolean, default: true } // For future re-assessments
+  },
+  prakritiCompleted: { type: Boolean, default: false }
 }, { timestamps: true });
 
 const Patient = User.discriminator('patient', PatientSchema);

@@ -21,7 +21,8 @@ import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { AppointmentService, AppointmentData } from '@/src/services/appointment';
 import { DoctorService, Doctor } from '@/src/services/doctor';
-import { surveyApi } from '@/src/services/api';
+import { surveyApi, prakritiApi } from '@/src/services/api';
+import { PatientService, PatientProfile } from '@/src/services/patient';
 
 export default function BookAppointmentScreen() {
   const colorScheme = useColorScheme();
@@ -81,7 +82,11 @@ export default function BookAppointmentScreen() {
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isLoadingSurveyData, setIsLoadingSurveyData] = useState(true);
+  const [isLoadingPatientData, setIsLoadingPatientData] = useState(true);
+  
+  // Patient profile and Prakriti data
+  const [patientProfile, setPatientProfile] = useState<PatientProfile | null>(null);
+  const [prakritiData, setPrakritiData] = useState<any>(null);
   
   // Additional patient details - initialize with stored data if available
   const [symptoms, setSymptoms] = useState('');
@@ -95,46 +100,65 @@ export default function BookAppointmentScreen() {
   const [gender, setGender] = useState(patient?.gender || '');
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
-  const [healthConditions, setHealthConditions] = useState<string[]>([]);
 
-  // Fetch existing survey data for authenticated users
+  // Fetch comprehensive patient data for authenticated users
   useEffect(() => {
-    const fetchSurveyData = async () => {
+    const fetchPatientData = async () => {
       if (!isAuthenticated || !patient) return;
       
       try {
-        setIsLoadingSurveyData(true);
-        const response = await surveyApi.getSurveyStatus();
+        setIsLoadingPatientData(true);
         
-        if (response.success && response.data?.surveyData) {
-          const surveyData = response.data.surveyData;
+        // Fetch patient profile
+        const profileResponse = await PatientService.getProfile();
+        if (profileResponse.success && profileResponse.data) {
+          const profile = profileResponse.data;
+          setPatientProfile(profile);
           
-          // Pre-populate form fields with existing survey data
-          if (surveyData.age) setAge(surveyData.age.toString());
-          if (surveyData.weight) setWeight(surveyData.weight.toString());
-          if (surveyData.height) setHeight(surveyData.height.toString());
-          if (surveyData.lifestyle) setLifestyle(surveyData.lifestyle);
-          if (surveyData.allergies && surveyData.allergies.length > 0) {
-            setAllergies(surveyData.allergies.join(', '));
+          // Pre-populate form fields with profile data (only if not already set)
+          if (profile.age && !age) setAge(profile.age.toString());
+          if (profile.weight && !weight) setWeight(profile.weight.toString());
+          if (profile.height && !height) setHeight(profile.height.toString());
+          if (profile.lifestyle && !lifestyle) setLifestyle(profile.lifestyle);
+          if (profile.allergies && profile.allergies.length > 0 && !allergies) {
+            setAllergies(profile.allergies.join(', '));
           }
-          if (surveyData.healthConditions) {
-            setHealthConditions(surveyData.healthConditions);
-            // Add health conditions to medical history if available
-            if (surveyData.healthConditions.length > 0 && !medicalHistory) {
-              setMedicalHistory(surveyData.healthConditions.join(', '));
+          if (profile.healthConditions && profile.healthConditions.length > 0) {
+            if (!medicalHistory) {
+              setMedicalHistory(profile.healthConditions.join(', '));
             }
           }
         }
+        
+        // Fetch Prakriti assessment data
+        const prakritiResponse = await prakritiApi.getCurrentPrakriti();
+        if (prakritiResponse.success && prakritiResponse.data) {
+          setPrakritiData(prakritiResponse.data);
+        }
+        
+        // Also try to get survey data for any missing information
+        const surveyResponse = await surveyApi.getSurveyStatus();
+        if (surveyResponse.success && surveyResponse.data?.surveyData) {
+          const surveyData = surveyResponse.data.surveyData;
+          
+          // Fill in any missing data from survey
+          if (!age && surveyData.age) setAge(surveyData.age.toString());
+          if (!weight && surveyData.weight) setWeight(surveyData.weight.toString());
+          if (!height && surveyData.height) setHeight(surveyData.height.toString());
+          if (!lifestyle && surveyData.lifestyle) setLifestyle(surveyData.lifestyle);
+        }
+        
       } catch (error) {
-        console.error('Error fetching survey data:', error);
+        console.error('Error fetching patient data:', error);
         // Don't show error to user, just use default values
       } finally {
-        setIsLoadingSurveyData(false);
+        setIsLoadingPatientData(false);
       }
     };
 
-    fetchSurveyData();
-  }, [isAuthenticated, patient, medicalHistory]);
+    fetchPatientData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, patient]); // Intentionally omitting form state variables
 
   // Available time slots
   const timeSlots = [
@@ -163,13 +187,15 @@ export default function BookAppointmentScreen() {
   const availableDates = getAvailableDates();
 
   // Show loading or don't render if not authenticated
-  if (isLoading || isDoctorLoading) {
+  if (isLoading || isDoctorLoading || isLoadingPatientData) {
     return (
       <ThemedView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.herbalGreen} />
           <Text style={[styles.loadingText, { color: colors.text }]}>
-            {isLoading ? 'Loading...' : 'Loading doctor information...'}
+            {isLoading ? 'Loading...' : 
+             isDoctorLoading ? 'Loading doctor information...' : 
+             'Loading patient data...'}
           </Text>
         </View>
       </ThemedView>
@@ -352,6 +378,125 @@ export default function BookAppointmentScreen() {
             </View>
           </View>
         </View>
+
+        {/* Comprehensive Patient Health Profile */}
+        {(patientProfile || prakritiData) && (
+          <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Patient Health Profile</Text>
+            
+            {/* Health Overview */}
+            {patientProfile && (
+              <View style={styles.healthOverview}>
+                <Text style={[styles.subsectionTitle, { color: colors.herbalGreen }]}>Health Overview</Text>
+                
+                <View style={styles.healthGrid}>
+                  {patientProfile.age && (
+                    <View style={styles.healthItem}>
+                      <Ionicons name="person-outline" size={16} color={colors.icon} />
+                      <Text style={[styles.healthLabel, { color: colors.icon }]}>Age:</Text>
+                      <Text style={[styles.healthValue, { color: colors.text }]}>{patientProfile.age} years</Text>
+                    </View>
+                  )}
+                  
+                  {patientProfile.weight && (
+                    <View style={styles.healthItem}>
+                      <Ionicons name="fitness-outline" size={16} color={colors.icon} />
+                      <Text style={[styles.healthLabel, { color: colors.icon }]}>Weight:</Text>
+                      <Text style={[styles.healthValue, { color: colors.text }]}>{patientProfile.weight} kg</Text>
+                    </View>
+                  )}
+                  
+                  {patientProfile.height && (
+                    <View style={styles.healthItem}>
+                      <Ionicons name="resize-outline" size={16} color={colors.icon} />
+                      <Text style={[styles.healthLabel, { color: colors.icon }]}>Height:</Text>
+                      <Text style={[styles.healthValue, { color: colors.text }]}>{patientProfile.height} cm</Text>
+                    </View>
+                  )}
+                  
+                  {patientProfile.lifestyle && (
+                    <View style={styles.healthItem}>
+                      <Ionicons name="bicycle-outline" size={16} color={colors.icon} />
+                      <Text style={[styles.healthLabel, { color: colors.icon }]}>Lifestyle:</Text>
+                      <Text style={[styles.healthValue, { color: colors.text }]}>{patientProfile.lifestyle}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Allergies */}
+                {patientProfile.allergies && patientProfile.allergies.length > 0 && (
+                  <View style={styles.healthDetailSection}>
+                    <View style={styles.healthDetailHeader}>
+                      <Ionicons name="warning-outline" size={16} color={colors.softOrange} />
+                      <Text style={[styles.healthDetailTitle, { color: colors.softOrange }]}>Allergies</Text>
+                    </View>
+                    <Text style={[styles.healthDetailText, { color: colors.text }]}>
+                      {patientProfile.allergies.join(', ')}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Health Conditions */}
+                {patientProfile.healthConditions && patientProfile.healthConditions.length > 0 && (
+                  <View style={styles.healthDetailSection}>
+                    <View style={styles.healthDetailHeader}>
+                      <Ionicons name="medical-outline" size={16} color={colors.herbalGreen} />
+                      <Text style={[styles.healthDetailTitle, { color: colors.herbalGreen }]}>Health Conditions</Text>
+                    </View>
+                    <Text style={[styles.healthDetailText, { color: colors.text }]}>
+                      {patientProfile.healthConditions.join(', ')}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Prakriti Assessment Results */}
+            {prakritiData && prakritiData.prakritiCompleted && prakritiData.currentPrakriti && (
+              <View style={styles.prakritiSection}>
+                <Text style={[styles.subsectionTitle, { color: colors.herbalGreen }]}>Ayurvedic Constitution (Prakriti)</Text>
+                
+                <View style={styles.prakritiResults}>
+                  <View style={styles.prakritiPrimary}>
+                    <Ionicons name="leaf-outline" size={20} color={colors.herbalGreen} />
+                    <Text style={[styles.prakritiPrimaryText, { color: colors.herbalGreen }]}>
+                      Primary: {prakritiData.currentPrakriti.primaryDosha}
+                    </Text>
+                  </View>
+                  
+                  {prakritiData.currentPrakriti.secondaryDosha && (
+                    <View style={styles.prakritiSecondary}>
+                      <Text style={[styles.prakritiSecondaryText, { color: colors.icon }]}>
+                        Secondary: {prakritiData.currentPrakriti.secondaryDosha}
+                      </Text>
+                    </View>
+                  )}
+                  
+                  <View style={styles.prakritiInfo}>
+                    <Ionicons name="information-circle-outline" size={14} color={colors.icon} />
+                    <Text style={[styles.prakritiInfoText, { color: colors.icon }]}>
+                      Assessment completed on {new Date(prakritiData.currentPrakriti.completedAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* Survey Status */}
+            <View style={styles.surveyStatus}>
+              <Ionicons 
+                name={patientProfile?.surveyCompleted ? "checkmark-circle" : "time-outline"} 
+                size={16} 
+                color={patientProfile?.surveyCompleted ? colors.herbalGreen : colors.softOrange} 
+              />
+              <Text style={[styles.surveyStatusText, { 
+                color: patientProfile?.surveyCompleted ? colors.herbalGreen : colors.softOrange 
+              }]}>
+                Health Survey: {patientProfile?.surveyCompleted ? 'Completed' : 'Pending'}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Additional Patient Details */}
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
@@ -1038,5 +1183,108 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
+  },
+  
+  // Patient Health Profile Styles
+  healthOverview: {
+    marginTop: 12,
+  },
+  subsectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  healthGrid: {
+    gap: 8,
+  },
+  healthItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  healthLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    minWidth: 60,
+  },
+  healthValue: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  healthDetailSection: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: 'rgba(0,0,0,0.02)',
+    borderRadius: 8,
+  },
+  healthDetailHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  healthDetailTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  healthDetailText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  prakritiSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+  },
+  prakritiResults: {
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: 'rgba(62, 142, 90, 0.05)',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#3E8E5A',
+  },
+  prakritiPrimary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  prakritiPrimaryText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  prakritiSecondary: {
+    marginLeft: 28,
+    marginBottom: 6,
+  },
+  prakritiSecondaryText: {
+    fontSize: 13,
+    fontStyle: 'italic',
+  },
+  prakritiInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 28,
+  },
+  prakritiInfoText: {
+    fontSize: 11,
+    fontStyle: 'italic',
+  },
+  surveyStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    padding: 8,
+    backgroundColor: 'rgba(0,0,0,0.02)',
+    borderRadius: 6,
+  },
+  surveyStatusText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });

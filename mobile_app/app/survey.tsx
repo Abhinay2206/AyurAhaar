@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -19,7 +20,7 @@ import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { AuthService } from '@/src/services/auth';
-import { surveyApi } from '@/src/services/api';
+import { surveyApi, prakritiApi, PrakritiQuestion } from '@/src/services/api';
 
 interface SurveyData {
   fullName: string;
@@ -34,6 +35,12 @@ interface SurveyData {
   allergies: string[];
   healthConditions: string[];
   customAllergies: string;
+}
+
+enum SurveyStep {
+  BASIC_INFO = 0,
+  PRAKRITI_ASSESSMENT = 1,
+  COMPLETE = 2,
 }
 
 const lifestyleOptions = [
@@ -73,14 +80,11 @@ export default function SurveyScreen() {
   const colors = Colors[colorScheme ?? 'light'];
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
+  // Survey step management
+  const [currentStep, setCurrentStep] = useState<SurveyStep>(SurveyStep.BASIC_INFO);
+  const [loading, setLoading] = useState(false);
 
+  // Basic survey data
   const [surveyData, setSurveyData] = useState<SurveyData>({
     fullName: '',
     mobileNumber: '',
@@ -96,9 +100,39 @@ export default function SurveyScreen() {
     customAllergies: '',
   });
 
+  // Prakriti assessment data
+  const [prakritiQuestions, setPrakritiQuestions] = useState<PrakritiQuestion[]>([]);
+  const [assessmentId, setAssessmentId] = useState<string>('');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [prakritiScores, setPrakritiScores] = useState({ vata: 0, pitta: 0, kapha: 0 });
+  const [prakritiResult, setPrakritiResult] = useState<any>(null);
+
+  // UI state
   const [showHealthConditions, setShowHealthConditions] = useState(false);
   const [showCustomAllergyInput, setShowCustomAllergyInput] = useState(false);
   const [showLifestyleDropdown, setShowLifestyleDropdown] = useState(false);
+
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    
+    // Load Prakriti questions
+    loadPrakritiQuestions();
+  }, [fadeAnim]);
+
+  const loadPrakritiQuestions = async () => {
+    try {
+      const response = await prakritiApi.getQuestions();
+      if (response.success && response.data) {
+        setPrakritiQuestions(response.data.questions);
+      }
+    } catch (error) {
+      console.error('Error loading Prakriti questions:', error);
+    }
+  };
 
   const renderInputField = (
     label: string,
@@ -227,49 +261,101 @@ export default function SurveyScreen() {
   };
 
   const handleNext = async () => {
-    if (validateForm()) {
-      try {
-        // Convert height to cm if needed
-        let heightInCm = 0;
-        if (surveyData.heightUnit === 'cm') {
-          heightInCm = parseInt(surveyData.height) || 0;
-        } else {
-          const feet = parseInt(surveyData.heightFeet) || 0;
-          const inches = parseInt(surveyData.heightInches) || 0;
-          heightInCm = Math.round((feet * 12 + inches) * 2.54);
+    if (currentStep === SurveyStep.BASIC_INFO) {
+      // Validate and submit basic info first
+      if (validateForm()) {
+        setLoading(true);
+        try {
+          // Convert height to cm if needed
+          let heightInCm = 0;
+          if (surveyData.heightUnit === 'cm') {
+            heightInCm = parseInt(surveyData.height) || 0;
+          } else {
+            const feet = parseInt(surveyData.heightFeet) || 0;
+            const inches = parseInt(surveyData.heightInches) || 0;
+            heightInCm = Math.round((feet * 12 + inches) * 2.54);
+          }
+
+          const submissionData = {
+            age: surveyData.age,
+            weight: parseInt(surveyData.weight) || 0,
+            height: heightInCm,
+            lifestyle: surveyData.lifestyle,
+            allergies: surveyData.allergies.filter(allergy => allergy !== 'none'),
+            healthConditions: surveyData.healthConditions.filter(condition => condition !== 'none'),
+          };
+
+          const response = await surveyApi.submitSurvey(submissionData);
+
+          if (response.success) {
+            // Start Prakriti assessment
+            const assessmentResponse = await prakritiApi.startAssessment();
+            
+            if (assessmentResponse.success && assessmentResponse.data) {
+              setAssessmentId(assessmentResponse.data.assessmentId);
+              setCurrentStep(SurveyStep.PRAKRITI_ASSESSMENT);
+            } else {
+              Alert.alert('Error', 'Failed to start Prakriti assessment');
+            }
+          } else {
+            Alert.alert('Error', response.error || 'Failed to submit survey. Please try again.');
+          }
+        } catch (error) {
+          console.error('Survey submission error:', error);
+          Alert.alert('Error', 'Something went wrong. Please try again.');
+        } finally {
+          setLoading(false);
         }
-
-        const submissionData = {
-          age: surveyData.age,
-          weight: parseInt(surveyData.weight) || 0,
-          height: heightInCm,
-          lifestyle: surveyData.lifestyle,
-          allergies: surveyData.allergies.filter(allergy => allergy !== 'none'),
-          healthConditions: surveyData.healthConditions.filter(condition => condition !== 'none'),
-        };
-
-        const response = await surveyApi.submitSurvey(submissionData);
-
-        if (response.success) {
-          Alert.alert(
-            'Success!', 
-            'Your health survey has been completed successfully. We will now create your personalized Ayurvedic diet plan.',
-            [
-              {
-                text: 'Continue',
-                onPress: () => {
-                  AuthService.handleSurveyCompletion();
-                }
-              }
-            ]
-          );
-        } else {
-          Alert.alert('Error', response.error || 'Failed to submit survey. Please try again.');
-        }
-      } catch (error) {
-        console.error('Survey submission error:', error);
-        Alert.alert('Error', 'Something went wrong. Please try again.');
       }
+    } else if (currentStep === SurveyStep.COMPLETE) {
+      // Navigate to plan selection after completing assessment
+      Alert.alert(
+        'Assessment Complete!', 
+        'Your comprehensive health and Prakriti assessment has been completed successfully. We will now create your personalized Ayurvedic diet plan.',
+        [
+          {
+            text: 'Continue',
+            onPress: () => {
+              AuthService.handleSurveyCompletion();
+              router.push('/plan-selection');
+            }
+          }
+        ]
+      );
+    }
+  };
+
+  const handlePrakritiAnswer = async (optionIndex: number) => {
+    if (!assessmentId || currentQuestionIndex >= prakritiQuestions.length) return;
+    
+    setLoading(true);
+    try {
+      const currentQuestion = prakritiQuestions[currentQuestionIndex];
+      const response = await prakritiApi.submitAnswer(
+        assessmentId,
+        currentQuestion.questionNumber,
+        optionIndex
+      );
+
+      if (response.success && response.data) {
+        setPrakritiScores(response.data.currentScores);
+
+        // Check if assessment is complete
+        if (response.data.isAssessmentComplete && response.data.prakritiResult) {
+          setPrakritiResult(response.data.prakritiResult);
+          setCurrentStep(SurveyStep.COMPLETE);
+        } else {
+          // Move to next question
+          setCurrentQuestionIndex(prev => prev + 1);
+        }
+      } else {
+        Alert.alert('Error', response.error || 'Failed to submit answer');
+      }
+    } catch (error) {
+      console.error('Error submitting Prakriti answer:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -582,6 +668,117 @@ export default function SurveyScreen() {
     </View>
   );
 
+  const renderPrakritiQuestion = () => {
+    if (currentQuestionIndex >= prakritiQuestions.length) return null;
+
+    const question = prakritiQuestions[currentQuestionIndex];
+    
+    return (
+      <View style={styles.questionContainer}>
+        <Text style={[styles.questionNumber, { color: colors.herbalGreen }]}>
+          Question {currentQuestionIndex + 1} of {prakritiQuestions.length}
+        </Text>
+        <Text style={[styles.questionText, { color: colors.text }]}>
+          {question.questionText}
+        </Text>
+        
+        <View style={styles.optionsContainer}>
+          {question.options.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.optionButton,
+                {
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.herbalGreen,
+                }
+              ]}
+              onPress={() => handlePrakritiAnswer(index)}
+              disabled={loading}
+            >
+              <Text style={[styles.optionText, { color: colors.text }]}>
+                {option.text}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.herbalGreen} />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.scoreDisplay}>
+          <Text style={[styles.scoreTitle, { color: colors.text }]}>Current Scores:</Text>
+          <View style={styles.scoreRow}>
+            <View style={styles.scoreItem}>
+              <Text style={[styles.scoreLabel, { color: colors.text }]}>Vata</Text>
+              <Text style={[styles.scoreValue, { color: '#FF6B6B' }]}>{prakritiScores.vata}</Text>
+            </View>
+            <View style={styles.scoreItem}>
+              <Text style={[styles.scoreLabel, { color: colors.text }]}>Pitta</Text>
+              <Text style={[styles.scoreValue, { color: '#4ECDC4' }]}>{prakritiScores.pitta}</Text>
+            </View>
+            <View style={styles.scoreItem}>
+              <Text style={[styles.scoreLabel, { color: colors.text }]}>Kapha</Text>
+              <Text style={[styles.scoreValue, { color: '#45B7D1' }]}>{prakritiScores.kapha}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderPrakritiResults = () => {
+    if (!prakritiResult) return null;
+
+    return (
+      <View style={styles.resultsContainer}>
+        <View style={styles.resultsHeader}>
+          <Ionicons name="leaf" size={48} color={colors.herbalGreen} />
+          <Text style={[styles.resultsTitle, { color: colors.text }]}>
+            Your Prakriti Type
+          </Text>
+        </View>
+
+        <View style={[styles.resultsCard, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.primaryDosha, { color: colors.herbalGreen }]}>
+            {prakritiResult.primary}
+            {prakritiResult.isDual && prakritiResult.secondary && (
+              <Text style={{ color: colors.softOrange }}> - {prakritiResult.secondary}</Text>
+            )}
+          </Text>
+          
+          {prakritiResult.isDual && (
+            <Text style={[styles.dualMessage, { color: colors.icon }]}>
+              You have a dual constitution
+            </Text>
+          )}
+
+          <View style={styles.percentagesContainer}>
+            {Object.entries(prakritiResult.percentages).map(([dosha, percentage]) => (
+              <View key={dosha} style={styles.percentageRow}>
+                <Text style={[styles.doshaName, { color: colors.text }]}>
+                  {dosha.charAt(0).toUpperCase() + dosha.slice(1)}
+                </Text>
+                <View style={styles.percentageBar}>
+                  <View
+                    style={[
+                      styles.percentageFill,
+                      {
+                        width: `${Number(percentage)}%` as any,
+                        backgroundColor: dosha === 'vata' ? '#FF6B6B' : dosha === 'pitta' ? '#4ECDC4' : '#45B7D1'
+                      }
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.percentageText, { color: colors.text }]}>
+                  {Number(percentage)}%
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
@@ -619,61 +816,79 @@ export default function SurveyScreen() {
       >
         <Animated.View style={[styles.modernFormCard, { backgroundColor: colors.cardBackground, opacity: fadeAnim }]}>
           
-          {/* Personal Details Section */}
-          {renderSectionHeader('Personal Information', 'person-outline', 'Basic details for your profile')}
-          
-          {renderInputField(
-            'Full Name',
-            surveyData.fullName,
-            (text) => updateField('fullName', text),
-            'person-outline',
-            'Enter your full name'
-          )}
-
-          {renderInputField(
-            'Mobile Number',
-            surveyData.mobileNumber,
-            (text) => updateField('mobileNumber', text),
-            'call-outline',
-            '+91 9876543210',
-            'phone-pad'
-          )}
-
-          {renderAgeSlider()}
-
-          {/* Weight and Height side by side */}
-          <View style={styles.rowContainer}>
-            <View style={styles.halfInput}>
+          {currentStep === SurveyStep.BASIC_INFO && (
+            <>
+              {/* Personal Details Section */}
+              {renderSectionHeader('Personal Information', 'person-outline', 'Basic details for your profile')}
+              
               {renderInputField(
-                'Weight (kg)',
-                surveyData.weight,
-                (text) => updateField('weight', text),
-                'fitness-outline',
-                '70',
-                'numeric'
+                'Full Name',
+                surveyData.fullName,
+                (text) => updateField('fullName', text),
+                'person-outline',
+                'Enter your full name'
               )}
-            </View>
-          </View>
 
-          {renderHeightSelector()}
+              {renderInputField(
+                'Mobile Number',
+                surveyData.mobileNumber,
+                (text) => updateField('mobileNumber', text),
+                'call-outline',
+                '+91 9876543210',
+                'phone-pad'
+              )}
 
-          {/* Lifestyle Section */}
-          {renderSectionHeader('Lifestyle Assessment', 'bicycle-outline', 'Help us understand your daily activity')}
-          
-          {renderLifestyleOptions()}
+              {renderAgeSlider()}
 
-          {/* Health Information Section */}
-          {renderSectionHeader('Health Profile', 'medical-outline', 'Your health conditions and allergies')}
-          
-          <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Food Allergies & Restrictions</Text>
-            <Text style={[styles.inputSubtext, { color: colors.icon }]}>
-              Select all that apply (optional)
-            </Text>
-            {renderAllergyChips()}
-          </View>
+              {/* Weight and Height side by side */}
+              <View style={styles.rowContainer}>
+                <View style={styles.halfInput}>
+                  {renderInputField(
+                    'Weight (kg)',
+                    surveyData.weight,
+                    (text) => updateField('weight', text),
+                    'fitness-outline',
+                    '70',
+                    'numeric'
+                  )}
+                </View>
+              </View>
 
-          {renderHealthConditions()}
+              {renderHeightSelector()}
+
+              {/* Lifestyle Section */}
+              {renderSectionHeader('Lifestyle Assessment', 'bicycle-outline', 'Help us understand your daily activity')}
+              
+              {renderLifestyleOptions()}
+
+              {/* Health Information Section */}
+              {renderSectionHeader('Health Profile', 'medical-outline', 'Your health conditions and allergies')}
+              
+              <View style={styles.inputContainer}>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Food Allergies & Restrictions</Text>
+                <Text style={[styles.inputSubtext, { color: colors.icon }]}>
+                  Select all that apply (optional)
+                </Text>
+                {renderAllergyChips()}
+              </View>
+
+              {renderHealthConditions()}
+            </>
+          )}
+
+          {currentStep === SurveyStep.PRAKRITI_ASSESSMENT && (
+            <>
+              {renderSectionHeader('Prakriti Assessment', 'leaf-outline', 'Discover your Ayurvedic constitution')}
+              {renderPrakritiQuestion()}
+            </>
+          )}
+
+          {currentStep === SurveyStep.COMPLETE && (
+            <>
+              {renderSectionHeader('Assessment Complete', 'checkmark-circle-outline', 'Your personalized results')}
+              {renderPrakritiResults()}
+            </>
+          )}
         </Animated.View>
       </ScrollView>
 
@@ -681,10 +896,16 @@ export default function SurveyScreen() {
       <View style={[styles.modernBottomSection, { backgroundColor: colors.cardBackground }]}>
         <View style={styles.progressContainer}>
           <Text style={[styles.progressText, { color: colors.icon }]}>
-            Health Assessment Complete
+            {currentStep === SurveyStep.BASIC_INFO && 'Health Assessment'}
+            {currentStep === SurveyStep.PRAKRITI_ASSESSMENT && 'Prakriti Assessment'}
+            {currentStep === SurveyStep.COMPLETE && 'Assessment Complete'}
           </Text>
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { backgroundColor: colors.herbalGreen, width: '100%' }]} />
+            <View style={[styles.progressFill, { 
+              backgroundColor: colors.herbalGreen, 
+              width: currentStep === SurveyStep.BASIC_INFO ? '33%' : 
+                     currentStep === SurveyStep.PRAKRITI_ASSESSMENT ? '66%' : '100%' 
+            }]} />
           </View>
         </View>
         
@@ -695,7 +916,11 @@ export default function SurveyScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.gradientButton}
           >
-            <Text style={styles.nextButtonText}>Generate My Diet Plan</Text>
+            <Text style={styles.nextButtonText}>
+              {currentStep === SurveyStep.BASIC_INFO && 'Continue to Prakriti'}
+              {currentStep === SurveyStep.PRAKRITI_ASSESSMENT && 'Complete Assessment'}
+              {currentStep === SurveyStep.COMPLETE && 'Continue to Plan Selection'}
+            </Text>
             <Ionicons name="arrow-forward" size={20} color="white" />
           </LinearGradient>
         </TouchableOpacity>
@@ -1094,5 +1319,155 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  
+  // Prakriti Assessment Styles
+  questionContainer: {
+    marginBottom: 24,
+    padding: 20,
+    borderRadius: 16,
+    backgroundColor: 'rgba(62, 142, 90, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(62, 142, 90, 0.1)',
+  },
+  questionNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#3E8E5A',
+  },
+  questionText: {
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  optionButton: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(62, 142, 90, 0.2)',
+    marginBottom: 12,
+    backgroundColor: 'white',
+  },
+  selectedOption: {
+    borderColor: '#3E8E5A',
+    backgroundColor: 'rgba(62, 142, 90, 0.1)',
+  },
+  optionText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  scoreContainer: {
+    marginTop: 24,
+    padding: 20,
+    borderRadius: 16,
+    backgroundColor: 'rgba(62, 142, 90, 0.05)',
+  },
+  scoreTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  scoreDisplay: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  scoreItem: {
+    alignItems: 'center',
+  },
+  scoreDoshaName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  scoreDoshaValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  primaryType: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#3E8E5A',
+  },
+  
+  // Additional Prakriti styles
+  optionsContainer: {
+    marginTop: 16,
+  },
+  scoreRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  scoreLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  scoreValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  resultsContainer: {
+    padding: 20,
+  },
+  resultsHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  resultsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  resultsCard: {
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 20,
+  },
+  primaryDosha: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  dualMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  percentagesContainer: {
+    marginTop: 16,
+  },
+  percentageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  doshaName: {
+    fontSize: 16,
+    fontWeight: '600',
+    width: 60,
+  },
+  percentageBar: {
+    flex: 1,
+    height: 8,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 4,
+    marginHorizontal: 12,
+    overflow: 'hidden',
+  },
+  percentageFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  percentageText: {
+    fontSize: 14,
+    fontWeight: '600',
+    minWidth: 45,
+    textAlign: 'right',
   },
 });

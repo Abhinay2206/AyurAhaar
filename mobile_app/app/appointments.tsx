@@ -259,6 +259,24 @@ export default function AppointmentsScreen() {
   return (
     <ThemedView style={styles.container}>
       {selectedAppointment ? renderAppointmentDetails() : renderAppointmentsList()}
+      
+      {/* Bottom Navigation */}
+      <View style={[styles.bottomNav, { backgroundColor: colors.cardBackground }]}>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/dashboard')}>
+          <Ionicons name="home" size={24} color={colors.icon} />
+          <Text style={[styles.navLabel, { color: colors.icon }]}>Dashboard</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons name="calendar" size={24} color={colors.herbalGreen} />
+          <Text style={[styles.navLabel, { color: colors.herbalGreen }]}>Appointments</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
+          <Ionicons name="person" size={24} color={colors.icon} />
+          <Text style={[styles.navLabel, { color: colors.icon }]}>Profile</Text>
+        </TouchableOpacity>
+      </View>
     </ThemedView>
   );
 }
@@ -373,7 +391,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 20,
+    paddingBottom: 100, // Add padding to prevent content from being hidden behind bottom nav
   },
   detailsContainer: {
     flex: 1,
@@ -491,5 +509,24 @@ const styles = StyleSheet.create({
   sectionContent: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  
+  // Bottom Navigation Styles
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+    paddingBottom: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  navItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  navLabel: {
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: '500',
   },
 });

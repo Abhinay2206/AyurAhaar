@@ -62,6 +62,28 @@ export interface SurveyData {
   healthConditions?: string[];
 }
 
+export interface PrakritiQuestion {
+  id: string;
+  questionNumber: number;
+  questionText: string;
+  category: string;
+  options: {
+    index: number;
+    text: string;
+  }[];
+}
+
+export interface PrakritiAssessmentResult {
+  primary: string;
+  secondary?: string;
+  isDual: boolean;
+  percentages: {
+    vata: number;
+    pitta: number;
+    kapha: number;
+  };
+}
+
 // Auth API methods
 export const authApi = {
   async login(email: string, password: string, role: string = 'patient'): Promise<ApiResponse<LoginResponse>> {
@@ -225,10 +247,185 @@ export const surveyApi = {
   },
 };
 
+// Prakriti Assessment API methods
+export const prakritiApi = {
+  async getQuestions(): Promise<ApiResponse<{ questions: PrakritiQuestion[] }>> {
+    try {
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        return { success: false, error: 'Authentication required' };
+      }
+
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/prakriti/questions`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.message || 'Failed to get Prakriti questions' };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('Get Prakriti questions error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  },
+
+  async startAssessment(): Promise<ApiResponse<{ assessmentId: string; completedQuestions: number }>> {
+    try {
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        return { success: false, error: 'Authentication required' };
+      }
+
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/prakriti/start`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.message || 'Failed to start Prakriti assessment' };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('Start Prakriti assessment error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  },
+
+  async submitAnswer(assessmentId: string, questionNumber: number, selectedOption: number): Promise<ApiResponse<{
+    completedQuestions: number;
+    totalQuestions: number;
+    isAssessmentComplete: boolean;
+    currentScores: { vata: number; pitta: number; kapha: number };
+    prakritiResult?: PrakritiAssessmentResult;
+  }>> {
+    try {
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        return { success: false, error: 'Authentication required' };
+      }
+
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/prakriti/submit-answer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          assessmentId,
+          questionNumber,
+          selectedOption,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.message || 'Failed to submit answer' };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('Submit Prakriti answer error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  },
+
+  async getAssessmentProgress(assessmentId: string): Promise<ApiResponse<{
+    id: string;
+    completedQuestions: number;
+    totalQuestions: number;
+    isCompleted: boolean;
+    responses: { [questionNumber: string]: number };
+    currentScores: { vata: number; pitta: number; kapha: number };
+    prakritiResult?: PrakritiAssessmentResult;
+  }>> {
+    try {
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        return { success: false, error: 'Authentication required' };
+      }
+
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/prakriti/progress/${assessmentId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.message || 'Failed to get assessment progress' };
+      }
+
+      return { success: true, data: data.assessment };
+    } catch (error) {
+      console.error('Get assessment progress error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  },
+
+  async getCurrentPrakriti(): Promise<ApiResponse<{
+    prakritiCompleted: boolean;
+    currentPrakriti?: {
+      assessmentId: string;
+      primaryDosha: string;
+      secondaryDosha?: string;
+      isDual: boolean;
+      completedAt: string;
+      isValid: boolean;
+    };
+  }>> {
+    try {
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        return { success: false, error: 'Authentication required' };
+      }
+
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/prakriti/current`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.message || 'Failed to get current Prakriti' };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('Get current Prakriti error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  },
+};
+
 // Placeholder for future API services
 export const apiService = {
   auth: authApi,
   survey: surveyApi,
+  prakriti: prakritiApi,
 };
 
 // Simple function to test API connectivity
