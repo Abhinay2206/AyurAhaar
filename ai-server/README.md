@@ -57,6 +57,16 @@ source venv/bin/activate
 python app.py
 ```
 
+### Optional: Quick Weekly Plan Smoke Test
+
+Run a tiny script to ensure weekly generation reliably returns 7 days with content:
+
+```bash
+source venv/bin/activate
+python smoke_test_weekly.py
+```
+You should see: `OK: Generated a valid 7-day plan with content for each day.`
+
 ### 3. Access the API
 
 - **API Documentation**: http://localhost:8000/docs

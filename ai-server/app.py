@@ -251,8 +251,9 @@ async def get_model_info():
     available_models = []
     if models_dir.exists():
         for model_path in models_dir.iterdir():
-            if model_path.is_dir() and (model_path / "pytorch_model.bin").exists():
-                available_models.append(model_path.name)
+            if model_path.is_dir():
+                if (model_path / "config.json").exists() or (model_path / "pytorch_model.bin").exists() or (model_path / "model.safetensors").exists():
+                    available_models.append(model_path.name)
     
     return ModelInfo(
         model_type=engine.model_type,

@@ -279,7 +279,13 @@ class T5MealPlanner(nn.Module):
         if patient.allergies:
             input_text += f"allergies {' '.join(patient.allergies)} "
 
-        input_text += "generate 7 days"
+        # Strong output-format hint to improve reliability
+        input_text += (
+            "generate 7 days. Return output strictly as: "
+            "day1: breakfast: <items>, lunch: <items>, dinner: <items>, snacks: <items> | "
+            "day2: breakfast: <items>, lunch: <items>, dinner: <items>, snacks: <items> | "
+            "day3: ... | day4: ... | day5: ... | day6: ... | day7: ..."
+        )
         return input_text
 
     def format_patient_input(self, patient: Patient, day: int) -> str:
@@ -484,8 +490,13 @@ class HybridNeuralEngine:
 
         generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-        # Parse the generated text into a weekly plan
-        weekly_plan = self.parse_generated_weekly_plan(generated_text, patient.id)
+        # Parse the generated text into a weekly plan. If parsing fails to find day-wise
+        # sections, the parser will fall back to patient-specific defaults for each day.
+        weekly_plan = self.parse_generated_weekly_plan(
+            generated_text,
+            patient_id=patient.id,
+            patient=patient,
+        )
 
         # If generation fails, use knowledge graph recommendations
         if not self._has_valid_weekly_content(weekly_plan) and use_knowledge_graph:
@@ -635,8 +646,14 @@ class HybridNeuralEngine:
             for day in weekly_plan.days
         )
 
-    def parse_generated_weekly_plan(self, generated_text: str, patient_id: str) -> WeeklyMealPlan:
-        """Parse the generated text into a structured weekly meal plan"""
+    def parse_generated_weekly_plan(self, generated_text: str, patient_id: str,
+                                    patient: Optional[Patient] = None) -> WeeklyMealPlan:
+        """Parse the generated text into a structured weekly meal plan.
+
+        If explicit day sections (e.g., 'day1:', 'day2:') are not present for a given day,
+        this will fall back to patient-aware defaults when a Patient is provided, ensuring
+        a complete and personalized 7-day plan.
+        """
         weekly_plans = []
         text = generated_text.lower()
         
@@ -671,9 +688,14 @@ class HybridNeuralEngine:
                 day_section = text[start:end]
                 day_plan = self._parse_day_section(day_section, patient_id, day_num)
             else:
-                # If no day-specific content, generate default for this day
-                default_plan_text = self._generate_default_plan_for_day(day_num)
-                parsed_plan = self.parse_generated_plan(default_plan_text)
+                # If no day-specific content, generate a patient-aware default for this day
+                if patient is not None:
+                    default_plan_text = self._generate_default_plan(patient, day_num)
+                    parsed_plan = self.parse_generated_plan(default_plan_text)
+                else:
+                    # Fallback to generic defaults if patient is unavailable
+                    default_plan_text = self._generate_default_plan_for_day(day_num)
+                    parsed_plan = self.parse_generated_plan(default_plan_text)
                 day_plan.breakfast = parsed_plan['breakfast']
                 day_plan.lunch = parsed_plan['lunch']
                 day_plan.dinner = parsed_plan['dinner']
