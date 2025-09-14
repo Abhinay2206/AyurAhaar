@@ -340,6 +340,11 @@ export default function ProfileScreen() {
           <Text style={[styles.navLabel, { color: colors.icon }]}>Appointments</Text>
         </TouchableOpacity>
         
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/chatbot' as any)}>
+          <Ionicons name="chatbubble-ellipses" size={24} color={colors.icon} />
+          <Text style={[styles.navLabel, { color: colors.icon }]}>Chat</Text>
+        </TouchableOpacity>
+        
         <TouchableOpacity style={styles.navItem}>
           <Ionicons name="person" size={24} color={colors.herbalGreen} />
           <Text style={[styles.navLabel, { color: colors.herbalGreen }]}>Profile</Text>

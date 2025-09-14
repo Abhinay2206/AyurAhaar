@@ -272,6 +272,11 @@ export default function AppointmentsScreen() {
           <Text style={[styles.navLabel, { color: colors.herbalGreen }]}>Appointments</Text>
         </TouchableOpacity>
         
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/chatbot')}>
+          <Ionicons name="chatbubble-ellipses" size={24} color={colors.icon} />
+          <Text style={[styles.navLabel, { color: colors.icon }]}>Chat</Text>
+        </TouchableOpacity>
+        
         <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
           <Ionicons name="person" size={24} color={colors.icon} />
           <Text style={[styles.navLabel, { color: colors.icon }]}>Profile</Text>

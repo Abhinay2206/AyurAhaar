@@ -228,6 +228,10 @@ export default function DashboardScreen() {
     router.push('/profile' as any);
   };
 
+  const handleChatbot = () => {
+    router.push('/chatbot' as any);
+  };
+
   const handleAyurvedaInfo = () => {
     router.push('/ayurveda-info' as any);
   };
@@ -800,6 +804,11 @@ export default function DashboardScreen() {
         <TouchableOpacity style={styles.navItem} onPress={handleAppointments}>
           <Ionicons name="calendar" size={24} color={colors.icon} />
           <Text style={[styles.navLabel, { color: colors.icon }]}>Appointments</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.navItem} onPress={handleChatbot}>
+          <Ionicons name="chatbubble-ellipses" size={24} color={colors.icon} />
+          <Text style={[styles.navLabel, { color: colors.icon }]}>Chat</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.navItem} onPress={handleProfile}>

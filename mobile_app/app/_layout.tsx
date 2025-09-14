@@ -47,6 +47,7 @@ export default function RootLayout() {
             <Stack.Screen name="book-appointment" options={{ headerShown: false }} />
             <Stack.Screen name="dashboard" options={{ headerShown: false }} />
             <Stack.Screen name="appointments" options={{ headerShown: false }} />
+            <Stack.Screen name="chatbot" options={{ headerShown: false }} />
             <Stack.Screen name="profile" options={{ headerShown: false }} />
             <Stack.Screen name="food-details" options={{ headerShown: false }} />
             <Stack.Screen name="view-prakriti" options={{ headerShown: false }} />

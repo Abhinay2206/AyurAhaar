@@ -18,6 +18,7 @@ from train import (
     load_foods_csv, load_patients_csv, load_doctor_plans_csv,
     MealPlanTrainer, create_sample_data
 )
+from rag_chatbot import rag_chatbot
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -115,6 +116,14 @@ class ModelInfo(BaseModel):
     is_loaded: bool
     models_available: List[str]
     last_trained: Optional[str] = None
+
+class RAGChatRequest(BaseModel):
+    message: str = Field(..., description="User's message for the RAG chatbot")
+
+class RAGChatResponse(BaseModel):
+    reply: str = Field(..., description="RAG chatbot's response")
+    success: bool = Field(default=True, description="Whether the request was successful")
+    error: Optional[str] = Field(default=None, description="Error message if any")
 
 # Utility functions
 def calculate_bmi(weight: float, height: float) -> float:
@@ -459,6 +468,35 @@ async def generate_plan_for_backend(request: BackendPatientData):
         return PlanGenerationResponse(
             success=False,
             message=f"Failed to generate plan: {str(e)}"
+        )
+
+@app.post("/rag-chat", response_model=RAGChatResponse)
+async def rag_chat(request: RAGChatRequest):
+    """Chat with RAG-powered Ayurvedic knowledge assistant"""
+    try:
+        logger.info(f"RAG Chat request: {request.message}")
+        
+        # Initialize RAG system if not already done
+        if not rag_chatbot.is_initialized:
+            logger.info("Initializing RAG chatbot...")
+            rag_chatbot.load_and_process_data()
+        
+        # Get response from RAG chatbot
+        response = await rag_chatbot.chat(request.message)
+        
+        logger.info(f"RAG Chat response generated successfully")
+        
+        return RAGChatResponse(
+            reply=response,
+            success=True
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in RAG chat: {e}")
+        return RAGChatResponse(
+            reply="I apologize, but I'm having trouble processing your request right now. Please try again later.",
+            success=False,
+            error=str(e)
         )
 
 @app.post("/train")
