@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApi } from './api';
 import { NavigationService } from './navigation';
 
@@ -108,10 +109,14 @@ export class AuthService {
   }
 
   static async handleSurveyCompletion(): Promise<void> {
-    // After survey completion, use NavigationService to determine best redirect
-    console.log('📝 Survey completed, checking user status...');
-    const userStatus = await NavigationService.getUserStatus();
-    console.log('📍 Redirecting to:', userStatus.redirectPath);
-    router.replace(userStatus.redirectPath as any);
+    // After survey completion, update the stored auth status and redirect to plan selection
+    console.log('📝 Survey completed, updating auth status...');
+    try {
+      // Update the survey completion status in AsyncStorage
+      await AsyncStorage.setItem('@survey_completed', JSON.stringify(true));
+      console.log('📍 Survey completion status updated');
+    } catch (error) {
+      console.error('Error updating survey completion status:', error);
+    }
   }
 }

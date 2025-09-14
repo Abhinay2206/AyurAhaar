@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 import asyncio
 import uvicorn
 from pathlib import Path
@@ -97,6 +97,17 @@ class TrainingRequest(BaseModel):
     batch_size: int = Field(1, ge=1, le=8, description="Training batch size")
     learning_rate: float = Field(3e-4, gt=0, description="Learning rate")
     weekly_mode: bool = Field(True, description="Train for weekly plans")
+
+# New model for backend integration
+class BackendPatientData(BaseModel):
+    patientId: str
+    personalInfo: Dict[str, Any]
+    prakritiInfo: Dict[str, Any]
+
+class PlanGenerationResponse(BaseModel):
+    success: bool
+    plan: Optional[Dict[str, Any]] = None
+    message: Optional[str] = None
 
 class ModelInfo(BaseModel):
     model_type: str
@@ -349,6 +360,106 @@ async def generate_meal_plan(request: GenerationRequest):
         return await generate_weekly_plan(request)
     else:
         return await generate_single_day_plan(request)
+
+@app.post("/generate-plan", response_model=PlanGenerationResponse)
+async def generate_plan_for_backend(request: BackendPatientData):
+    """Generate AI meal plan for backend integration"""
+    try:
+        if not engine:
+            raise HTTPException(status_code=503, detail="AI engine not initialized")
+        
+        logger.info(f"Generating plan for patient: {request.patientId}")
+        
+        # Extract personal info
+        personal_info = request.personalInfo
+        prakriti_info = request.prakritiInfo
+        
+        # Create PatientCreate object from the data
+        patient_data = PatientCreate(
+            age=personal_info.get('age', 30),
+            gender='male',  # Default, can be enhanced later
+            weight=float(personal_info.get('weight', 70)),
+            height=float(personal_info.get('height', 170)),
+            lifestyle=personal_info.get('lifestyle', 'moderate'),
+            prakriti=prakriti_info.get('primaryDosha', 'vata').lower(),
+            health_conditions=personal_info.get('healthConditions', []),
+            allergies=personal_info.get('allergies', []),
+            preferred_cuisine=personal_info.get('preferredCuisine', [])
+        )
+        
+        # Generate weekly plan
+        generation_request = GenerationRequest(
+            patient=patient_data,
+            weekly=True,
+            temperature=0.9,
+            use_knowledge_graph=True
+        )
+        
+        # Generate the plan
+        weekly_plan = await generate_weekly_plan(generation_request)
+        
+        # Format the response for backend
+        formatted_plan = {
+            "patient_id": request.patientId,
+            "plan_type": "weekly",
+            "generated_at": datetime.now().isoformat(),
+            "prakriti": prakriti_info.get('primaryDosha', 'Unknown'),
+            "weekly_plan": {},
+            "recommendations": [],
+            "restrictions": []
+        }
+        
+        # Convert the weekly plan to our format
+        if hasattr(weekly_plan, 'days'):
+            for day_plan in weekly_plan.days:
+                # Format as day1, day2, etc. to match mobile app expectations
+                day_key = f"day{day_plan.day}"
+                formatted_plan["weekly_plan"][day_key] = {
+                    "breakfast": day_plan.breakfast,
+                    "lunch": day_plan.lunch,
+                    "dinner": day_plan.dinner,
+                    "snacks": day_plan.snacks
+                }
+                formatted_plan["restrictions"].extend(day_plan.restrictions)
+        
+        # Add general recommendations based on prakriti
+        primary_dosha = prakriti_info.get('primaryDosha', '').lower()
+        if primary_dosha == 'vata':
+            formatted_plan["recommendations"] = [
+                "Eat warm, cooked foods",
+                "Include healthy fats and oils",
+                "Maintain regular meal times",
+                "Avoid cold and raw foods"
+            ]
+        elif primary_dosha == 'pitta':
+            formatted_plan["recommendations"] = [
+                "Eat cooling foods",
+                "Avoid spicy and oily foods",
+                "Include fresh fruits and vegetables",
+                "Eat at regular intervals"
+            ]
+        elif primary_dosha == 'kapha':
+            formatted_plan["recommendations"] = [
+                "Eat light and warm foods",
+                "Include spices to aid digestion",
+                "Avoid heavy and oily foods",
+                "Eat smaller portions"
+            ]
+        
+        logger.info(f"Successfully generated plan for patient: {request.patientId}")
+        
+        return PlanGenerationResponse(
+            success=True,
+            plan=formatted_plan,
+            message="AI meal plan generated successfully"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating plan for backend: {e}")
+        return PlanGenerationResponse(
+            success=False,
+            message=f"Failed to generate plan: {str(e)}"
+        )
 
 @app.post("/train")
 async def train_model(request: TrainingRequest, background_tasks: BackgroundTasks):

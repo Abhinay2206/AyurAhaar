@@ -23,6 +23,7 @@ async function submitSurvey(req, res) {
       lifestyle: surveyData.lifestyle,
       allergies: surveyData.allergies || [],
       healthConditions: surveyData.healthConditions || [],
+      preferredCuisine: surveyData.preferredCuisine || [],
       surveyCompleted: true
     };
 

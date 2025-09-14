@@ -18,19 +18,71 @@ import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { PermissionsService } from '@/src/services/permissions';
 import { DoctorService } from '@/src/services/doctor';
+import { PlanService } from '@/src/services/plan';
+import { authApi } from '@/src/services/api';
 
 export default function PlanSelectionScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const [isLoading, setIsLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
-  const handleAIPlan = () => {
-    // Show Coming Soon message
-    Alert.alert(
-      'Coming Soon!',
-      'AI Personalized Plan feature is currently under development. We\'re working hard to bring you the best personalized Ayurveda meal plans. Please try the Doctor Appointment option for now.',
-      [{ text: 'OK', style: 'default' }]
-    );
+  const handleAIPlan = async () => {
+    try {
+      setAiLoading(true);
+      
+      // Get current user
+      const { user } = await authApi.getStoredAuth();
+      if (!user) {
+        Alert.alert('Error', 'Please login again to continue.');
+        return;
+      }
+
+      Alert.alert(
+        'Generate AI Plan',
+        'This will create a personalized Ayurvedic meal plan based on your survey responses and Prakriti assessment. This may take a few moments.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Generate Plan',
+            onPress: async () => {
+              try {
+                const result = await PlanService.generateAIPlan((user as any).id || (user as any)._id);
+                
+                Alert.alert(
+                  'Success!',
+                  'Your personalized AI meal plan has been generated successfully.',
+                  [
+                    {
+                      text: 'View Plan',
+                      onPress: () => {
+                        // Use replace to ensure proper navigation and refresh
+                        router.replace('/dashboard');
+                      },
+                    }
+                  ]
+                );
+              } catch (error) {
+                console.error('AI plan generation error:', error);
+                Alert.alert(
+                  'Error',
+                  'Failed to generate AI plan. Please try again later.',
+                  [{ text: 'OK' }]
+                );
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error preparing AI plan generation:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleDoctorAppointment = async () => {

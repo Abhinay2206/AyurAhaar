@@ -11,6 +11,7 @@ const PatientSchema = new mongoose.Schema({
   lifestyle: { type: String },
   allergies: [String],
   healthConditions: [String],
+  preferredCuisine: [String],
   surveyCompleted: { type: Boolean, default: false },
   previousPlan: { type: mongoose.Schema.Types.ObjectId, ref: 'MealPlan' },
   appointments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }],
@@ -19,7 +20,8 @@ const PatientSchema = new mongoose.Schema({
     planId: { type: mongoose.Schema.Types.ObjectId },
     isVisible: { type: Boolean, default: false },
     createdAt: { type: Date },
-    lastModified: { type: Date }
+    lastModified: { type: Date },
+    aiPlan: { type: mongoose.Schema.Types.Mixed } // Store AI generated plan data
   },
   // Prakriti Assessment Integration
   prakritiAssessments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'PrakritiAssessment' }],

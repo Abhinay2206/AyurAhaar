@@ -1,5 +1,6 @@
 const Patient = require('../models/Patient');
 const Appointment = require('../models/Appointment');
+const axios = require('axios');
 
 // Get current plan for a patient with display rules
 const getCurrentPlan = async (req, res) => {
@@ -40,7 +41,10 @@ const getCurrentPlan = async (req, res) => {
       // If no completed appointments and patient has AI plan, show AI plan
       planToShow = patient.currentPlan;
       planType = 'ai';
+      console.log('📊 Returning AI plan data:', JSON.stringify(planToShow, null, 2));
     }
+
+    console.log('📊 Final plan response:', { planType, planToShow: planToShow ? 'exists' : 'null', hasCompletedAppointment });
 
     res.json({
       success: true,
@@ -148,8 +152,167 @@ const clearAIPlanOnDoctorCompletion = async (appointmentId) => {
   }
 };
 
+// Generate AI Plan - New endpoint
+const generateAIPlan = async (req, res) => {
+  try {
+    const { patientId } = req.body;
+    const userId = req.user?.userId; // From auth middleware
+
+    // Use patientId from request body or fallback to authenticated user
+    const targetPatientId = patientId || userId;
+
+    if (!targetPatientId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Patient ID is required'
+      });
+    }
+
+    // Fetch patient data from database
+    const patient = await Patient.findById(targetPatientId)
+      .populate('prakritiAssessments')
+      .populate('currentPrakriti.assessmentId');
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found'
+      });
+    }
+
+    // Check if patient has completed survey and prakriti assessment
+    if (!patient.surveyCompleted || !patient.prakritiCompleted) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please complete your health survey and Prakriti assessment first'
+      });
+    }
+
+    // Prepare data for AI server
+    const aiRequestData = {
+      patientId: targetPatientId,
+      personalInfo: {
+        age: patient.age,
+        weight: patient.weight,
+        height: patient.height,
+        lifestyle: patient.lifestyle,
+        allergies: patient.allergies || [],
+        healthConditions: patient.healthConditions || [],
+        preferredCuisine: patient.preferredCuisine || []
+      },
+      prakritiInfo: {
+        primaryDosha: patient.currentPrakriti?.primaryDosha || 'Unknown',
+        secondaryDosha: patient.currentPrakriti?.secondaryDosha || 'Unknown',
+        isDual: patient.currentPrakriti?.isDual || false
+      }
+    };
+
+    console.log('🤖 Sending data to AI server for plan generation...');
+
+    // Call AI server
+    const aiServerUrl = process.env.AI_SERVER_URL || 'http://localhost:5000';
+    const aiResponse = await axios.post(`${aiServerUrl}/generate-plan`, aiRequestData, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 120000 // 2 minutes timeout for AI processing
+    });
+
+    if (!aiResponse.data || !aiResponse.data.success) {
+      throw new Error('AI server failed to generate plan');
+    }
+
+    const generatedPlan = aiResponse.data.plan;
+
+    // Save the generated plan to database
+    const updatedPatient = await Patient.findByIdAndUpdate(
+      targetPatientId,
+      {
+        currentPlan: {
+          type: 'ai',
+          planId: null, // AI plans don't have separate plan documents
+          isVisible: true,
+          createdAt: new Date(),
+          lastModified: new Date(),
+          aiPlan: generatedPlan // Store the AI plan data directly
+        }
+      },
+      { new: true }
+    );
+
+    console.log('✅ AI plan generated and saved successfully');
+
+    res.json({
+      success: true,
+      message: 'AI plan generated successfully',
+      data: {
+        plan: generatedPlan,
+        createdAt: updatedPatient.currentPlan.createdAt
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error generating AI plan:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate AI plan',
+      error: error.message
+    });
+  }
+};
+
+// Reset plan for patient
+const resetPlan = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const patient = await Patient.findById(patientId);
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found'
+      });
+    }
+
+    // Reset the current plan to empty/none
+    const updatedPatient = await Patient.findByIdAndUpdate(
+      patientId,
+      {
+        currentPlan: {
+          type: 'none',
+          planId: null,
+          isVisible: false,
+          createdAt: null,
+          lastModified: new Date(),
+          aiPlan: null
+        }
+      },
+      { new: true }
+    );
+
+    console.log(`✅ Plan reset successfully for patient: ${patientId}`);
+
+    res.json({
+      success: true,
+      message: 'Plan reset successfully',
+      data: updatedPatient.currentPlan
+    });
+
+  } catch (error) {
+    console.error('❌ Error resetting plan:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reset plan',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getCurrentPlan,
   setAIPlan,
-  clearAIPlanOnDoctorCompletion
+  clearAIPlanOnDoctorCompletion,
+  generateAIPlan,
+  resetPlan
 };

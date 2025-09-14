@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
@@ -19,37 +20,146 @@ import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { AppointmentService, Appointment } from '@/src/services/appointment';
 import { PlanService, PlanData } from '@/src/services/plan';
-
-// Current patient data
-const currentPatient = {
-  name: 'Rahul Sharma',
-  constitution: 'Vata-Pitta',
-  planType: 'AI Generated',
-  startDate: '2024-01-15',
-};
+import { PatientService, PatientProfile } from '@/src/services/patient';
+import { prakritiApi } from '@/src/services/api';
 
 export default function DashboardScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const { patient } = useAuth();
+  const { patient, getToken } = useAuth();
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(true);
   const [currentPlan, setCurrentPlan] = useState<PlanData | null>(null);
   const [isLoadingPlan, setIsLoadingPlan] = useState(true);
+  const [patientProfile, setPatientProfile] = useState<PatientProfile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [currentPrakriti, setCurrentPrakriti] = useState<any>(null);
+  const [isLoadingPrakriti, setIsLoadingPrakriti] = useState(true);
+  const [isGeneratingAIPlan, setIsGeneratingAIPlan] = useState(false);
+  const [isResettingPlan, setIsResettingPlan] = useState(false);
+  
+  // New state for daily task tracking
+  const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
+  
+  // Always show Day 1 of the plan (when patient starts the AI plan)
+  const currentPlanDay = 'day1'; // Always start with Day 1
 
-  // Use authenticated patient data or fallback to dummy data
-  const displayPatient = patient || currentPatient;
+  // Calculate days since plan started
+  const getDaysSincePlanStart = (planStartDate: string) => {
+    const start = new Date(planStartDate);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.min(diffDays, 7); // Cap at 7 days for weekly plan
+  };
+
+  // Helper function to toggle task completion
+  const toggleTask = (taskId: string) => {
+    const newCompletedTasks = new Set(completedTasks);
+    if (newCompletedTasks.has(taskId)) {
+      newCompletedTasks.delete(taskId);
+    } else {
+      newCompletedTasks.add(taskId);
+    }
+    setCompletedTasks(newCompletedTasks);
+  };
+
+  // Navigation functions
+  const handleViewFullPlan = () => {
+    router.push('/full-plan-details' as any);
+  };
+
+  const handleViewPrakritiAssessment = () => {
+    router.push('/view-prakriti' as any);
+  };
+
+  const handleViewBodyConstitution = () => {
+    router.push('/body-constitution' as any);
+  };
+
+  const fetchCurrentPrakriti = async () => {
+    try {
+      setIsLoadingPrakriti(true);
+      const response = await prakritiApi.getCurrentPrakriti();
+      if (response.success && response.data?.currentPrakriti) {
+        setCurrentPrakriti(response.data.currentPrakriti);
+      }
+    } catch (error) {
+      console.error('Error fetching Prakriti:', error);
+    } finally {
+      setIsLoadingPrakriti(false);
+    }
+  };
+
+  // Use patient profile data if available, fallback to auth context, then to default
+  const displayPatient = useMemo(() => {
+    const getConstitutionString = () => {
+      if (currentPrakriti) {
+        const { primaryDosha, secondaryDosha, isDual } = currentPrakriti;
+        if (isDual && secondaryDosha) {
+          return `${primaryDosha}-${secondaryDosha}`;
+        }
+        return primaryDosha;
+      }
+      return 'Unknown';
+    };
+
+    if (patientProfile) {
+      return {
+        name: patientProfile.name,
+        constitution: getConstitutionString(),
+        _id: patientProfile._id
+      };
+    }
+    return patient || { name: 'User', constitution: getConstitutionString() };
+  }, [patientProfile, patient, currentPrakriti]);
+
+  // Debug patient data
+  useEffect(() => {
+    console.log('📱 Dashboard - Patient data:', patient);
+    console.log('📱 Dashboard - Patient profile:', patientProfile);
+    console.log('📱 Dashboard - Display patient:', displayPatient);
+  }, [patient, patientProfile, displayPatient]);
+
+  // Fetch patient profile data
+  const fetchPatientProfile = useCallback(async () => {
+    try {
+      setIsLoadingProfile(true);
+      console.log('👤 Fetching patient profile...');
+      
+      // Check if we have a token first
+      const token = await getToken();
+      if (!token) {
+        console.log('❌ No auth token found');
+        setIsLoadingProfile(false);
+        return;
+      }
+      
+      const response = await PatientService.getProfile();
+      if (response.success && response.data) {
+        console.log('👤 Received patient profile:', response.data);
+        setPatientProfile(response.data);
+      } else {
+        console.log('❌ Failed to fetch patient profile:', response.error);
+      }
+    } catch (error) {
+      console.error('Error fetching patient profile:', error);
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  }, [getToken]);
 
   // Fetch real appointment data and plan data
   const fetchAppointments = useCallback(async () => {
-    if (!patient?._id) {
+    const patientId = patient?._id || patientProfile?._id;
+    if (!patientId) {
       setIsLoadingAppointments(false);
       return;
     }
 
     try {
       setIsLoadingAppointments(true);
-      const appointments = await AppointmentService.getPatientAppointments(patient._id);
+      const appointments = await AppointmentService.getPatientAppointments(patientId);
       
       // Filter for upcoming appointments (exclude cancelled) and sort by date
       const upcoming = appointments
@@ -67,17 +177,20 @@ export default function DashboardScreen() {
     } finally {
       setIsLoadingAppointments(false);
     }
-  }, [patient?._id]);
+  }, [patient?._id, patientProfile?._id]);
 
   const fetchPlanData = useCallback(async () => {
-    if (!patient?._id) {
+    const patientId = patient?._id || patientProfile?._id;
+    if (!patientId) {
       setIsLoadingPlan(false);
       return;
     }
 
     try {
       setIsLoadingPlan(true);
-      const planData = await PlanService.getCurrentPlan(patient._id);
+      console.log('📊 Fetching plan data for patient:', patientId);
+      const planData = await PlanService.getCurrentPlan(patientId);
+      console.log('📊 Received plan data:', planData);
       setCurrentPlan(planData);
     } catch (error) {
       console.error('Error fetching plan data:', error);
@@ -86,21 +199,25 @@ export default function DashboardScreen() {
     } finally {
       setIsLoadingPlan(false);
     }
-  }, [patient?._id]);
+  }, [patient?._id, patientProfile?._id]);
 
   useEffect(() => {
+    fetchPatientProfile();
     fetchAppointments();
     fetchPlanData();
-  }, [fetchAppointments, fetchPlanData]);
+    fetchCurrentPrakriti();
+  }, [fetchPatientProfile, fetchAppointments, fetchPlanData]);
 
   // Refresh data when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       if (patient?._id) {
+        fetchPatientProfile();
         fetchAppointments();
         fetchPlanData();
+        fetchCurrentPrakriti();
       }
-    }, [fetchAppointments, fetchPlanData, patient?._id])
+    }, [fetchPatientProfile, fetchAppointments, fetchPlanData, patient?._id])
   );
 
   const handleAppointments = () => {
@@ -109,6 +226,132 @@ export default function DashboardScreen() {
 
   const handleProfile = () => {
     router.push('/profile' as any);
+  };
+
+  const handleAyurvedaInfo = () => {
+    router.push('/ayurveda-info' as any);
+  };
+
+  const handleGenerateAIPlan = async () => {
+    if (!patient?._id && !patientProfile?._id) {
+      Alert.alert('Error', 'Please login again to continue.');
+      return;
+    }
+
+    try {
+      setIsGeneratingAIPlan(true);
+      
+      Alert.alert(
+        'Generate AI Plan',
+        'This will create a personalized Ayurvedic meal plan based on your survey responses and Prakriti assessment. This may take a few moments.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Generate Plan',
+            onPress: async () => {
+              try {
+                const patientId = patient?._id || patientProfile?._id;
+                if (!patientId) {
+                  Alert.alert('Error', 'Patient ID not found. Please login again.');
+                  return;
+                }
+                
+                await PlanService.generateAIPlan(patientId);
+                
+                Alert.alert(
+                  'Success!',
+                  'Your personalized AI meal plan has been generated successfully.',
+                  [
+                    {
+                      text: 'OK',
+                      onPress: () => {
+                        // Refresh the dashboard data to show the new plan
+                        fetchPatientProfile();
+                        fetchPlanData();
+                      },
+                    }
+                  ]
+                );
+              } catch (error) {
+                console.error('AI plan generation error:', error);
+                Alert.alert(
+                  'Error',
+                  'Failed to generate AI plan. Please try again later.',
+                  [{ text: 'OK' }]
+                );
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error preparing AI plan generation:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setIsGeneratingAIPlan(false);
+    }
+  };
+
+  const handleResetPlan = async () => {
+    if (!patient?._id && !patientProfile?._id) {
+      Alert.alert('Error', 'Please login again to continue.');
+      return;
+    }
+
+    Alert.alert(
+      'Reset Plan',
+      'Are you sure you want to reset your current meal plan? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Reset Plan',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsResettingPlan(true);
+              
+              const patientId = patient?._id || patientProfile?._id;
+              if (!patientId) {
+                Alert.alert('Error', 'Patient ID not found. Please login again.');
+                return;
+              }
+              
+              await PlanService.resetPlan(patientId);
+              
+              Alert.alert(
+                'Success!',
+                'Your meal plan has been reset successfully.',
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Refresh the dashboard data to show no plan
+                      fetchPatientProfile();
+                      fetchPlanData();
+                    },
+                  }
+                ]
+              );
+            } catch (error) {
+              console.error('Plan reset error:', error);
+              Alert.alert(
+                'Error',
+                'Failed to reset plan. Please try again later.',
+                [{ text: 'OK' }]
+              );
+            } finally {
+              setIsResettingPlan(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleAppointmentDetails = (appointmentId: string) => {
@@ -140,6 +383,12 @@ export default function DashboardScreen() {
             onPress={() => router.push('/explore')}
           >
             <Ionicons name="restaurant" size={28} color={colors.herbalGreen} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.infoButton} 
+            onPress={handleAyurvedaInfo}
+          >
+            <Ionicons name="information-circle" size={28} color={colors.herbalGreen} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.profileButton} onPress={handleProfile}>
             <Ionicons name="person-circle" size={32} color={colors.herbalGreen} />
@@ -196,19 +445,230 @@ export default function DashboardScreen() {
         </View>
       ) : currentPlan && currentPlan.planType !== 'none' ? (
         <ScrollView style={styles.mealsContainer} showsVerticalScrollIndicator={false}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Your Active Plan ({currentPlan.planType === 'ai' ? 'AI Generated' : 'Doctor Prescribed'})
-          </Text>
-          <View style={[styles.mealCard, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.mealDescription, { color: colors.icon }]}>
-              {currentPlan.planType === 'ai' ? 
-                'Your personalized AI-generated meal plan is active.' : 
-                'Your doctor-prescribed plan is active.'}
+          {/* Prakriti Section */}
+          <View style={[styles.prakritiCard, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              🧘‍♀️ Your Prakriti
             </Text>
+            <Text style={[styles.prakritiType, { color: colors.herbalGreen }]}>
+              {currentPlan.planType === 'ai' && currentPlan.plan?.aiPlan?.prakriti 
+                ? currentPlan.plan.aiPlan.prakriti 
+                : (displayPatient as any).constitution || 'Unknown'}
+            </Text>
+            
+            {/* Action buttons container */}
+            <View style={styles.prakritiButtonsContainer}>
+              <TouchableOpacity 
+                style={[styles.secondaryButton, { 
+                  borderColor: colors.herbalGreen, 
+                  flex: 1, 
+                  marginRight: 8,
+                  marginTop: 0,
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  minHeight: 42
+                }]}
+                onPress={handleViewPrakritiAssessment}
+              >
+                <Text style={[styles.secondaryButtonText, { color: colors.herbalGreen }]}>
+                  View Assessment
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.primaryButton, { 
+                  backgroundColor: colors.herbalGreen, 
+                  flex: 1, 
+                  marginLeft: 8,
+                  minHeight: 42
+                }]}
+                onPress={handleViewBodyConstitution}
+              >
+                <Ionicons name="body-outline" size={16} color="white" style={{ marginRight: 6 }} />
+                <Text style={[styles.primaryButtonText, { color: 'white' }]}>
+                  Body Map
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
+          {/* Today's Plan Section */}
+          {currentPlan.planType === 'ai' && currentPlan.plan?.aiPlan ? (
+            <View>
+            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 20 }]}>
+              📅 Day 1 Plan - Your Journey Begins
+            </Text>              {/* Day 1 Meals */}
+              {currentPlan.plan.aiPlan.weekly_plan && currentPlan.plan.aiPlan.weekly_plan[currentPlanDay] && (
+                <View style={[styles.mealCard, { backgroundColor: colors.cardBackground }]}>
+                  <Text style={[styles.mealTitle, { color: colors.text }]}>
+                    🍽️ Day 1 Meals
+                  </Text>
+                  {['breakfast', 'lunch', 'dinner'].map((mealType) => {
+                    const meal = currentPlan.plan.aiPlan.weekly_plan[currentPlanDay][mealType];
+                    if (meal) {
+                      const taskId = `meal-${mealType}-day1`;
+                      // Handle both string and array formats
+                      const mealItems = Array.isArray(meal) ? meal : [meal];
+                      
+                      return (
+                        <View key={mealType} style={styles.mealSection}>
+                          <TouchableOpacity
+                            style={styles.taskItem}
+                            onPress={() => toggleTask(taskId)}
+                          >
+                            <Ionicons 
+                              name={completedTasks.has(taskId) ? "checkmark-circle" : "ellipse-outline"} 
+                              size={24} 
+                              color={completedTasks.has(taskId) ? colors.herbalGreen : colors.icon} 
+                            />
+                            <View style={styles.taskContent}>
+                              <Text style={[
+                                styles.taskTitle, 
+                                { color: colors.text },
+                                completedTasks.has(taskId) && styles.completedTask
+                              ]}>
+                                {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
+                              </Text>
+                              <View style={styles.foodItemsContainer}>
+                                {mealItems.map((item: string, index: number) => (
+                                  <Text 
+                                    key={index} 
+                                    style={[
+                                      styles.foodItem, 
+                                      { color: colors.icon },
+                                      completedTasks.has(taskId) && styles.completedTask
+                                    ]}
+                                  >
+                                    • {item}
+                                  </Text>
+                                ))}
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+                    return null;
+                  })}
+                </View>
+              )}
+
+              {/* Daily Recommendations - Separate Section */}
+              {currentPlan.plan.aiPlan.recommendations && currentPlan.plan.aiPlan.recommendations.length > 0 && (
+                <View style={[styles.mealCard, { backgroundColor: colors.cardBackground }]}>
+                  <Text style={[styles.mealTitle, { color: colors.text }]}>
+                    ✨ Daily Recommendations
+                  </Text>
+                  <Text style={[styles.mealDescription, { color: colors.icon, marginBottom: 12 }]}>
+                    Follow these guidelines throughout your Ayurvedic journey:
+                  </Text>
+                  {currentPlan.plan.aiPlan.recommendations.map((rec: string, index: number) => {
+                    const taskId = `rec-${index}`;
+                    return (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.taskItem}
+                        onPress={() => toggleTask(taskId)}
+                      >
+                        <Ionicons 
+                          name={completedTasks.has(taskId) ? "checkmark-circle" : "ellipse-outline"} 
+                          size={24} 
+                          color={completedTasks.has(taskId) ? colors.herbalGreen : colors.icon} 
+                        />
+                        <View style={styles.taskContent}>
+                          <Text style={[
+                            styles.taskDescription, 
+                            { color: colors.text },
+                            completedTasks.has(taskId) && styles.completedTask
+                          ]}>
+                            {rec}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              {/* Action Buttons */}
+              <View style={styles.actionButtonsContainer}>
+                <TouchableOpacity
+                  style={[styles.primaryActionButton, { backgroundColor: colors.herbalGreen }]}
+                  onPress={handleViewFullPlan}
+                >
+                  <Ionicons name="calendar-outline" size={20} color="white" />
+                  <Text style={styles.primaryActionButtonText}>View Full Plan</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.resetActionButton, { borderColor: colors.softOrange }]}
+                  onPress={handleResetPlan}
+                  disabled={isResettingPlan}
+                >
+                  <Ionicons name="refresh-outline" size={20} color={colors.softOrange} />
+                  <Text style={[styles.resetActionButtonText, { color: colors.softOrange }]}>
+                    {isResettingPlan ? 'Resetting...' : 'Reset Plan'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={[styles.mealCard, { backgroundColor: colors.cardBackground }]}>
+              <Text style={[styles.mealDescription, { color: colors.icon }]}>
+                {currentPlan.planType === 'ai' ? 
+                  'Your personalized AI-generated meal plan is active.' : 
+                  'Your doctor-prescribed plan is active.'}
+              </Text>
+            </View>
+          )}
         </ScrollView>
       ) : (
-        <View style={styles.noPlanContainer}>
+        <ScrollView style={styles.mealsContainer} showsVerticalScrollIndicator={false}>
+          {/* Prakriti Section - Always show when no plan */}
+          <View style={[styles.prakritiCard, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              🧘‍♀️ Your Prakriti
+            </Text>
+            <Text style={[styles.prakritiType, { color: colors.herbalGreen }]}>
+              {(displayPatient as any).constitution || 'Unknown'}
+            </Text>
+            
+            {/* Action buttons container */}
+            <View style={styles.prakritiButtonsContainer}>
+              <TouchableOpacity 
+                style={[styles.secondaryButton, { 
+                  borderColor: colors.herbalGreen, 
+                  flex: 1, 
+                  marginRight: 8,
+                  marginTop: 0,
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  minHeight: 42
+                }]}
+                onPress={handleViewPrakritiAssessment}
+              >
+                <Text style={[styles.secondaryButtonText, { color: colors.herbalGreen }]}>
+                  View Assessment
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.primaryButton, { 
+                  backgroundColor: colors.herbalGreen, 
+                  flex: 1, 
+                  marginLeft: 8,
+                  minHeight: 42
+                }]}
+                onPress={handleViewBodyConstitution}
+              >
+                <Ionicons name="body-outline" size={16} color="white" style={{ marginRight: 6 }} />
+                <Text style={[styles.primaryButtonText, { color: 'white' }]}>
+                  Body Map
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* No Plan Card */}
           <View style={[styles.noPlanCard, { backgroundColor: colors.cardBackground }]}>
             <Ionicons name="nutrition-outline" size={80} color={colors.icon} />
             <Text style={[styles.noPlanTitle, { color: colors.text }]}>No Active Meal Plan</Text>
@@ -218,10 +678,13 @@ export default function DashboardScreen() {
             <View style={styles.noPlanActions}>
               <TouchableOpacity
                 style={[styles.primaryActionButton, { backgroundColor: colors.herbalGreen }]}
-                onPress={() => router.push('/ai-plan-generation' as any)}
+                onPress={handleGenerateAIPlan}
+                disabled={isGeneratingAIPlan}
               >
                 <Ionicons name="sparkles" size={20} color="white" />
-                <Text style={styles.primaryActionButtonText}>Generate AI Plan</Text>
+                <Text style={styles.primaryActionButtonText}>
+                  {isGeneratingAIPlan ? 'Generating...' : 'Generate AI Plan'}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.secondaryActionButton, { borderColor: colors.herbalGreen }]}
@@ -232,7 +695,7 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </ScrollView>
       )}
 
       {/* Appointments Section */}
@@ -398,6 +861,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   exploreButton: {
+    padding: 1,
+  },
+  infoButton: {
     padding: 1,
   },
   planCard: {
@@ -720,6 +1186,106 @@ const styles = StyleSheet.create({
   },
   secondaryActionButtonText: {
     fontSize: 16,
+    fontWeight: '600',
+  },
+  resetActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    gap: 8,
+    marginTop: 12,
+  },
+  resetActionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // New styles for enhanced dashboard
+  prakritiCard: {
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  prakritiType: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginVertical: 8,
+    textAlign: 'center',
+  },
+  secondaryButton: {
+    borderWidth: 2,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  taskItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  taskContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  taskTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  taskDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  completedTask: {
+    textDecorationLine: 'line-through',
+    opacity: 0.6,
+  },
+  actionButtonsContainer: {
+    marginTop: 20,
+    gap: 12,
+  },
+  mealSection: {
+    marginBottom: 8,
+  },
+  foodItemsContainer: {
+    marginTop: 4,
+  },
+  foodItem: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 2,
+  },
+  prakritiButtonsContainer: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 8,
+  },
+  primaryButton: {
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  primaryButtonText: {
+    fontSize: 14,
     fontWeight: '600',
   },
 });

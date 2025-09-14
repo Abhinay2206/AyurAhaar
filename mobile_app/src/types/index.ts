@@ -13,6 +13,7 @@ export interface SurveyData {
   age: number;
   weight: string;
   height: string;
+  preferredCuisine: string[];
   // Add other survey fields
 }
 

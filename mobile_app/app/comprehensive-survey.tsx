@@ -32,6 +32,7 @@ interface SurveyData {
   allergies: string[];
   healthConditions: string[];
   customAllergies: string;
+  preferredCuisine: string[];
 }
 
 interface PrakritiScores {

@@ -1,4 +1,5 @@
 import { getApiBaseUrl } from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface PlanData {
   planType: 'ai' | 'doctor' | 'none';
@@ -50,6 +51,63 @@ export class PlanService {
       return result.data;
     } catch (error) {
       console.error('Error setting AI plan:', error);
+      throw error;
+    }
+  }
+
+  static async generateAIPlan(patientId: string): Promise<any> {
+    try {
+      const token = await AsyncStorage.getItem('@auth_token');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/plans/generate-ai-plan`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ patientId }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to generate AI plan');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Error generating AI plan:', error);
+      throw error;
+    }
+  }
+
+  static async resetPlan(patientId: string): Promise<any> {
+    try {
+      const token = await AsyncStorage.getItem('@auth_token');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/plans/patient/${patientId}/reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to reset plan');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Error resetting plan:', error);
       throw error;
     }
   }

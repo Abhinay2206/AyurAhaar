@@ -35,6 +35,7 @@ interface SurveyData {
   allergies: string[];
   healthConditions: string[];
   customAllergies: string;
+  preferredCuisine: string[];
 }
 
 enum SurveyStep {
@@ -75,6 +76,25 @@ const healthConditionOptions = [
   { label: 'None', value: 'none', icon: 'checkmark-circle-outline' }
 ];
 
+const cuisineOptions = [
+  { label: 'North Indian', value: 'north_indian', icon: 'restaurant-outline' },
+  { label: 'South Indian', value: 'south_indian', icon: 'leaf-outline' },
+  { label: 'Gujarati', value: 'gujarati', icon: 'flower-outline' },
+  { label: 'Punjabi', value: 'punjabi', icon: 'restaurant-outline' },
+  { label: 'Bengali', value: 'bengali', icon: 'fish-outline' },
+  { label: 'Maharashtrian', value: 'maharashtrian', icon: 'nutrition-outline' },
+  { label: 'Tamil', value: 'tamil', icon: 'leaf-outline' },
+  { label: 'Kerala', value: 'kerala', icon: 'fish-outline' },
+  { label: 'Rajasthani', value: 'rajasthani', icon: 'restaurant-outline' },
+  { label: 'Continental', value: 'continental', icon: 'wine-outline' },
+  { label: 'Chinese', value: 'chinese', icon: 'restaurant-outline' },
+  { label: 'Mediterranean', value: 'mediterranean', icon: 'leaf-outline' },
+  { label: 'Italian', value: 'italian', icon: 'pizza-outline' },
+  { label: 'Mexican', value: 'mexican', icon: 'restaurant-outline' },
+  { label: 'Thai', value: 'thai', icon: 'leaf-outline' },
+  { label: 'Japanese', value: 'japanese', icon: 'fish-outline' }
+];
+
 export default function SurveyScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -98,6 +118,7 @@ export default function SurveyScreen() {
     allergies: [],
     healthConditions: [],
     customAllergies: '',
+    preferredCuisine: [],
   });
 
   // Prakriti assessment data
@@ -219,6 +240,18 @@ export default function SurveyScreen() {
     updateField('healthConditions', newConditions);
   };
 
+  const toggleCuisine = (cuisine: string) => {
+    let newCuisines = [...surveyData.preferredCuisine];
+    
+    if (newCuisines.includes(cuisine)) {
+      newCuisines = newCuisines.filter(c => c !== cuisine);
+    } else {
+      newCuisines = [...newCuisines, cuisine];
+    }
+    
+    updateField('preferredCuisine', newCuisines);
+  };
+
   const validateForm = () => {
     const { fullName, mobileNumber, age, weight, heightUnit, height, heightFeet, heightInches, lifestyle } = surveyData;
     
@@ -283,6 +316,7 @@ export default function SurveyScreen() {
             lifestyle: surveyData.lifestyle,
             allergies: surveyData.allergies.filter(allergy => allergy !== 'none'),
             healthConditions: surveyData.healthConditions.filter(condition => condition !== 'none'),
+            preferredCuisine: surveyData.preferredCuisine,
           };
 
           const response = await surveyApi.submitSurvey(submissionData);
@@ -309,19 +343,29 @@ export default function SurveyScreen() {
       }
     } else if (currentStep === SurveyStep.COMPLETE) {
       // Navigate to plan selection after completing assessment
-      Alert.alert(
-        'Assessment Complete!', 
-        'Your comprehensive health and Prakriti assessment has been completed successfully. We will now create your personalized Ayurvedic diet plan.',
-        [
-          {
-            text: 'Continue',
-            onPress: () => {
-              AuthService.handleSurveyCompletion();
-              router.push('/plan-selection');
-            }
-          }
-        ]
-      );
+      setLoading(true);
+      try {
+        // Update survey completion status
+        await AuthService.handleSurveyCompletion();
+        
+        // Force navigate to plan selection
+        console.log('🎯 Navigating to plan-selection...');
+        router.push('/plan-selection');
+        
+        // Also show success message
+        setTimeout(() => {
+          Alert.alert(
+            'Assessment Complete!', 
+            'Your comprehensive health and Prakriti assessment has been completed successfully.',
+            [{ text: 'OK' }]
+          );
+        }, 500);
+      } catch (error) {
+        console.error('Error completing survey:', error);
+        Alert.alert('Error', 'Failed to complete survey. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -620,6 +664,52 @@ export default function SurveyScreen() {
     </View>
   );
 
+  const renderCuisinePreferences = () => (
+    <View style={styles.inputContainer}>
+      <Text style={[styles.inputLabel, { color: colors.text }]}>
+        Preferred Cuisines <Text style={[styles.inputSubtext, { color: colors.icon, fontSize: 12, fontWeight: 'normal' }]}>(optional)</Text>
+      </Text>
+      <Text style={[styles.inputSubtext, { color: colors.icon }]}>
+        Select your favorite cuisines to personalize your meal plans
+      </Text>
+      <View style={styles.chipsContainer}>
+        {cuisineOptions.map((cuisine) => (
+          <TouchableOpacity
+            key={cuisine.value}
+            style={[
+              styles.modernChip,
+              {
+                backgroundColor: surveyData.preferredCuisine.includes(cuisine.value)
+                  ? colors.herbalGreen
+                  : colors.lightGreen,
+                borderColor: colors.herbalGreen,
+              }
+            ]}
+            onPress={() => toggleCuisine(cuisine.value)}
+          >
+            <Ionicons 
+              name={cuisine.icon as any} 
+              size={16} 
+              color={surveyData.preferredCuisine.includes(cuisine.value) ? 'white' : colors.herbalGreen} 
+            />
+            <Text
+              style={[
+                styles.chipText,
+                {
+                  color: surveyData.preferredCuisine.includes(cuisine.value)
+                    ? 'white'
+                    : colors.herbalGreen,
+                }
+              ]}
+            >
+              {cuisine.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
   const renderLifestyleOptions = () => (
     <View style={styles.inputContainer}>
       <Text style={[styles.inputLabel, { color: colors.text }]}>
@@ -873,6 +963,11 @@ export default function SurveyScreen() {
               </View>
 
               {renderHealthConditions()}
+
+              {/* Cuisine Preferences Section */}
+              {renderSectionHeader('Food Preferences', 'restaurant-outline', 'Tell us about your favorite cuisines')}
+              
+              {renderCuisinePreferences()}
             </>
           )}
 
@@ -909,7 +1004,12 @@ export default function SurveyScreen() {
           </View>
         </View>
         
-        <TouchableOpacity onPress={handleNext} style={styles.modernNextButton} activeOpacity={0.8}>
+        <TouchableOpacity 
+          onPress={handleNext} 
+          style={[styles.modernNextButton, { opacity: loading ? 0.7 : 1 }]} 
+          activeOpacity={0.8}
+          disabled={loading}
+        >
           <LinearGradient
             colors={[colors.herbalGreen, colors.softOrange]}
             start={{ x: 0, y: 0 }}
@@ -917,11 +1017,13 @@ export default function SurveyScreen() {
             style={styles.gradientButton}
           >
             <Text style={styles.nextButtonText}>
-              {currentStep === SurveyStep.BASIC_INFO && 'Continue to Prakriti'}
-              {currentStep === SurveyStep.PRAKRITI_ASSESSMENT && 'Complete Assessment'}
-              {currentStep === SurveyStep.COMPLETE && 'Continue to Plan Selection'}
+              {loading ? 'Processing...' : (
+                currentStep === SurveyStep.BASIC_INFO ? 'Continue to Prakriti' :
+                currentStep === SurveyStep.PRAKRITI_ASSESSMENT ? 'Complete Assessment' :
+                'Continue to Plan Selection'
+              )}
             </Text>
-            <Ionicons name="arrow-forward" size={20} color="white" />
+            {!loading && <Ionicons name="arrow-forward" size={20} color="white" />}
           </LinearGradient>
         </TouchableOpacity>
       </View>

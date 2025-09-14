@@ -48,6 +48,12 @@ export default function RootLayout() {
             <Stack.Screen name="dashboard" options={{ headerShown: false }} />
             <Stack.Screen name="appointments" options={{ headerShown: false }} />
             <Stack.Screen name="profile" options={{ headerShown: false }} />
+            <Stack.Screen name="food-details" options={{ headerShown: false }} />
+            <Stack.Screen name="view-prakriti" options={{ headerShown: false }} />
+            <Stack.Screen name="body-constitution" options={{ headerShown: false }} />
+            <Stack.Screen name="full-plan-details" options={{ headerShown: false }} />
+            <Stack.Screen name="ayurveda-info" options={{ headerShown: false }} />
+            <Stack.Screen name="comprehensive-survey" options={{ headerShown: false }} />
             <Stack.Screen name="dev-tools" options={{ headerShown: true, title: 'Dev Tools' }} />
             <Stack.Screen name="+not-found" />
           </Stack>

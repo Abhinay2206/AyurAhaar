@@ -399,7 +399,7 @@ export default function FoodDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
+    paddingTop: 44, // Reduced padding for status bar only
   },
   header: {
     flexDirection: 'row',
