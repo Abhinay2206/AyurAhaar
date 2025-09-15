@@ -3,6 +3,7 @@ const router = express.Router();
 const { authenticateToken, requirePatientRole } = require('../middleware/auth.middleware');
 const {
   createAppointment,
+  getAllAppointments,
   getPatientAppointments,
   getDoctorAppointments,
   updateAppointmentStatus,
@@ -15,6 +16,9 @@ const {
 
 // Create new appointment
 router.post('/create', createAppointment);
+
+// Get all appointments (admin route)
+router.get('/all', getAllAppointments);
 
 // Get my appointments (for authenticated patient)
 router.get('/my-appointments', authenticateToken, requirePatientRole, async (req, res) => {

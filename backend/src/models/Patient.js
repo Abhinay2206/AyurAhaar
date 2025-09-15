@@ -23,6 +23,14 @@ const PatientSchema = new mongoose.Schema({
     lastModified: { type: Date },
     aiPlan: { type: mongoose.Schema.Types.Mixed } // Store AI generated plan data
   },
+  // Consultation status tracking
+  consultationStatus: {
+    type: String,
+    enum: ['none', 'consulting', 'completed'],
+    default: 'none'
+  },
+  consultationStartedAt: { type: Date },
+  consultationCompletedAt: { type: Date },
   // Prakriti Assessment Integration
   prakritiAssessments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'PrakritiAssessment' }],
   currentPrakriti: {

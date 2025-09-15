@@ -164,7 +164,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           id: 'meal-plans', 
           icon: '◉', 
           label: 'Treatment Plans', 
-          path: '/app/meal-plans',
+          path: '/app/treatment-plans',
           category: 'clinical'
         },
         { 

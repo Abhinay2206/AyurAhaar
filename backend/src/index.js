@@ -13,11 +13,13 @@ const doctorRoutes = require('./routes/doctor.routes');
 const appointmentRoutes = require('./routes/appointment.routes');
 const planRoutes = require('./routes/plan.routes');
 const patientRoutes = require('./routes/patient.routes');
+const adminRoutes = require('./routes/admin.routes');
 const foodRoutes = require('./routes/food.routes');
 const prakritiRoutes = require('./routes/prakriti.routes');
 const chatRoutes = require('./routes/chat.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const prescriptionRoutes = require('./routes/prescription.routes');
+const treatmentPlanRoutes = require('./routes/treatmentPlan.routes');
 
 const app = express();
 
@@ -50,11 +52,13 @@ app.use('/api/doctor', doctorRoutes); // Add doctor-specific authenticated route
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/patients', patientRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/prakriti', prakritiRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/treatment-plans', treatmentPlanRoutes);
 
 // 404 handler
 app.use((req, res) => {

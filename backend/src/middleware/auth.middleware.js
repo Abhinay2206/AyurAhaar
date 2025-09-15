@@ -54,10 +54,11 @@ function requireDoctorRole(req, res, next) {
   next();
 }
 
-// Middleware to check if user is an admin
+// Middleware to check if user is an admin, doctor, or super-admin (for patient management)
 function requireAdminRole(req, res, next) {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Admin role required' });
+  const allowedRoles = ['admin', 'doctor', 'super-admin'];
+  if (!allowedRoles.includes(req.user.role)) {
+    return res.status(403).json({ message: 'Admin, doctor, or super-admin role required' });
   }
   next();
 }

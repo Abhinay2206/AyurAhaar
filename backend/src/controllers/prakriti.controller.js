@@ -362,5 +362,57 @@ module.exports = {
   submitPrakritiAnswer,
   getAssessmentProgress,
   getPrakritiHistory,
-  getCurrentPrakriti
+  getCurrentPrakriti,
+  getPatientPrakritiData
 };
+
+// Get patient Prakriti data by patient ID (admin/doctor route)
+async function getPatientPrakritiData(req, res) {
+  try {
+    const { patientId } = req.params;
+    
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found'
+      });
+    }
+
+    // Get the latest assessment
+    const latestAssessment = await PrakritiAssessment.findOne({ 
+      patient: patientId,
+      isCompleted: true 
+    })
+    .sort({ completedAt: -1 })
+    .populate('responses.question');
+
+    res.json({
+      success: true,
+      data: {
+        prakritiCompleted: patient.prakritiCompleted || false,
+        currentPrakriti: patient.currentPrakriti || null,
+        assessmentData: latestAssessment ? {
+          id: latestAssessment._id,
+          completedAt: latestAssessment.completedAt,
+          scores: latestAssessment.scores,
+          dominantDosha: latestAssessment.dominantDosha,
+          prakritiType: latestAssessment.prakritiType,
+          characteristics: latestAssessment.characteristics,
+          responses: latestAssessment.responses.map(response => ({
+            questionText: response.question.questionText,
+            category: response.question.category,
+            selectedAnswer: response.selectedAnswer,
+            answerText: response.question.options[response.selectedAnswer]?.optionText
+          }))
+        } : null
+      }
+    });
+  } catch (error) {
+    console.error('Error getting patient Prakriti data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while retrieving Prakriti data'
+    });
+  }
+}

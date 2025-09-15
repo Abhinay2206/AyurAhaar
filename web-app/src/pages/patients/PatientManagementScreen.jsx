@@ -1,118 +1,483 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Button, Input } from '../../components';
 import { formatDate, getBMICategory, getPrakritiColor } from '../../utils';
-import { ApiService } from '../../services';
+import ApiService from '../../services/api';
 
-// Mock patient data based on the CSV structure
-const mockPatients = [
-  {
-    patient_id: 'P0001',
-    name: 'Rajesh Kumar',
-    age: 56,
-    gender: 'M',
-    weight_kg: 76.2,
-    height_cm: 171,
-    BMI: 26.1,
-    lifestyle: 'sedentary',
-    prakriti: 'Kapha',
-    health_conditions: 'None',
-    allergies: 'None',
-    preferred_cuisine: 'Chinese',
-    phone: '+91 9876543210',
-    email: 'rajesh.kumar@email.com',
-    address: 'Banjara Hills, Hyderabad',
-    last_visit: '2024-01-15',
-    next_appointment: '2024-02-10',
-    treatment_status: 'Active',
-    joining_date: '2023-06-15'
-  },
-  {
-    patient_id: 'P0002',
-    name: 'Priya Sharma',
-    age: 36,
-    gender: 'F',
-    weight_kg: 61.4,
-    height_cm: 174,
-    BMI: 20.3,
+// Modal Components
+const Modal = ({ isOpen, onClose, title, children, size = 'medium' }) => {
+  if (!isOpen) return null;
+
+  const sizes = {
+    small: '400px',
+    medium: '600px',
+    large: '800px',
+    xlarge: '1000px'
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        width: '90%',
+        maxWidth: sizes[size],
+        maxHeight: '90vh',
+        overflow: 'auto',
+        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+      }}>
+        <div style={{
+          padding: '20px',
+          borderBottom: '1px solid #e5e7eb',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h2 style={{
+            margin: 0,
+            fontSize: '18px',
+            fontWeight: '600',
+            color: '#2C5F41',
+            fontFamily: "'Inter', sans-serif"
+          }}>
+            {title}
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+              color: '#687076',
+              padding: '4px'
+            }}
+          >
+            ×
+          </button>
+        </div>
+        <div style={{ padding: '20px' }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AddPatientModal = ({ onClose, onPatientAdded }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    age: '',
+    gender: '',
+    weight_kg: '',
+    height_cm: '',
     lifestyle: 'sedentary',
     prakriti: 'Vata',
-    health_conditions: 'Obesity',
-    allergies: 'peanuts',
-    preferred_cuisine: 'North Indian',
-    phone: '+91 9876543211',
-    email: 'priya.sharma@email.com',
-    address: 'Jubilee Hills, Hyderabad',
-    last_visit: '2024-01-18',
-    next_appointment: '2024-02-15',
-    treatment_status: 'Active',
-    joining_date: '2023-08-22'
-  },
-  {
-    patient_id: 'P0003',
-    name: 'Anita Reddy',
-    age: 20,
-    gender: 'F',
-    weight_kg: 66.2,
-    height_cm: 159,
-    BMI: 26.2,
-    lifestyle: 'sedentary',
-    prakriti: 'Vata',
-    health_conditions: 'Hypertension',
-    allergies: 'peanuts',
-    preferred_cuisine: 'North Indian',
-    phone: '+91 9876543212',
-    email: 'anita.reddy@email.com',
-    address: 'Gachibowli, Hyderabad',
-    last_visit: '2024-01-20',
-    next_appointment: '2024-02-08',
-    treatment_status: 'Active',
-    joining_date: '2023-09-10'
-  },
-  {
-    patient_id: 'P0004',
-    name: 'Vikram Singh',
-    age: 29,
-    gender: 'M',
-    weight_kg: 68.3,
-    height_cm: 175,
-    BMI: 22.3,
-    lifestyle: 'sedentary',
-    prakriti: 'Vata',
-    health_conditions: 'Obesity',
-    allergies: 'milk',
-    preferred_cuisine: 'Chinese',
-    phone: '+91 9876543213',
-    email: 'vikram.singh@email.com',
-    address: 'Kondapur, Hyderabad',
-    last_visit: '2024-01-12',
-    next_appointment: '2024-02-20',
-    treatment_status: 'Active',
-    joining_date: '2023-07-05'
-  },
-  {
-    patient_id: 'P0005',
-    name: 'Sunita Devi',
-    age: 33,
-    gender: 'F',
-    weight_kg: 59.8,
-    height_cm: 160,
-    BMI: 23.4,
-    lifestyle: 'sedentary',
-    prakriti: 'Mixed',
-    health_conditions: 'None',
-    allergies: 'None',
-    preferred_cuisine: 'Italian',
-    phone: '+91 9876543214',
-    email: 'sunita.devi@email.com',
-    address: 'Hitech City, Hyderabad',
-    last_visit: '2024-01-22',
-    next_appointment: null,
-    treatment_status: 'Completed',
-    joining_date: '2023-05-18'
-  }
-];
+    health_conditions: '',
+    allergies: '',
+    preferred_cuisine: '',
+    address: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      // This would be the actual API call to create a patient
+      console.log('Creating patient:', formData);
+      // await ApiService.createPatient(formData);
+      onPatientAdded();
+    } catch (error) {
+      setError('Failed to create patient. Please try again.', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title="Add New Patient" size="large">
+      <form onSubmit={handleSubmit}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '16px',
+          marginBottom: '20px'
+        }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#2C5F41' }}>
+              Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#2C5F41' }}>
+              Email *
+            </label>
+            <input
+              type="email"
+              required
+              value={formData.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#2C5F41' }}>
+              Phone *
+            </label>
+            <input
+              type="tel"
+              required
+              value={formData.phone}
+              onChange={(e) => handleChange('phone', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#2C5F41' }}>
+              Age
+            </label>
+            <input
+              type="number"
+              value={formData.age}
+              onChange={(e) => handleChange('age', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#2C5F41' }}>
+              Gender
+            </label>
+            <select
+              value={formData.gender}
+              onChange={(e) => handleChange('gender', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
+              <option value="">Select Gender</option>
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#2C5F41' }}>
+              Prakriti
+            </label>
+            <select
+              value={formData.prakriti}
+              onChange={(e) => handleChange('prakriti', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
+              <option value="Vata">Vata</option>
+              <option value="Pitta">Pitta</option>
+              <option value="Kapha">Kapha</option>
+              <option value="Mixed">Mixed</option>
+            </select>
+          </div>
+        </div>
+
+        {error && (
+          <div style={{
+            backgroundColor: '#fee',
+            color: '#c33',
+            padding: '12px',
+            borderRadius: '4px',
+            marginBottom: '16px'
+          }}>
+            {error}
+          </div>
+        )}
+
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          justifyContent: 'flex-end'
+        }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#f3f4f6',
+              color: '#374151',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontFamily: "'Inter', sans-serif"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: loading ? '#9ca3af' : '#3E8E5A',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: "'Inter', sans-serif"
+            }}
+          >
+            {loading ? 'Creating...' : 'Create Patient'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+};
+
+const PlanModal = ({ patient, onClose }) => {
+  return (
+    <Modal isOpen={true} onClose={onClose} title={`Treatment Plan - ${patient.name}`} size="large">
+      <div style={{ textAlign: 'center', padding: '40px', color: '#687076' }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
+        <h3 style={{ color: '#2C5F41', marginBottom: '8px' }}>Treatment Plan</h3>
+        <p>Treatment plan details for {patient.name} will be displayed here.</p>
+        <p style={{ fontSize: '14px', marginTop: '16px' }}>
+          This feature will show the patient's current treatment plan, dietary recommendations, 
+          and progress tracking.
+        </p>
+      </div>
+    </Modal>
+  );
+};
+
+const AppointmentModal = ({ patient, onClose, onAppointmentScheduled }) => {
+  const [appointmentData, setAppointmentData] = useState({
+    date: '',
+    time: '',
+    type: 'consultation',
+    notes: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Scheduling appointment:', appointmentData);
+    onAppointmentScheduled();
+  };
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title={`Schedule Appointment - ${patient.name}`} size="medium">
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#2C5F41' }}>
+              Appointment Date
+            </label>
+            <input
+              type="date"
+              required
+              value={appointmentData.date}
+              onChange={(e) => setAppointmentData(prev => ({ ...prev, date: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#2C5F41' }}>
+              Appointment Time
+            </label>
+            <input
+              type="time"
+              required
+              value={appointmentData.time}
+              onChange={(e) => setAppointmentData(prev => ({ ...prev, time: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#2C5F41' }}>
+              Appointment Type
+            </label>
+            <select
+              value={appointmentData.type}
+              onChange={(e) => setAppointmentData(prev => ({ ...prev, type: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
+              <option value="consultation">Consultation</option>
+              <option value="follow-up">Follow-up</option>
+              <option value="assessment">Assessment</option>
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#2C5F41' }}>
+              Notes
+            </label>
+            <textarea
+              value={appointmentData.notes}
+              onChange={(e) => setAppointmentData(prev => ({ ...prev, notes: e.target.value }))}
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif",
+                resize: 'vertical'
+              }}
+              placeholder="Additional notes for the appointment..."
+            />
+          </div>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          justifyContent: 'flex-end'
+        }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#f3f4f6',
+              color: '#374151',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontFamily: "'Inter', sans-serif"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#3E8E5A',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontFamily: "'Inter', sans-serif"
+            }}
+          >
+            Schedule Appointment
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+};
+
+const HistoryModal = ({ patient, onClose }) => {
+  return (
+    <Modal isOpen={true} onClose={onClose} title={`Patient History - ${patient.name}`} size="large">
+      <div style={{ textAlign: 'center', padding: '40px', color: '#687076' }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
+        <h3 style={{ color: '#2C5F41', marginBottom: '8px' }}>Patient History</h3>
+        <p>Medical history and treatment records for {patient.name} will be displayed here.</p>
+        <p style={{ fontSize: '14px', marginTop: '16px' }}>
+          This feature will show appointment history, treatment progress, test results, 
+          and other medical records.
+        </p>
+      </div>
+    </Modal>
+  );
+};
 
 const PatientManagementScreen = () => {
+  // eslint-disable-next-line no-unused-vars
   const [patients, setPatients] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -124,7 +489,108 @@ const PatientManagementScreen = () => {
     lifestyle: 'all'
   });
   const [showPatientModal, setShowPatientModal] = useState(false);
+  const [showAddPatientModal, setShowAddPatientModal] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalPatients: 0,
+    limit: 10
+  });
+
+  // Load patients from API
+  const fetchPatients = async (page = 1, resetPagination = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const filters = {};
+      if (searchTerm) filters.search = searchTerm;
+      if (filterCriteria.prakriti !== 'all') filters.prakriti = filterCriteria.prakriti;
+      if (filterCriteria.healthCondition !== 'all') filters.healthCondition = filterCriteria.healthCondition;
+      if (filterCriteria.ageGroup !== 'all') filters.ageGroup = filterCriteria.ageGroup;
+      if (filterCriteria.lifestyle !== 'all') filters.lifestyle = filterCriteria.lifestyle;
+      
+      const response = await ApiService.getAllPatients({
+        ...filters,
+        page,
+        limit: pagination.limit
+      });
+      
+      // Extract data from the nested response structure
+      const data = response.data || response;
+      
+      setPatients(data.patients || []);
+      setFilteredPatients(data.patients || []);
+      
+      if (resetPagination) {
+        setPagination({
+          currentPage: 1,
+          totalPages: data.pagination?.totalPages || 1,
+          totalPatients: data.pagination?.total || 0,
+          limit: data.pagination?.limit || 10
+        });
+      } else {
+        setPagination(prev => ({
+          ...prev,
+          currentPage: data.pagination?.currentPage || page,
+          totalPages: data.pagination?.totalPages || 1,
+          totalPatients: data.pagination?.total || 0,
+          limit: data.pagination?.limit || 10
+        }));
+      }
+    } catch (err) {
+      console.error('Error fetching patients:', err);
+      setError('Failed to load patients. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchPatients(1, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // When filters change, reset to page 1
+  useEffect(() => {
+    if (searchTerm || filterCriteria.prakriti !== 'all' || filterCriteria.healthCondition !== 'all' || 
+        filterCriteria.ageGroup !== 'all' || filterCriteria.lifestyle !== 'all') {
+      fetchPatients(1, true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, filterCriteria]);
+
+  // Handle page changes
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, currentPage: newPage }));
+    fetchPatients(newPage, false);
+  };
+
+  // Action handlers
+  const handleViewPlan = (patient) => {
+    setSelectedPatient(patient);
+    setShowPlanModal(true);
+  };
+
+  const handleScheduleAppointment = (patient) => {
+    setSelectedPatient(patient);
+    setShowAppointmentModal(true);
+  };
+
+  const handleViewHistory = (patient) => {
+    setSelectedPatient(patient);
+    setShowHistoryModal(true);
+  };
+
+  const handleAddPatient = () => {
+    setShowAddPatientModal(true);
+  };
 
   // Dashboard-themed styles
   const containerStyles = {
@@ -148,64 +614,6 @@ const PatientManagementScreen = () => {
     margin: 0,
     fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   };
-
-  const filterPatients = useCallback(() => {
-    let filtered = patients;
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(patient =>
-        patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.patient_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.phone.includes(searchTerm) ||
-        patient.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Prakriti filter
-    if (filterCriteria.prakriti !== 'all') {
-      filtered = filtered.filter(patient => patient.prakriti === filterCriteria.prakriti);
-    }
-
-    // Health condition filter
-    if (filterCriteria.healthCondition !== 'all') {
-      filtered = filtered.filter(patient => 
-        patient.health_conditions.toLowerCase().includes(filterCriteria.healthCondition.toLowerCase())
-      );
-    }
-
-    // Age group filter
-    if (filterCriteria.ageGroup !== 'all') {
-      filtered = filtered.filter(patient => {
-        const age = patient.age;
-        switch (filterCriteria.ageGroup) {
-          case 'young': return age < 30;
-          case 'middle': return age >= 30 && age < 50;
-          case 'senior': return age >= 50;
-          default: return true;
-        }
-      });
-    }
-
-    // Lifestyle filter
-    if (filterCriteria.lifestyle !== 'all') {
-      filtered = filtered.filter(patient => patient.lifestyle === filterCriteria.lifestyle);
-    }
-
-    setFilteredPatients(filtered);
-  }, [patients, searchTerm, filterCriteria]);
-
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setPatients(mockPatients);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  useEffect(() => {
-    filterPatients();
-  }, [filterPatients]);
 
   const handlePatientSelect = (patient) => {
     setSelectedPatient(patient);
@@ -609,7 +1017,21 @@ const PatientManagementScreen = () => {
           <p style={{color: '#687076', fontSize: '14px', margin: '4px 0 0 0', fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"}}>Manage and monitor your patients' health journey</p>
         </div>
         <div>
-          <Button variant="primary">Add New Patient</Button>
+          <button 
+            onClick={handleAddPatient}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#3E8E5A',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: '500'
+            }}
+          >
+            Add New Patient
+          </button>
         </div>
       </div>
 
@@ -848,42 +1270,110 @@ const PatientManagementScreen = () => {
               paddingTop: '8px',
               borderTop: '1px solid #f3f4f6'
             }}>
-              <button style={{
-                flex: 1,
-                padding: '4px 6px',
-                fontSize: '10px',
-                backgroundColor: '#3E8E5A',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer'
-              }}>View Plan</button>
-              <button style={{
-                flex: 1,
-                padding: '4px 6px',
-                fontSize: '10px',
-                backgroundColor: '#F4A261',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer'
-              }}>Appointment</button>
-              <button style={{
-                flex: 1,
-                padding: '4px 6px',
-                fontSize: '10px',
-                backgroundColor: '#687076',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer'
-              }}>History</button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewPlan(patient);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '4px 6px',
+                  fontSize: '10px',
+                  backgroundColor: '#3E8E5A',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer'
+                }}
+              >
+                View Plan
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleScheduleAppointment(patient);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '4px 6px',
+                  fontSize: '10px',
+                  backgroundColor: '#F4A261',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer'
+                }}
+              >
+                Appointment
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewHistory(patient);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '4px 6px',
+                  fontSize: '10px',
+                  backgroundColor: '#687076',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer'
+                }}
+              >
+                History
+              </button>
             </div>
           </Card>
         ))}
       </div>
 
-      {filteredPatients.length === 0 && !loading && (
+      {/* Loading State */}
+      {loading && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '200px',
+          fontSize: '16px',
+          color: '#687076'
+        }}>
+          Loading patients...
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div style={{
+          backgroundColor: '#fee',
+          border: '1px solid #fcc',
+          borderRadius: '8px',
+          padding: '16px',
+          margin: '16px 0',
+          color: '#c33',
+          textAlign: 'center'
+        }}>
+          {error}
+          <button 
+            onClick={fetchPatients}
+            style={{
+              marginLeft: '12px',
+              padding: '6px 12px',
+              backgroundColor: '#3E8E5A',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* No Results */}
+      {!loading && !error && filteredPatients.length === 0 && (
         <div style={{
           textAlign: 'center',
           padding: '40px 20px',
@@ -892,11 +1382,164 @@ const PatientManagementScreen = () => {
           <div style={{fontSize: '48px', marginBottom: '12px'}}>⚕</div>
           <h3 style={{color: '#2C5F41', margin: '0 0 6px 0', fontSize: '16px'}}>No patients found</h3>
           <p style={{margin: '0 0 16px 0', fontSize: '12px'}}>Try adjusting your search criteria or add a new patient.</p>
-          <Button variant="primary">Add New Patient</Button>
+          <button 
+            onClick={handleAddPatient}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#3E8E5A',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: '500'
+            }}
+          >
+            Add New Patient
+          </button>
         </div>
       )}
 
+      {/* Pagination Controls */}
+      {!loading && !error && pagination.totalPages > 1 && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '12px',
+          marginTop: '24px',
+          padding: '16px',
+          borderTop: '1px solid #e5e7eb'
+        }}>
+          <button
+            onClick={() => handlePageChange(pagination.currentPage - 1)}
+            disabled={pagination.currentPage === 1}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: pagination.currentPage === 1 ? '#f3f4f6' : '#3E8E5A',
+              color: pagination.currentPage === 1 ? '#9ca3af' : 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: pagination.currentPage === 1 ? 'not-allowed' : 'pointer',
+              fontFamily: "'Inter', sans-serif"
+            }}
+          >
+            Previous
+          </button>
+          
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            alignItems: 'center'
+          }}>
+            {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+              let pageNum;
+              if (pagination.totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (pagination.currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                pageNum = pagination.totalPages - 4 + i;
+              } else {
+                pageNum = pagination.currentPage - 2 + i;
+              }
+              
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: pagination.currentPage === pageNum ? '#3E8E5A' : 'transparent',
+                    color: pagination.currentPage === pageNum ? 'white' : '#2C5F41',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: pagination.currentPage === pageNum ? '600' : '400'
+                  }}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+          
+          <button
+            onClick={() => handlePageChange(pagination.currentPage + 1)}
+            disabled={pagination.currentPage === pagination.totalPages}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: pagination.currentPage === pagination.totalPages ? '#f3f4f6' : '#3E8E5A',
+              color: pagination.currentPage === pagination.totalPages ? '#9ca3af' : 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: pagination.currentPage === pagination.totalPages ? 'not-allowed' : 'pointer',
+              fontFamily: "'Inter', sans-serif"
+            }}
+          >
+            Next
+          </button>
+          
+          <div style={{
+            marginLeft: '12px',
+            fontSize: '14px',
+            color: '#687076',
+            fontFamily: "'Inter', sans-serif"
+          }}>
+            Page {pagination.currentPage} of {pagination.totalPages} 
+            ({pagination.totalPatients} patients total)
+          </div>
+        </div>
+      )}
+
+      {/* Modals */}
       {showPatientModal && <PatientModal />}
+      
+      {showAddPatientModal && (
+        <AddPatientModal 
+          onClose={() => setShowAddPatientModal(false)}
+          onPatientAdded={() => {
+            setShowAddPatientModal(false);
+            fetchPatients(1, true); // Refresh patients list
+          }}
+        />
+      )}
+
+      {showPlanModal && selectedPatient && (
+        <PlanModal 
+          patient={selectedPatient}
+          onClose={() => {
+            setShowPlanModal(false);
+            setSelectedPatient(null);
+          }}
+        />
+      )}
+
+      {showAppointmentModal && selectedPatient && (
+        <AppointmentModal 
+          patient={selectedPatient}
+          onClose={() => {
+            setShowAppointmentModal(false);
+            setSelectedPatient(null);
+          }}
+          onAppointmentScheduled={() => {
+            setShowAppointmentModal(false);
+            setSelectedPatient(null);
+            fetchPatients(pagination.currentPage, false); // Refresh current page
+          }}
+        />
+      )}
+
+      {showHistoryModal && selectedPatient && (
+        <HistoryModal 
+          patient={selectedPatient}
+          onClose={() => {
+            setShowHistoryModal(false);
+            setSelectedPatient(null);
+          }}
+        />
+      )}
     </div>
   );
 };

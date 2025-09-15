@@ -79,4 +79,44 @@ async function getSurveyStatus(req, res) {
   }
 }
 
-module.exports = { submitSurvey, getSurveyStatus };
+module.exports = { submitSurvey, getSurveyStatus, getPatientSurveyData };
+
+// Get patient survey data by patient ID (admin/doctor route)
+async function getPatientSurveyData(req, res) {
+  try {
+    const { patientId } = req.params;
+    
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Patient not found' 
+      });
+    }
+
+    res.json({ 
+      success: true,
+      data: {
+        surveyCompleted: patient.surveyCompleted || false,
+        surveyData: {
+          age: patient.age,
+          weight: patient.weight,
+          height: patient.height,
+          lifestyle: patient.lifestyle,
+          allergies: patient.allergies || [],
+          healthConditions: patient.healthConditions || [],
+          preferredCuisine: patient.preferredCuisine || [],
+          // Calculate BMI
+          bmi: patient.weight && patient.height ? 
+            (patient.weight / Math.pow(patient.height / 100, 2)).toFixed(1) : null
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Get patient survey data error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error' 
+    });
+  }
+}

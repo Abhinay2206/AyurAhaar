@@ -260,10 +260,168 @@ async function updatePlan(req, res) {
   }
 }
 
+// Get all patients (for admin/doctor use)
+async function getAllPatients(req, res) {
+  try {
+    const {
+      page = 1,
+      limit = 50,
+      search = '',
+      prakriti = '',
+      healthCondition = '',
+      ageGroup = '',
+      lifestyle = '',
+      treatmentStatus = ''
+    } = req.query;
+
+    // Build filter object
+    const filter = {};
+
+    // Search filter
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Prakriti filter
+    if (prakriti && prakriti !== 'all') {
+      filter['currentPrakriti.primaryDosha'] = prakriti;
+    }
+
+    // Health condition filter
+    if (healthCondition && healthCondition !== 'all') {
+      if (healthCondition === 'none') {
+        filter.$or = [
+          { healthConditions: { $exists: false } },
+          { healthConditions: { $size: 0 } }
+        ];
+      } else {
+        filter.healthConditions = { $in: [new RegExp(healthCondition, 'i')] };
+      }
+    }
+
+    // Age group filter
+    if (ageGroup && ageGroup !== 'all') {
+      switch (ageGroup) {
+        case 'young':
+          filter.age = { $lt: 30 };
+          break;
+        case 'middle':
+          filter.age = { $gte: 30, $lt: 50 };
+          break;
+        case 'senior':
+          filter.age = { $gte: 50 };
+          break;
+      }
+    }
+
+    // Lifestyle filter
+    if (lifestyle && lifestyle !== 'all') {
+      filter.lifestyle = lifestyle;
+    }
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get patients with pagination
+    const patients = await Patient.find(filter)
+      .select('-password -__v')
+      .populate('currentPrakriti.assessmentId', 'results')
+      .populate('appointments', 'date status')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Get total count for pagination
+    const totalPatients = await Patient.countDocuments(filter);
+
+    // Transform data to match frontend expectations
+    const transformedPatients = patients.map(patient => {
+      // Calculate BMI if height and weight are available
+      let bmi = null;
+      if (patient.height && patient.weight) {
+        const heightInM = patient.height / 100;
+        bmi = (patient.weight / (heightInM * heightInM)).toFixed(1);
+      }
+
+      // Get treatment status based on current plan and appointments
+      let treatmentStatus = 'Inactive';
+      if (patient.currentPlan && patient.currentPlan.type !== 'none') {
+        treatmentStatus = 'Active';
+      } else if (patient.appointments && patient.appointments.length > 0) {
+        const hasRecentAppointment = patient.appointments.some(apt => 
+          new Date(apt.date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+        );
+        if (hasRecentAppointment) {
+          treatmentStatus = 'Active';
+        } else {
+          treatmentStatus = 'Completed';
+        }
+      }
+
+      // Get the most recent appointment
+      const sortedAppointments = patient.appointments ? 
+        patient.appointments.sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
+      const lastVisit = sortedAppointments.length > 0 ? sortedAppointments[0].date : patient.createdAt;
+      
+      // Get next appointment
+      const futureAppointments = patient.appointments ? 
+        patient.appointments.filter(apt => new Date(apt.date) > new Date()) : [];
+      const nextAppointment = futureAppointments.length > 0 ? 
+        futureAppointments.sort((a, b) => new Date(a.date) - new Date(b.date))[0].date : null;
+
+      return {
+        patient_id: patient._id,
+        name: patient.name,
+        age: patient.age || 0,
+        gender: patient.gender || 'N/A',
+        weight_kg: patient.weight || 0,
+        height_cm: patient.height || 0,
+        BMI: bmi || 0,
+        lifestyle: patient.lifestyle || 'sedentary',
+        prakriti: patient.currentPrakriti?.primaryDosha || 'Unknown',
+        health_conditions: patient.healthConditions?.join(', ') || 'None',
+        allergies: patient.allergies?.join(', ') || 'None',
+        preferred_cuisine: patient.preferredCuisine?.join(', ') || 'Not specified',
+        phone: patient.phone || 'Not provided',
+        email: patient.email,
+        address: patient.address || 'Not provided',
+        last_visit: lastVisit,
+        next_appointment: nextAppointment,
+        treatment_status: treatmentStatus,
+        joining_date: patient.createdAt
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        patients: transformedPatients,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(totalPatients / parseInt(limit)),
+          totalPatients,
+          limit: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while fetching patients' 
+    });
+  }
+}
+
 module.exports = {
   getProfile,
   updateProfile,
   getDashboard,
   updateSurveyStatus,
-  updatePlan
+  updatePlan,
+  getAllPatients
 };

@@ -4,6 +4,8 @@ import { LoginScreen, DoctorRegistrationScreen } from './pages/auth';
 import { ComprehensiveDashboard } from './pages/dashboard';
 import { PatientManagementScreen } from './pages/patients';
 import { MealPlanGenerationScreen } from './pages/meal-plans';
+import TreatmentPlansScreen from './pages/treatment-plans';
+import MealPlanCreationScreen from './pages/meal-plan-creation/MealPlanCreationScreen';
 import { ConsultationsScreen } from './pages/consultations';
 import { PrescriptionsScreen } from './pages/prescriptions';
 import { ReportsScreen } from './pages/reports';
@@ -39,12 +41,16 @@ function App() {
             <Route path="patients" element={<PatientManagementScreen />} />
             <Route path="consultations" element={<ConsultationsScreen />} />
             <Route path="meal-plans" element={<MealPlanGenerationScreen />} />
+            <Route path="treatment-plans" element={<TreatmentPlansScreen />} />
             <Route path="prescriptions" element={<PrescriptionsScreen />} />
             <Route path="reports" element={<ReportsScreen />} />
             <Route path="analytics" element={<AnalyticsScreen />} />
             <Route path="messages" element={<MessagesScreen />} />
             <Route path="settings" element={<SettingsScreen />} />
           </Route>
+
+          {/* Standalone Routes */}
+          <Route path="/meal-plan-creation" element={<MealPlanCreationScreen />} />
           
           {/* Super Admin Routes */}
           <Route path="/super-admin/login" element={<SuperAdminLogin />} />

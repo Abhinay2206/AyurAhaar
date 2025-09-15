@@ -116,6 +116,161 @@ const createAppointment = async (req, res) => {
   }
 };
 
+// Get all appointments for admin view
+const getAllAppointments = async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      status, 
+      search,
+      sortBy = 'priority' // priority, date, status
+    } = req.query;
+
+    // Build filter object
+    const filter = {};
+    if (status && status !== 'all') {
+      filter.status = status;
+    }
+
+    // Build search filter
+    let searchFilter = {};
+    if (search) {
+      searchFilter = {
+        $or: [
+          { 'patientDetails.name': { $regex: search, $options: 'i' } },
+          { 'patientDetails.email': { $regex: search, $options: 'i' } },
+          { 'patientDetails.phone': { $regex: search, $options: 'i' } },
+          { doctorName: { $regex: search, $options: 'i' } },
+          { appointmentId: { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+
+    // Combine filters
+    const finalFilter = { ...filter, ...searchFilter };
+
+    // Build sort object
+    let sortObject = {};
+    if (sortBy === 'priority') {
+      // Sort by status priority (scheduled first, then completed)
+      const statusPriority = {
+        'confirmed': 1,
+        'pending': 2,
+        'completed': 3,
+        'cancelled': 4
+      };
+      
+      // We'll handle this in aggregation pipeline
+      sortObject = { date: 1, time: 1 };
+    } else if (sortBy === 'date') {
+      sortObject = { date: -1, time: -1 };
+    } else if (sortBy === 'status') {
+      sortObject = { status: 1, date: 1 };
+    }
+
+    // Get total count for pagination
+    const total = await Appointment.countDocuments(finalFilter);
+
+    // Get appointments with pagination
+    let appointments;
+    if (sortBy === 'priority') {
+      // Use aggregation for custom status sorting
+      appointments = await Appointment.aggregate([
+        { $match: finalFilter },
+        {
+          $addFields: {
+            statusPriority: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ['$status', 'confirmed'] }, then: 1 },
+                  { case: { $eq: ['$status', 'pending'] }, then: 2 },
+                  { case: { $eq: ['$status', 'completed'] }, then: 3 },
+                  { case: { $eq: ['$status', 'cancelled'] }, then: 4 }
+                ],
+                default: 5
+              }
+            }
+          }
+        },
+        { $sort: { statusPriority: 1, date: 1, time: 1 } },
+        { $skip: (page - 1) * limit },
+        { $limit: parseInt(limit) },
+        {
+          $lookup: {
+            from: 'patients',
+            localField: 'patient',
+            foreignField: '_id',
+            as: 'patientInfo'
+          }
+        },
+        {
+          $lookup: {
+            from: 'doctors',
+            localField: 'doctor',
+            foreignField: '_id',
+            as: 'doctorInfo'
+          }
+        }
+      ]);
+    } else {
+      appointments = await Appointment.find(finalFilter)
+        .populate('patient', 'name email phone')
+        .populate('doctor', 'name specialization location')
+        .sort(sortObject)
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit));
+    }
+
+    // Transform data for frontend
+    const transformedAppointments = appointments.map(appointment => {
+      const apt = appointment._doc || appointment;
+      return {
+        id: apt._id,
+        appointmentId: apt.appointmentId,
+        patientId: apt.patient, // Add patient ID for consultation workflow
+        patientName: apt.patientDetails?.name || apt.patientInfo?.[0]?.name || 'Unknown',
+        patientEmail: apt.patientDetails?.email || apt.patientInfo?.[0]?.email,
+        patientPhone: apt.patientDetails?.phone || apt.patientInfo?.[0]?.phone,
+        doctorName: apt.doctorName || apt.doctorInfo?.[0]?.name,
+        doctorSpecialization: apt.doctorSpecialization || apt.doctorInfo?.[0]?.specialization,
+        date: apt.date,
+        time: apt.time,
+        status: apt.status,
+        type: apt.consultationDetails?.type || 'Consultation',
+        notes: apt.consultationDetails?.symptoms || apt.consultationDetails?.notes || '',
+        diagnosis: apt.consultationDetails?.diagnosis || '',
+        duration: apt.consultationDetails?.duration || '30 min',
+        consultationFee: apt.consultationFee,
+        paymentStatus: apt.paymentStatus,
+        createdAt: apt.createdAt,
+        updatedAt: apt.updatedAt
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        appointments: transformedAppointments,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          total,
+          limit: parseInt(limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
 // Get appointments for a patient
 const getPatientAppointments = async (req, res) => {
   try {
@@ -552,6 +707,7 @@ const deleteAppointment = async (req, res) => {
 
 module.exports = {
   createAppointment,
+  getAllAppointments,
   getPatientAppointments,
   getDoctorAppointments,
   updateAppointmentStatus,
