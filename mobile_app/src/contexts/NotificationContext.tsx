@@ -18,6 +18,7 @@ interface NotificationContextType {
   updatePreferences: (preferences: Partial<NotificationPreferences>) => Promise<void>;
   sendLocalNotification: (title: string, body: string, data?: any) => Promise<string | null>;
   scheduleAppointmentReminder: (appointmentId: string, appointmentDate: Date, doctorName: string) => Promise<string | null>;
+  cancelAppointmentReminders: (appointmentId: string) => Promise<void>;
   schedulePlanReminder: (planId: string, reminderTime: Date, message: string) => Promise<string | null>;
   scheduleMedicationReminder: (medicationName: string, time: Date) => Promise<string | null>;
   cancelNotification: (notificationId: string) => Promise<void>;
@@ -207,6 +208,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     return await notificationService.scheduleAppointmentReminder(appointmentId, appointmentDate, doctorName);
   };
 
+  const cancelAppointmentReminders = async (appointmentId: string): Promise<void> => {
+    await notificationService.cancelAppointmentReminders(appointmentId);
+  };
+
   const schedulePlanReminder = async (
     planId: string,
     reminderTime: Date,
@@ -241,6 +246,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     updatePreferences,
     sendLocalNotification,
     scheduleAppointmentReminder,
+    cancelAppointmentReminders,
     schedulePlanReminder,
     scheduleMedicationReminder,
     cancelNotification,

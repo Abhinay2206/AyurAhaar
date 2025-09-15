@@ -369,7 +369,10 @@ class NotificationService {
       return null;
     }
 
-    return await this.scheduleNotification({
+    // Cancel any existing notifications for this appointment first
+    await this.cancelAppointmentReminders(appointmentId);
+
+    const notificationId = await this.scheduleNotification({
       id: `appointment_${appointmentId}`,
       title: 'Upcoming Appointment',
       body: `You have an appointment with Dr. ${doctorName} in 1 hour`,
@@ -380,6 +383,30 @@ class NotificationService {
         action: 'reminder'
       },
     });
+
+    if (notificationId) {
+      console.log(`📅 Scheduled reminder for appointment ${appointmentId}: ${notificationId}`);
+    }
+
+    return notificationId;
+  }
+
+  /**
+   * Cancel all reminders for a specific appointment
+   */
+  async cancelAppointmentReminders(appointmentId: string): Promise<void> {
+    try {
+      const scheduledNotifications = await this.getScheduledNotifications();
+      
+      for (const notification of scheduledNotifications) {
+        if (notification.content.data?.appointmentId === appointmentId) {
+          await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+          console.log(`🗑️ Cancelled existing reminder: ${notification.identifier}`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to cancel appointment reminders:', error);
+    }
   }
 
   /**

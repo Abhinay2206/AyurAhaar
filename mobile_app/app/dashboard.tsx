@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   StyleSheet,
@@ -30,7 +30,7 @@ export default function DashboardScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { patient, getToken } = useAuth();
-  const { sendLocalNotification, scheduleAppointmentReminder } = useNotification();
+  const { scheduleAppointmentReminder } = useNotification();
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(true);
   const [currentPlan, setCurrentPlan] = useState<PlanData | null>(null);
@@ -40,6 +40,7 @@ export default function DashboardScreen() {
   const [currentPrakriti, setCurrentPrakriti] = useState<any>(null);
   const [isLoadingPrakriti, setIsLoadingPrakriti] = useState(true);
   const [isGeneratingAIPlan, setIsGeneratingAIPlan] = useState(false);
+  const scheduledAppointmentIds = useRef<Set<string>>(new Set());
   const [isResettingPlan, setIsResettingPlan] = useState(false);
   
   // New state for daily task tracking
@@ -182,17 +183,22 @@ export default function DashboardScreen() {
       console.log('✅ Filtered upcoming appointments:', upcoming.length, upcoming);
       setUpcomingAppointments(upcoming);
 
-      // Schedule notification reminders for upcoming appointments
+      // Schedule notification reminders for upcoming appointments (only once per appointment)
       for (const appointment of upcoming) {
-        try {
-          await scheduleAppointmentReminder(
-            appointment._id,
-            new Date(appointment.date),
-            appointment.doctorName || 'Doctor'
-          );
-          console.log('🔔 Scheduled reminder for appointment:', appointment._id);
-        } catch (error) {
-          console.error('❌ Failed to schedule reminder for appointment:', appointment._id, error);
+        if (!scheduledAppointmentIds.current.has(appointment._id)) {
+          try {
+            await scheduleAppointmentReminder(
+              appointment._id,
+              new Date(appointment.date),
+              appointment.doctorName || 'Doctor'
+            );
+            scheduledAppointmentIds.current.add(appointment._id);
+            console.log('🔔 Scheduled reminder for appointment:', appointment._id);
+          } catch (error) {
+            console.error('❌ Failed to schedule reminder for appointment:', appointment._id, error);
+          }
+        } else {
+          console.log('⏭️ Skipping already scheduled appointment:', appointment._id);
         }
       }
     } catch (error) {
@@ -259,19 +265,6 @@ export default function DashboardScreen() {
 
   const handleAyurvedaInfo = () => {
     router.push('/ayurveda-info' as any);
-  };
-
-  const handleTestNotification = async () => {
-    try {
-      await sendLocalNotification(
-        'Welcome to AyurAhaar!',
-        'Your wellness journey starts here. Explore personalized Ayurvedic solutions.'
-      );
-      Alert.alert('Success', 'Test notification sent!');
-    } catch (error) {
-      console.error('Failed to send test notification:', error);
-      Alert.alert('Error', 'Failed to send test notification.');
-    }
   };
 
   const handleGenerateAIPlan = async () => {
@@ -431,12 +424,6 @@ export default function DashboardScreen() {
             onPress={handleAyurvedaInfo}
           >
             <Ionicons name="information-circle" size={28} color={colors.herbalGreen} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.testButton} 
-            onPress={handleTestNotification}
-          >
-            <Ionicons name="notifications" size={24} color={colors.herbalGreen} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.profileButton} onPress={handleProfile}>
             <Ionicons name="person-circle" size={32} color={colors.herbalGreen} />
@@ -918,9 +905,6 @@ const styles = StyleSheet.create({
     padding: 1,
   },
   infoButton: {
-    padding: 1,
-  },
-  testButton: {
     padding: 1,
   },
   planCard: {
