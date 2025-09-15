@@ -9,10 +9,12 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { LanguageSelector } from '@/src/components/common/LanguageSelector';
+import NotificationSettings from '@/src/components/notification/NotificationSettings';
 import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
 import { Colors } from '@/src/constants/Colors';
@@ -28,6 +30,7 @@ export default function ProfileScreen() {
   
   const [profile, setProfile] = useState<PatientProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -302,7 +305,7 @@ export default function ProfileScreen() {
           </Text>
           
           {[
-            { icon: 'notifications', label: 'Notifications', action: () => {} },
+            { icon: 'notifications', label: 'Notifications', action: () => setShowNotificationSettings(true) },
             { icon: 'help-circle', label: 'Help & Support', action: () => {} },
             { icon: 'document-text', label: 'Terms & Conditions', action: () => {} },
             { icon: 'shield-checkmark', label: 'Privacy Policy', action: () => {} },
@@ -372,6 +375,16 @@ export default function ProfileScreen() {
           <Text style={[styles.navLabel, { color: colors.herbalGreen }]}>Profile</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Notification Settings Modal */}
+      <Modal
+        visible={showNotificationSettings}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowNotificationSettings(false)}
+      >
+        <NotificationSettings onClose={() => setShowNotificationSettings(false)} />
+      </Modal>
     </ThemedView>
   );
 }

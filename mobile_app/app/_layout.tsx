@@ -8,6 +8,7 @@ import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { PermissionsProvider } from '@/src/contexts/PermissionsContext';
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { LanguageProvider } from '@/src/contexts/LanguageContext';
+import { NotificationProvider } from '@/src/contexts/NotificationContext';
 
 // Initialize i18n
 import '@/src/config/i18n';
@@ -26,8 +27,9 @@ export default function RootLayout() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <PermissionsProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <NotificationProvider>
+          <PermissionsProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen 
@@ -66,7 +68,8 @@ export default function RootLayout() {
           <StatusBar style="auto" />
         </ThemeProvider>
       </PermissionsProvider>
-    </AuthProvider>
-  </LanguageProvider>
+    </NotificationProvider>
+  </AuthProvider>
+</LanguageProvider>
   );
 }

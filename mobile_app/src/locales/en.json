@@ -14,7 +14,9 @@
     "done": "Done",
     "search": "Search",
     "language": "Language",
-    "selectLanguage": "Select Language"
+    "selectLanguage": "Select Language",
+    "enable": "Enable",
+    "settings": "Settings"
   },
   "home": {
     "title": "AyurAhaar",
@@ -180,5 +182,37 @@
     "symptoms": "Symptoms",
     "lifestyle": "Lifestyle",
     "herbs": "Herbs"
+  },
+  "notification": {
+    "settings_title": "Notification Settings",
+    "loading": "Loading notification settings...",
+    "permission_required": "Permission Required",
+    "permission_message": "Please enable notifications in your device settings to receive important updates.",
+    "permission_disabled": "Notifications are disabled. Enable them to receive important updates.",
+    "update_failed": "Failed to update notification settings. Please try again.",
+    "test_title": "Test Notification",
+    "test_message": "This is a test notification from AyurAhaar!",
+    "test_sent": "Test Sent",
+    "test_sent_message": "Test notification has been sent successfully.",
+    "test_failed": "Failed to send test notification. Please try again.",
+    "send_test": "Send Test Notification",
+    "notification_types": "Notification Types",
+    "sound_vibration": "Sound & Vibration",
+    "about_notifications": "About Notifications",
+    "about_notifications_desc": "Stay updated with appointment reminders, health plan notifications, and important wellness tips. You can customize which notifications you receive at any time.",
+    "enable_notifications": "Enable Notifications",
+    "enable_notifications_desc": "Allow AyurAhaar to send you notifications",
+    "appointment_reminders": "Appointment Reminders",
+    "appointment_reminders_desc": "Get notified about upcoming consultations",
+    "plan_notifications": "Health Plan Updates",
+    "plan_notifications_desc": "Receive updates about your wellness plans",
+    "medication_reminders": "Medication Reminders",
+    "medication_reminders_desc": "Never miss your prescribed medications",
+    "marketing_notifications": "Tips & Updates",
+    "marketing_notifications_desc": "Get wellness tips and app updates",
+    "enable_sound": "Notification Sound",
+    "enable_sound_desc": "Play sound when notifications arrive",
+    "enable_vibration": "Vibration",
+    "enable_vibration_desc": "Vibrate device for notifications"
   }
 }
