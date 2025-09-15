@@ -175,13 +175,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           category: 'clinical'
         },
         { 
-          id: 'reports', 
-          icon: '■', 
-          label: 'Medical Reports', 
-          path: '/app/reports',
-          category: 'clinical'
-        },
-        { 
           id: 'analytics', 
           icon: '▲', 
           label: 'Analytics', 
@@ -208,35 +201,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
 
   const menuItems = getMenuItems();
 
-  const getCategoryLabels = () => {
-    if (userRole === 'super-admin') {
-      return {
-        main: 'Overview',
-        management: 'Management',
-        analytics: 'Analytics',
-        system: 'System'
-      };
-    } else {
-      return {
-        main: 'Main',
-        clinical: 'Clinical',
-        insights: 'Insights',
-        communication: 'Communication',
-        system: 'System'
-      };
-    }
-  };
-
-  const categoryLabels = getCategoryLabels();
-
-  const getMenuItemsByCategory = (category) => {
-    return menuItems.filter(item => item.category === category);
-  };
-
-  const categories = userRole === 'super-admin' 
-    ? ['main', 'management', 'analytics', 'system']
-    : ['main', 'clinical', 'insights', 'communication', 'system'];
-
   const menuItemStyles = (isActive) => ({
     display: 'flex',
     alignItems: 'center',
@@ -247,6 +211,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     color: isActive ? '#2C5F41' : '#687076',
     backgroundColor: isActive ? '#E8F5E8' : 'transparent',
     border: isActive ? '1px solid #3E8E5A' : '1px solid transparent',
+    borderBottom: '1px solid #E0E0E0',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     fontSize: '0.8rem',
@@ -270,19 +235,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-  };
-
-  const categoryHeaderStyles = {
-    padding: collapsed ? '0.25rem 0.5rem' : '0.75rem 0.75rem 0.25rem 0.75rem',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    color: '#687076',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    display: collapsed ? 'none' : 'block',
-    borderTop: '1px solid #E0E0E0',
-    marginTop: '0.75rem',
-    fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   };
 
   const collapseBtnStyles = {
@@ -371,43 +323,29 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       </div>
 
       <nav>
-        {categories.map(category => {
-          const categoryItems = getMenuItemsByCategory(category);
-          if (categoryItems.length === 0) return null;
-
+        {menuItems.map(item => {
+          const isActive = activeItem === item.id;
           return (
-            <div key={category}>
-              {category !== 'main' && (
-                <div style={categoryHeaderStyles}>
-                  {categoryLabels[category]}
-                </div>
+            <div
+              key={item.id}
+              style={menuItemStyles(isActive)}
+              onClick={() => handleItemClick(item)}
+              onMouseEnter={(e) => handleItemHover(e, isActive)}
+              onMouseLeave={(e) => handleItemLeave(e, isActive)}
+            >
+              <span style={iconStyles}>{item.icon}</span>
+              <span style={labelStyles}>{item.label}</span>
+              {isActive && (
+                <div style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: '3px',
+                  backgroundColor: '#3E8E5A',
+                  borderRadius: '0 4px 4px 0',
+                }} />
               )}
-              {categoryItems.map(item => {
-                const isActive = activeItem === item.id;
-                return (
-                  <div
-                    key={item.id}
-                    style={menuItemStyles(isActive)}
-                    onClick={() => handleItemClick(item)}
-                    onMouseEnter={(e) => handleItemHover(e, isActive)}
-                    onMouseLeave={(e) => handleItemLeave(e, isActive)}
-                  >
-                    <span style={iconStyles}>{item.icon}</span>
-                    <span style={labelStyles}>{item.label}</span>
-                    {isActive && (
-                      <div style={{
-                        position: 'absolute',
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: '3px',
-                        backgroundColor: '#3E8E5A',
-                        borderRadius: '0 4px 4px 0',
-                      }} />
-                    )}
-                  </div>
-                );
-              })}
             </div>
           );
         })}

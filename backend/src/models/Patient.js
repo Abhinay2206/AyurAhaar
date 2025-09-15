@@ -16,7 +16,7 @@ const PatientSchema = new mongoose.Schema({
   previousPlan: { type: mongoose.Schema.Types.ObjectId, ref: 'MealPlan' },
   appointments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }],
   currentPlan: {
-    type: { type: String, enum: ['ai', 'doctor', 'none'], default: 'none' },
+    type: { type: String, enum: ['ai', 'doctor', 'meal-plan', 'none'], default: 'none' },
     planId: { type: mongoose.Schema.Types.ObjectId },
     isVisible: { type: Boolean, default: false },
     createdAt: { type: Date },

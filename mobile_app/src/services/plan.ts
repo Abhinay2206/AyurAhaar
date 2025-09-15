@@ -2,7 +2,7 @@ import { getApiBaseUrl } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface PlanData {
-  planType: 'ai' | 'doctor' | 'none';
+  planType: 'ai' | 'doctor' | 'meal-plan' | 'none';
   plan: any;
   hasCompletedAppointment: boolean;
   patientId: string;

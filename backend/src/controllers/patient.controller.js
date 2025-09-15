@@ -417,11 +417,56 @@ async function getAllPatients(req, res) {
   }
 }
 
+// Get patient by ID (for admin/doctor use)
+async function getPatientById(req, res) {
+  try {
+    const { patientId } = req.params;
+
+    console.log('🔍 Fetching patient by ID:', patientId);
+
+    const patient = await Patient.findById(patientId)
+      .populate('currentPlan.planId')
+      .populate('appointments')
+      .select('-password');
+
+    if (!patient) {
+      console.log('❌ Patient not found for ID:', patientId);
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Patient not found' 
+      });
+    }
+
+    console.log('✅ Patient found:', patient.name);
+
+    res.json({
+      success: true,
+      data: patient
+    });
+  } catch (error) {
+    console.error('❌ Error fetching patient by ID:', error);
+    
+    // Check if it's a valid ObjectId
+    if (error.name === 'CastError') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid patient ID format' 
+      });
+    }
+
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while fetching patient' 
+    });
+  }
+}
+
 module.exports = {
   getProfile,
   updateProfile,
   getDashboard,
   updateSurveyStatus,
   updatePlan,
-  getAllPatients
+  getAllPatients,
+  getPatientById
 };

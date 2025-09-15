@@ -21,7 +21,6 @@ import {
   MealPlanManagement
 } from './pages/super-admin';
 import { Layout } from './components';
-import LandingPage from './components/LandingPage';
 import './App.css';
 
 function App() {
@@ -29,8 +28,8 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          {/* Public Landing Page */}
-          <Route path="/" element={<LandingPage />} />
+          {/* Root Route redirects to auth */}
+          <Route path="/" element={<Navigate to="/auth" replace />} />
           
           {/* Doctor Portal Routes */}
           <Route path="/auth" element={<LoginScreen />} />

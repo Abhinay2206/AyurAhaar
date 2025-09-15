@@ -54,14 +54,30 @@ export default function FullPlanDetailsScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <AyurvedaPattern />
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Full Plan</Text>
+          <View style={{ width: 24 }} />
+        </View>
+
         <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.icon }]}>Loading your meal plan...</Text>
+          <View style={[styles.loadingCard, { backgroundColor: colors.cardBackground }]}>
+            <Ionicons name="nutrition-outline" size={60} color={colors.herbalGreen} />
+            <Text style={[styles.loadingTitle, { color: colors.text }]}>Loading Your Plan</Text>
+            <Text style={[styles.loadingText, { color: colors.icon }]}>
+              Preparing your personalized meal plan...
+            </Text>
+          </View>
         </View>
       </View>
     );
   }
 
-  if (!currentPlan || currentPlan.planType === 'none' || !currentPlan.plan?.aiPlan) {
+  if (!currentPlan || currentPlan.planType === 'none') {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <AyurvedaPattern />
@@ -76,17 +92,69 @@ export default function FullPlanDetailsScreen() {
         </View>
 
         <View style={styles.noPlanContainer}>
-          <Ionicons name="nutrition-outline" size={80} color={colors.icon} />
-          <Text style={[styles.noPlanTitle, { color: colors.text }]}>No AI Plan Available</Text>
-          <Text style={[styles.noPlanDescription, { color: colors.icon }]}>
-            Generate your AI meal plan from the dashboard to view the full plan details.
-          </Text>
+          <View style={[styles.noPlanCard, { backgroundColor: colors.cardBackground }]}>
+            <Ionicons name="nutrition-outline" size={80} color={colors.icon} />
+            <Text style={[styles.noPlanTitle, { color: colors.text }]}>No Plan Available</Text>
+            <Text style={[styles.noPlanDescription, { color: colors.icon }]}>
+              Generate your personalized plan from the dashboard to view detailed meal plans and recommendations.
+            </Text>
+            <TouchableOpacity 
+              style={[styles.generateButton, { backgroundColor: colors.herbalGreen }]}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.generateButtonText}>Go to Dashboard</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
   }
 
-  const aiPlan = currentPlan.plan.aiPlan;
+  // Check if we have valid plan data based on plan type
+  const hasValidPlanData = 
+    (currentPlan.planType === 'ai' && currentPlan.plan?.aiPlan) ||
+    (currentPlan.planType === 'meal-plan' && currentPlan.plan?.mealPlanDetails) ||
+    (currentPlan.planType === 'doctor' && currentPlan.plan);
+
+  if (!hasValidPlanData) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <AyurvedaPattern />
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Full Plan</Text>
+          <View style={{ width: 24 }} />
+        </View>
+
+        <View style={styles.noPlanContainer}>
+          <View style={[styles.noPlanCard, { backgroundColor: colors.cardBackground }]}>
+            <Ionicons name="nutrition-outline" size={80} color={colors.icon} />
+            <Text style={[styles.noPlanTitle, { color: colors.text }]}>Plan Data Not Available</Text>
+            <Text style={[styles.noPlanDescription, { color: colors.icon }]}>
+              {currentPlan.planType === 'ai' && 'AI plan data is missing. Please generate a new plan.'}
+              {currentPlan.planType === 'meal-plan' && 'Meal plan details are missing. Please create a new meal plan.'}
+              {currentPlan.planType === 'doctor' && 'Doctor plan data is missing. Please contact your doctor.'}
+            </Text>
+            <TouchableOpacity 
+              style={[styles.generateButton, { backgroundColor: colors.herbalGreen }]}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.generateButtonText}>Go to Dashboard</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Get plan data based on type
+  const planData = currentPlan.planType === 'ai' ? currentPlan.plan.aiPlan : 
+                   currentPlan.planType === 'meal-plan' ? currentPlan.plan.mealPlanDetails :
+                   currentPlan.plan;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -109,30 +177,65 @@ export default function FullPlanDetailsScreen() {
         end={{ x: 1, y: 1 }}
       >
         <View style={styles.overviewContent}>
+          <View style={styles.planTypeIndicator}>
+            <Text style={styles.planTypeEmoji}>
+              {currentPlan.planType === 'ai' && '🧘‍♀️'}
+              {currentPlan.planType === 'meal-plan' && '🍽️'}
+              {currentPlan.planType === 'doctor' && '👨‍⚕️'}
+            </Text>
+          </View>
+          
           <Text style={styles.planTitle}>
-            🧘‍♀️ {aiPlan.prakriti} Constitution Plan
+            {currentPlan.planType === 'ai' && (
+              `${planData.prakriti || 'Ayurvedic'} Constitution Plan`
+            )}
+            {currentPlan.planType === 'meal-plan' && (
+              planData.title || 'Custom Meal Plan'
+            )}
+            {currentPlan.planType === 'doctor' && (
+              'Doctor Prescribed Plan'
+            )}
           </Text>
+          
           <Text style={styles.planSubtitle}>
-            {aiPlan.plan_type} • Generated {new Date(aiPlan.generated_at).toLocaleDateString('en-US', {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric'
-            })}
+            {currentPlan.planType === 'ai' && (
+              `${planData.plan_type || 'Personalized'} • Generated ${planData.generated_at ? new Date(planData.generated_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+              }) : 'recently'}`
+            )}
+            {currentPlan.planType === 'meal-plan' && (
+              `${planData.duration || 7} days • Target: ${planData.targetCalories || 2000} cal/day`
+            )}
+            {currentPlan.planType === 'doctor' && (
+              'Professional medical guidance'
+            )}
           </Text>
+          
           <View style={styles.planStats}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>7</Text>
+              <Text style={styles.statNumber}>
+                {currentPlan.planType === 'meal-plan' ? planData.duration || 7 : 7}
+              </Text>
               <Text style={styles.statLabel}>Days</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>21</Text>
+              <Text style={styles.statNumber}>
+                {currentPlan.planType === 'meal-plan' ? 
+                  (planData.duration || 7) * 4 : 21}
+              </Text>
               <Text style={styles.statLabel}>Meals</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>100%</Text>
-              <Text style={styles.statLabel}>Ayurvedic</Text>
+              <Text style={styles.statNumber}>
+                {currentPlan.planType === 'meal-plan' ? 
+                  planData.targetCalories || '2000' : '100%'}
+              </Text>
+              <Text style={styles.statLabel}>
+                {currentPlan.planType === 'meal-plan' ? 'Cal/Day' : 'Ayurvedic'}
+              </Text>
             </View>
           </View>
         </View>
@@ -140,93 +243,200 @@ export default function FullPlanDetailsScreen() {
 
       {/* Enhanced Day Selector */}
       <View style={styles.daySelector}>
-        <Text style={[styles.daySelectorTitle, { color: colors.text }]}>Select Day</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayScroll}>
-          {dayNames.map((day, index) => (
-            <TouchableOpacity
-              key={day}
-              style={[
-                styles.dayButton,
-                { 
-                  borderColor: selectedDay === day ? colors.herbalGreen : colors.inputBorder,
-                  backgroundColor: selectedDay === day ? colors.herbalGreen : colors.cardBackground 
-                }
-              ]}
-              onPress={() => setSelectedDay(day)}
-            >
-              <Text style={[
-                styles.dayText,
-                { color: selectedDay === day ? 'white' : colors.text }
-              ]}>
-                {dayLabels[index]}
-              </Text>
-              {selectedDay === day && (
-                <View style={styles.selectedDayIndicator} />
-              )}
-            </TouchableOpacity>
-          ))}
+        <Text style={[styles.daySelectorTitle, { color: colors.text }]}>📅 Choose Day</Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.dayScrollContainer}
+          style={styles.dayScroll}
+        >
+          {dayNames.map((day, index) => {
+            const isSelected = selectedDay === day;
+            return (
+              <TouchableOpacity
+                key={day}
+                style={[
+                  styles.dayButton,
+                  { 
+                    borderColor: isSelected ? colors.herbalGreen : colors.inputBorder,
+                    backgroundColor: isSelected ? colors.herbalGreen : colors.cardBackground 
+                  }
+                ]}
+                onPress={() => setSelectedDay(day)}
+              >
+                <Text style={[
+                  styles.dayText,
+                  { color: isSelected ? 'white' : colors.text }
+                ]}>
+                  {dayLabels[index]}
+                </Text>
+                {isSelected && <View style={styles.selectedDayIndicator} />}
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Selected Day Meals */}
-        {aiPlan.weekly_plan && aiPlan.weekly_plan[selectedDay] && (
-          <View style={[styles.mealsCard, { backgroundColor: colors.cardBackground }]}>
-            <View style={styles.mealsHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                🍽️ {dayLabels[dayNames.indexOf(selectedDay)]} Meals
+        {/* Day Meals - AI Plan */}
+        {currentPlan.planType === 'ai' && planData.weekly_plan && planData.weekly_plan[selectedDay] && (
+          <View style={[styles.dayMealsContainer, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.dayHeader}>
+              <Text style={[styles.dayTitle, { color: colors.text }]}>
+                📅 {dayLabels[dayNames.indexOf(selectedDay)]}
               </Text>
-              <Text style={[styles.sectionSubtitle, { color: colors.icon }]}>
-                Personalized for your constitution
+              <Text style={[styles.daySubtitle, { color: colors.icon }]}>
+                Ayurvedic meals for your constitution
               </Text>
             </View>
-            
-            {['breakfast', 'lunch', 'dinner'].map((mealType, mealIndex) => {
-              const meal = aiPlan.weekly_plan[selectedDay][mealType];
-              if (meal) {
-                // Handle both string and array formats
+
+            <View style={styles.mealsGrid}>
+              {['breakfast', 'lunch', 'dinner'].map((mealType, index) => {
+                const meal = planData.weekly_plan[selectedDay][mealType];
+                if (!meal) return null;
+
                 const mealItems = Array.isArray(meal) ? meal : [meal];
-                
+                const mealConfig = {
+                  breakfast: { emoji: '🌅', name: 'Breakfast', colors: ['#FFF3E0', '#FFE0B2'] },
+                  lunch: { emoji: '☀️', name: 'Lunch', colors: ['#E8F5E8', '#C8E6C9'] },
+                  dinner: { emoji: '🌙', name: 'Dinner', colors: ['#E3F2FD', '#BBDEFB'] }
+                } as const;
+
+                const config = mealConfig[mealType as keyof typeof mealConfig];
+
                 return (
-                  <View key={mealType} style={[
-                    styles.mealItem,
-                    mealIndex === 0 && styles.firstMealItem
-                  ]}>
+                  <View key={mealType} style={styles.mealCard}>
                     <LinearGradient
-                      colors={mealType === 'breakfast' ? ['#FFE4B5', '#FFF8DC'] : 
-                             mealType === 'lunch' ? ['#F0E68C', '#FFFACD'] : 
-                             ['#E6E6FA', '#F8F8FF']}
-                      style={styles.mealIconGradient}
+                      colors={config.colors}
+                      style={styles.mealCardHeader}
                     >
-                      <Text style={styles.mealEmoji}>
-                        {mealType === 'breakfast' ? '🌅' : mealType === 'lunch' ? '☀️' : '🌙'}
+                      <Text style={styles.mealEmoji}>{config.emoji}</Text>
+                      <Text style={[styles.mealName, { color: colors.text }]}>
+                        {config.name}
                       </Text>
                     </LinearGradient>
-                    <View style={styles.mealContent}>
-                      <Text style={[styles.mealTitle, { color: colors.text }]}>
-                        {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
-                      </Text>
-                      <View style={styles.foodItemsList}>
-                        {mealItems.map((item: string, index: number) => (
-                          <View key={index} style={styles.foodItemContainer}>
-                            <View style={[styles.foodItemBullet, { backgroundColor: colors.herbalGreen }]} />
-                            <Text style={[styles.foodItemText, { color: colors.text }]}>
-                              {item}
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
+                    
+                    <View style={styles.mealCardContent}>
+                      {mealItems.map((item: string, itemIndex: number) => (
+                        <View key={itemIndex} style={styles.foodItemRow}>
+                          <View style={[styles.foodBullet, { backgroundColor: colors.herbalGreen }]} />
+                          <Text style={[styles.foodText, { color: colors.text }]}>
+                            {item}
+                          </Text>
+                        </View>
+                      ))}
                     </View>
                   </View>
                 );
-              }
-              return null;
-            })}
+              })}
+            </View>
           </View>
         )}
 
-        {/* Recommendations */}
-        {aiPlan.recommendations && aiPlan.recommendations.length > 0 && (
+        {/* Day Meals - Meal Plan */}
+        {currentPlan.planType === 'meal-plan' && planData.mealPlan && planData.mealPlan[selectedDay] && (
+          <View style={[styles.dayMealsContainer, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.dayHeader}>
+              <Text style={[styles.dayTitle, { color: colors.text }]}>
+                📅 {dayLabels[dayNames.indexOf(selectedDay)]}
+              </Text>
+              <Text style={[styles.daySubtitle, { color: colors.icon }]}>
+                Detailed meal plan with nutrition
+              </Text>
+            </View>
+
+            <View style={styles.mealsGrid}>
+            {(['breakfast', 'lunch', 'dinner', 'snacks'] as const).map((mealType, index) => {
+                const meal = planData.mealPlan[selectedDay][mealType];
+                if (!meal || meal.length === 0) return null;
+
+                const mealConfig = {
+                  breakfast: { emoji: '🌅', name: 'Breakfast', colors: ['#FFF3E0', '#FFE0B2'] },
+                  lunch: { emoji: '☀️', name: 'Lunch', colors: ['#E8F5E8', '#C8E6C9'] },
+                  dinner: { emoji: '🌙', name: 'Dinner', colors: ['#E3F2FD', '#BBDEFB'] },
+                  snacks: { emoji: '🍎', name: 'Snacks', colors: ['#F3E5F5', '#E1BEE7'] }
+                } as const;
+
+                const config = mealConfig[mealType];
+
+                return (
+                  <View key={mealType} style={styles.mealCard}>
+                    <LinearGradient
+                      colors={config.colors}
+                      style={styles.mealCardHeader}
+                    >
+                      <Text style={styles.mealEmoji}>{config.emoji}</Text>
+                      <Text style={[styles.mealName, { color: colors.text }]}>
+                        {config.name}
+                      </Text>
+                    </LinearGradient>                    <View style={styles.mealCardContent}>
+                      {meal.map((foodItem: any, itemIndex: number) => (
+                        <View key={itemIndex} style={styles.detailedFoodItem}>
+                          <View style={styles.foodItemHeader}>
+                            <Text style={[styles.foodItemName, { color: colors.text }]}>
+                              {foodItem.name}
+                            </Text>
+                            <Text style={[styles.foodItemCalories, { color: colors.herbalGreen }]}>
+                              {foodItem.calories} cal
+                            </Text>
+                          </View>
+                          <View style={styles.foodItemDetails}>
+                            <Text style={[styles.foodItemQuantity, { color: colors.icon }]}>
+                              {foodItem.quantity}
+                            </Text>
+                            {(foodItem.protein > 0 || foodItem.carbs > 0 || foodItem.fats > 0) && (
+                              <Text style={[styles.foodItemNutrition, { color: colors.icon }]}>
+                                P: {foodItem.protein}g • C: {foodItem.carbs}g • F: {foodItem.fats}g
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Daily Nutrition Summary */}
+            {planData.nutritionSummary && (
+              <View style={[styles.nutritionSummaryCard, { backgroundColor: colors.cardBackground }]}>
+                <Text style={[styles.nutritionTitle, { color: colors.text }]}>
+                  📊 Daily Nutrition
+                </Text>
+                <View style={styles.nutritionRow}>
+                  <View style={styles.nutritionStat}>
+                    <Text style={[styles.nutritionValue, { color: colors.herbalGreen }]}>
+                      {planData.nutritionSummary.totalCalories}
+                    </Text>
+                    <Text style={[styles.nutritionLabel, { color: colors.icon }]}>Calories</Text>
+                  </View>
+                  <View style={styles.nutritionStat}>
+                    <Text style={[styles.nutritionValue, { color: colors.softOrange }]}>
+                      {planData.nutritionSummary.protein}g
+                    </Text>
+                    <Text style={[styles.nutritionLabel, { color: colors.icon }]}>Protein</Text>
+                  </View>
+                  <View style={styles.nutritionStat}>
+                    <Text style={[styles.nutritionValue, { color: colors.herbalGreen }]}>
+                      {planData.nutritionSummary.carbs}g
+                    </Text>
+                    <Text style={[styles.nutritionLabel, { color: colors.icon }]}>Carbs</Text>
+                  </View>
+                  <View style={styles.nutritionStat}>
+                    <Text style={[styles.nutritionValue, { color: colors.softOrange }]}>
+                      {planData.nutritionSummary.fats}g
+                    </Text>
+                    <Text style={[styles.nutritionLabel, { color: colors.icon }]}>Fats</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Recommendations - AI Plan Only */}
+        {currentPlan.planType === 'ai' && planData.recommendations && planData.recommendations.length > 0 && (
           <View style={[styles.recommendationsCard, { backgroundColor: colors.cardBackground }]}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               ✨ Daily Recommendations
@@ -235,7 +445,7 @@ export default function FullPlanDetailsScreen() {
               Follow these guidelines throughout your Ayurvedic journey:
             </Text>
             
-            {aiPlan.recommendations.map((rec: string, index: number) => (
+            {planData.recommendations.map((rec: string, index: number) => (
               <View key={index} style={styles.recommendationItem}>
                 <View style={[styles.bulletPoint, { backgroundColor: colors.herbalGreen }]} />
                 <Text style={[styles.recommendationText, { color: colors.text }]}>
@@ -247,7 +457,7 @@ export default function FullPlanDetailsScreen() {
         )}
 
         {/* Restrictions */}
-        {aiPlan.restrictions && aiPlan.restrictions.length > 0 && (
+        {currentPlan.planType === 'ai' && planData.restrictions && planData.restrictions.length > 0 && (
           <View style={[styles.restrictionsCard, { backgroundColor: colors.cardBackground }]}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               🚫 Dietary Restrictions
@@ -256,7 +466,7 @@ export default function FullPlanDetailsScreen() {
               Avoid these items for optimal health:
             </Text>
             
-            {aiPlan.restrictions.map((restriction: string, index: number) => (
+            {planData.restrictions.map((restriction: string, index: number) => (
               <View key={index} style={styles.restrictionItem}>
                 <View style={[styles.bulletPoint, { backgroundColor: colors.softOrange }]} />
                 <Text style={[styles.restrictionText, { color: colors.text }]}>
@@ -335,17 +545,28 @@ const styles = StyleSheet.create({
   },
   overviewContent: {
     flex: 1,
+    alignItems: 'center',
+  },
+  planTypeIndicator: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  planTypeEmoji: {
+    fontSize: 32,
   },
   planTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 8,
     color: 'white',
+    textAlign: 'center',
   },
   planSubtitle: {
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: 20,
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   planStats: {
     flexDirection: 'row',
@@ -549,16 +770,45 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  loadingCard: {
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  loadingTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   loadingText: {
     fontSize: 16,
-    fontStyle: 'italic',
+    textAlign: 'center',
+    lineHeight: 24,
   },
   noPlanContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
+  },
+  noPlanCard: {
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
   },
   noPlanTitle: {
     fontSize: 20,
@@ -571,5 +821,193 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
+    marginBottom: 24,
+  },
+  generateButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  generateButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Additional styles for meal plan functionality
+  mealHeader: {
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  foodItem: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  foodDetails: {
+    marginLeft: 12,
+    marginTop: 2,
+  },
+  foodQuantity: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  foodNutrition: {
+    fontSize: 11,
+    marginTop: 1,
+  },
+  nutritionCard: {
+    marginHorizontal: 20,
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 16,
+  },
+  nutritionGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  nutritionItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  nutritionValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  nutritionLabel: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  // New improved styles
+  dayScrollContainer: {
+    paddingHorizontal: 8,
+  },
+  dayMealsContainer: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 24,
+    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  dayHeader: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  dayTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  daySubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  mealsGrid: {
+    gap: 16,
+  },
+  mealCard: {
+    borderRadius: 16,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  mealCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+  },
+  mealIcon: {
+    fontSize: 24,
+  },
+  mealName: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  mealCardContent: {
+    padding: 16,
+    paddingTop: 0,
+  },
+  foodItemRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+    gap: 12,
+  },
+  foodBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginTop: 8,
+  },
+  foodText: {
+    fontSize: 15,
+    lineHeight: 22,
+    flex: 1,
+  },
+  detailedFoodItem: {
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  foodItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  foodItemName: {
+    fontSize: 16,
+    fontWeight: '500',
+    flex: 1,
+  },
+  foodItemCalories: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  foodItemDetails: {
+    gap: 4,
+  },
+  foodItemQuantity: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  foodItemNutrition: {
+    fontSize: 12,
+  },
+  nutritionSummaryCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  nutritionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  nutritionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  nutritionStat: {
+    alignItems: 'center',
+    flex: 1,
   },
 });

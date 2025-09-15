@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllPatients } = require('../controllers/patient.controller');
+const { getAllPatients, getPatientById } = require('../controllers/patient.controller');
 const { getAllAppointments } = require('../controllers/appointment.controller');
 const { getPatientSurveyData } = require('../controllers/survey.controller');
 const { getPatientPrakritiData } = require('../controllers/prakriti.controller');
@@ -13,6 +13,9 @@ router.use(requireAdminRole);
 
 // Get all patients for admin/doctor management
 router.get('/patients', getAllPatients);
+
+// Get specific patient by ID for admin/doctor management
+router.get('/patients/:patientId', getPatientById);
 
 // Get all appointments for admin/doctor management
 router.get('/appointments', getAllAppointments);

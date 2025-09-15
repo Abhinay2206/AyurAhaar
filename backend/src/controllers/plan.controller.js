@@ -1,5 +1,6 @@
 const Patient = require('../models/Patient');
 const Appointment = require('../models/Appointment');
+const MealPlan = require('../models/MealPlan');
 const axios = require('axios');
 
 // Get current plan for a patient with display rules
@@ -37,11 +38,37 @@ const getCurrentPlan = async (req, res) => {
         planToShow = latestAppointment.dietPlan;
         planType = 'doctor';
       }
-    } else if (patient.currentPlan && patient.currentPlan.type === 'ai' && patient.currentPlan.isVisible) {
-      // If no completed appointments and patient has AI plan, show AI plan
-      planToShow = patient.currentPlan;
-      planType = 'ai';
-      console.log('📊 Returning AI plan data:', JSON.stringify(planToShow, null, 2));
+    } else if (patient.currentPlan && patient.currentPlan.isVisible) {
+      // Handle different plan types based on currentPlan.type
+      if (patient.currentPlan.type === 'meal-plan' && patient.currentPlan.planId) {
+        // Fetch detailed meal plan from MealPlan collection
+        console.log('📊 Fetching meal plan from collection:', patient.currentPlan.planId);
+        try {
+          const mealPlan = await MealPlan.findById(patient.currentPlan.planId);
+          if (mealPlan) {
+            planToShow = {
+              ...patient.currentPlan.toObject(),
+              mealPlanDetails: mealPlan.toObject()
+            };
+            planType = 'meal-plan';
+            console.log('📊 Found meal plan in collection');
+          } else {
+            console.log('⚠️ Meal plan not found in collection, falling back to none');
+          }
+        } catch (error) {
+          console.error('❌ Error fetching meal plan:', error);
+        }
+      } else if (patient.currentPlan.type === 'ai') {
+        // Use AI plan data directly from patient
+        planToShow = patient.currentPlan;
+        planType = 'ai';
+        console.log('📊 Returning AI plan data from patient');
+      } else if (patient.currentPlan.type === 'doctor') {
+        // Handle doctor plans
+        planToShow = patient.currentPlan;
+        planType = 'doctor';
+        console.log('📊 Returning doctor plan data from patient');
+      }
     }
 
     console.log('📊 Final plan response:', { planType, planToShow: planToShow ? 'exists' : 'null', hasCompletedAppointment });

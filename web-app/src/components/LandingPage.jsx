@@ -1,218 +1,325 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import './LandingPage.css';
 
 const LandingPage = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeFeature, setActiveFeature] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const features = [
+    {
+      icon: "🏥",
+      title: "Smart Patient Management",
+      description: "Comprehensive patient profiles with AI-powered insights and treatment tracking"
+    },
+    {
+      icon: "🍽️",
+      title: "Intelligent Meal Planning",
+      description: "Personalized Ayurvedic nutrition plans based on individual constitution and health goals"
+    },
+    {
+      icon: "📱",
+      title: "Mobile Patient App",
+      description: "Seamless patient engagement with constitution assessment and progress tracking"
+    },
+    {
+      icon: "🧠",
+      title: "AI-Powered Insights",
+      description: "Advanced analytics to optimize treatment outcomes and practice efficiency"
+    }
+  ];
+
   return (
     <div className="landing-page">
-      {/* Professional Medical Header */}
-      <header className="navbar">
-        <div className="navbar-container">
+      {/* Navigation */}
+      <nav className={`navbar ${isScrolled ? 'navbar-scrolled' : ''}`}>
+        <div className="container">
           <Link to="/" className="navbar-brand">
-            <div className="brand-logo">
-              🌿
+            <div className="brand-icon">
+              <span className="icon-leaf">🌿</span>
+              <div className="icon-glow"></div>
             </div>
-            <span>AyurAhaar</span>
+            <div className="brand-text">
+              <h1 className="brand-name">AyurAhaar</h1>
+              <span className="brand-subtitle">Digital Ayurveda</span>
+            </div>
           </Link>
-          <nav className="navbar-nav">
-            <Link to="/auth" className="nav-link">Login</Link>
-            <Link to="/auth" className="btn btn-primary">Get Started</Link>
-          </nav>
+          
+          <div className="navbar-menu">
+            <a href="#features" className="nav-link">Features</a>
+            <a href="#platform" className="nav-link">Platform</a>
+            <a href="#contact" className="nav-link">Contact</a>
+            <Link to="/auth" className="btn btn-outline-primary">Sign In</Link>
+            <Link to="/auth" className="btn btn-primary">
+              Get Started
+              <span className="btn-arrow">→</span>
+            </Link>
+          </div>
         </div>
-      </header>
+      </nav>
 
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <h1 className="hero-title">
-            Transform Your Health with Ancient Ayurvedic Wisdom
-          </h1>
-          <p className="hero-subtitle">
-            Experience personalized Ayurvedic nutrition plans designed by certified doctors 
-            to restore balance, vitality, and wellness in your life.
-          </p>
-          <div className="hero-actions">
-            <Link to="/auth" className="btn btn-primary btn-lg">
-              Consult with Ayurvedic Doctors
-            </Link>
-            <Link to="/ayurveda-info" className="btn btn-outline btn-lg">
-              Learn About Ayurveda
-            </Link>
+      <section className="hero">
+        <div className="hero-bg">
+          <div className="hero-gradient"></div>
+          <div className="hero-pattern"></div>
+          <div className="floating-shapes">
+            <div className="shape shape-1"></div>
+            <div className="shape shape-2"></div>
+            <div className="shape shape-3"></div>
+          </div>
+        </div>
+        
+        <div className="container hero-container">
+          <div className="hero-content">
+            <div className="hero-badge">
+              <span className="badge-icon">✨</span>
+              <span>Next-Generation Ayurvedic Platform</span>
+            </div>
+            
+            <h1 className="hero-title">
+              Transform Your
+              <span className="title-gradient"> Ayurvedic Practice</span>
+              <br />with Modern Technology
+            </h1>
+            
+            <p className="hero-description">
+              Revolutionize patient care with our comprehensive digital platform. 
+              Seamlessly manage patients, create personalized meal plans, and deliver 
+              exceptional Ayurvedic healthcare with AI-powered insights.
+            </p>
+            
+            <div className="hero-features">
+              <div className="feature-point">
+                <span className="check-icon">✓</span>
+                <span>Complete Practice Management</span>
+              </div>
+              <div className="feature-point">
+                <span className="check-icon">✓</span>
+                <span>AI-Powered Meal Planning</span>
+              </div>
+              <div className="feature-point">
+                <span className="check-icon">✓</span>
+                <span>Patient Mobile App</span>
+              </div>
+            </div>
+            
+            <div className="hero-actions">
+              <Link to="/auth" className="btn btn-primary btn-lg">
+                <span>Start Free Trial</span>
+                <span className="btn-arrow">→</span>
+              </Link>
+              <button className="btn btn-glass">
+                <span className="play-icon">▶</span>
+                <span>Watch Demo</span>
+              </button>
+            </div>
+            
+            <div className="hero-social-proof">
+              <div className="proof-item">
+                <span className="proof-icon">🔒</span>
+                <span>HIPAA Compliant</span>
+              </div>
+              <div className="proof-item">
+                <span className="proof-icon">⚡</span>
+                <span>Lightning Fast</span>
+              </div>
+              <div className="proof-item">
+                <span className="proof-icon">🌱</span>
+                <span>Eco-Friendly</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="hero-visual">
+            <div className="dashboard-preview">
+              <div className="dashboard-window">
+                <div className="window-header">
+                  <div className="window-controls">
+                    <span className="control red"></span>
+                    <span className="control yellow"></span>
+                    <span className="control green"></span>
+                  </div>
+                  <div className="window-title">AyurAhaar Dashboard</div>
+                </div>
+                <div className="window-content">
+                  <div className="dashboard-nav">
+                    <div className="nav-item active">Dashboard</div>
+                    <div className="nav-item">Patients</div>
+                    <div className="nav-item">Meal Plans</div>
+                    <div className="nav-item">Analytics</div>
+                  </div>
+                  <div className="dashboard-stats">
+                    <div className="stat-card">
+                      <div className="stat-icon">👥</div>
+                      <div className="stat-content">
+                        <div className="stat-number">Patient</div>
+                        <div className="stat-label">Management</div>
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-icon">📊</div>
+                      <div className="stat-content">
+                        <div className="stat-number">Smart</div>
+                        <div className="stat-label">Analytics</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="dashboard-chart">
+                    <div className="chart-header">Practice Overview</div>
+                    <div className="chart-visualization">
+                      <div className="chart-bars">
+                        <div className="bar" style={{height: '70%'}}></div>
+                        <div className="bar" style={{height: '85%'}}></div>
+                        <div className="bar" style={{height: '60%'}}></div>
+                        <div className="bar" style={{height: '95%'}}></div>
+                        <div className="bar" style={{height: '75%'}}></div>
+                        <div className="bar" style={{height: '88%'}}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="features-section">
-        <div className="features-container">
-          <div className="text-center mb-5">
-            <h2>Comprehensive Ayurvedic Healthcare Platform</h2>
-            <p className="lead">
-              Experience the perfect blend of traditional Ayurvedic wisdom and modern healthcare technology
+      <section id="features" className="features">
+        <div className="container">
+          <div className="section-header">
+            <div className="section-badge">
+              <span>🚀 Features</span>
+            </div>
+            <h2 className="section-title">
+              Everything You Need for
+              <span className="title-accent"> Modern Ayurvedic Practice</span>
+            </h2>
+            <p className="section-description">
+              Our comprehensive platform combines traditional Ayurvedic wisdom with cutting-edge technology 
+              to deliver exceptional patient care and streamline your practice operations.
             </p>
           </div>
           
           <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon">
-                👩‍⚕️
+            {features.map((feature, index) => (
+              <div 
+                key={index}
+                className={`feature-card ${activeFeature === index ? 'active' : ''}`}
+                onMouseEnter={() => setActiveFeature(index)}
+              >
+                <div className="feature-icon">
+                  <span>{feature.icon}</span>
+                  <div className="icon-bg"></div>
+                </div>
+                <h3 className="feature-title">{feature.title}</h3>
+                <p className="feature-description">{feature.description}</p>
+                <div className="feature-arrow">→</div>
               </div>
-              <h3>Certified Ayurvedic Doctors</h3>
-              <p>
-                Consult with verified Ayurvedic practitioners who specialize in 
-                personalized nutrition and holistic wellness approaches.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">
-                🔬
-              </div>
-              <h3>AI-Powered Analysis</h3>
-              <p>
-                Advanced AI technology analyzes your constitution (Prakriti) and 
-                current health status to provide precise recommendations.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">
-                🥗
-              </div>
-              <h3>Personalized Meal Plans</h3>
-              <p>
-                Receive customized nutrition plans based on your unique body constitution, 
-                seasonal needs, and health goals.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">
-                📊
-              </div>
-              <h3>Progress Tracking</h3>
-              <p>
-                Monitor your wellness journey with detailed analytics and 
-                regular assessments from your Ayurvedic healthcare team.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">
-                🌱
-              </div>
-              <h3>Natural Remedies</h3>
-              <p>
-                Access a comprehensive database of natural Ayurvedic remedies 
-                and lifestyle recommendations for optimal health.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">
-                📱
-              </div>
-              <h3>Mobile Accessibility</h3>
-              <p>
-                Take your wellness journey anywhere with our responsive platform 
-                designed for seamless mobile experience.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="how-it-works-section">
+      {/* Platform Overview */}
+      <section id="platform" className="platform">
         <div className="container">
-          <div className="text-center mb-5">
-            <h2>Your Journey to Wellness in 4 Simple Steps</h2>
-            <p className="lead">Start your personalized Ayurvedic transformation today</p>
-          </div>
-          
-          <div className="steps-grid">
-            <div className="step-card">
-              <div className="step-number">1</div>
-              <h4>Complete Assessment</h4>
-              <p>Fill out our comprehensive health questionnaire to determine your unique body constitution and current wellness state.</p>
-            </div>
-
-            <div className="step-card">
-              <div className="step-number">2</div>
-              <h4>Doctor Consultation</h4>
-              <p>Meet with a certified Ayurvedic doctor for personalized analysis and detailed health evaluation.</p>
-            </div>
-
-            <div className="step-card">
-              <div className="step-number">3</div>
-              <h4>Receive Your Plan</h4>
-              <p>Get your customized nutrition plan, lifestyle recommendations, and natural remedy suggestions.</p>
-            </div>
-
-            <div className="step-card">
-              <div className="step-number">4</div>
-              <h4>Track Progress</h4>
-              <p>Monitor your wellness journey with regular check-ins and plan adjustments based on your progress.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="testimonials-section">
-        <div className="container">
-          <div className="text-center mb-5">
-            <h2>What Our Patients Say</h2>
-            <p className="lead">Real stories from people who transformed their health with AyurAhaar</p>
-          </div>
-          
-          <div className="testimonials-grid">
-            <div className="testimonial-card">
-              <div className="testimonial-content">
-                <p>
-                  "AyurAhaar completely transformed my relationship with food and health. 
-                  The personalized meal plans based on my Prakriti helped me lose weight naturally 
-                  and feel more energetic than ever before."
-                </p>
+          <div className="platform-content">
+            <div className="platform-text">
+              <div className="section-badge">
+                <span>🏥 Complete Solution</span>
               </div>
-              <div className="testimonial-author">
-                <div className="author-avatar">P</div>
-                <div className="author-info">
-                  <h5>Priya Sharma</h5>
-                  <span>Software Engineer, Mumbai</span>
+              <h2 className="section-title">
+                Comprehensive Platform for
+                <span className="title-accent"> Ayurvedic Healthcare</span>
+              </h2>
+              <p className="section-description">
+                From patient onboarding to treatment completion, our platform handles every aspect 
+                of your practice with intuitive tools and intelligent automation.
+              </p>
+              
+              <div className="platform-features">
+                <div className="platform-feature">
+                  <div className="feature-icon-sm">🔄</div>
+                  <div>
+                    <h4>Seamless Workflow</h4>
+                    <p>Streamlined processes from consultation to follow-up</p>
+                  </div>
+                </div>
+                <div className="platform-feature">
+                  <div className="feature-icon-sm">🎯</div>
+                  <div>
+                    <h4>Personalized Care</h4>
+                    <p>Tailored treatment plans based on individual constitution</p>
+                  </div>
+                </div>
+                <div className="platform-feature">
+                  <div className="feature-icon-sm">📈</div>
+                  <div>
+                    <h4>Practice Growth</h4>
+                    <p>Analytics and insights to optimize your practice</p>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="testimonial-card">
-              <div className="testimonial-content">
-                <p>
-                  "The doctors on AyurAhaar are incredibly knowledgeable. 
-                  Their holistic approach helped me manage my digestive issues 
-                  without any side effects. Highly recommended!"
-                </p>
+              
+              <div className="platform-actions">
+                <Link to="/auth" className="btn btn-primary">
+                  Start Your Journey
+                  <span className="btn-arrow">→</span>
+                </Link>
+                <button className="btn btn-outline">
+                  Learn More
+                </button>
               </div>
-              <div className="testimonial-author">
-                <div className="author-avatar">R</div>
-                <div className="author-info">
-                  <h5>Raj Patel</h5>
-                  <span>Business Owner, Delhi</span>
+            </div>
+            
+            <div className="platform-visual">
+              <div className="devices-showcase">
+                <div className="device desktop">
+                  <div className="device-screen">
+                    <div className="screen-content">
+                      <div className="app-header">Doctor Portal</div>
+                      <div className="app-body">
+                        <div className="sidebar">
+                          <div className="sidebar-item active">Dashboard</div>
+                          <div className="sidebar-item">Patients</div>
+                          <div className="sidebar-item">Meal Plans</div>
+                          <div className="sidebar-item">Reports</div>
+                        </div>
+                        <div className="main-content">
+                          <div className="content-cards">
+                            <div className="mini-card"></div>
+                            <div className="mini-card"></div>
+                            <div className="mini-card"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="testimonial-card">
-              <div className="testimonial-content">
-                <p>
-                  "As a working mother, I needed a practical wellness solution. 
-                  AyurAhaar's meal plans fit perfectly into my busy lifestyle 
-                  and improved my family's overall health."
-                </p>
-              </div>
-              <div className="testimonial-author">
-                <div className="author-avatar">S</div>
-                <div className="author-info">
-                  <h5>Sneha Gupta</h5>
-                  <span>Marketing Manager, Bangalore</span>
+                
+                <div className="device mobile">
+                  <div className="device-screen">
+                    <div className="mobile-header">
+                      <div className="status-bar"></div>
+                      <div className="app-title">AyurAhaar</div>
+                    </div>
+                    <div className="mobile-content">
+                      <div className="mobile-card">Constitution</div>
+                      <div className="mobile-card">Meal Plan</div>
+                      <div className="mobile-card">Progress</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -221,71 +328,124 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="cta-section">
+      <section className="cta">
+        <div className="cta-bg">
+          <div className="cta-gradient"></div>
+          <div className="cta-pattern"></div>
+        </div>
+        
         <div className="container">
           <div className="cta-content">
-            <h2>Ready to Start Your Ayurvedic Wellness Journey?</h2>
-            <p>
-              Join thousands of people who have transformed their health with personalized 
-              Ayurvedic nutrition and lifestyle guidance from certified doctors.
-            </p>
+            <div className="cta-text">
+              <h2 className="cta-title">
+                Ready to Transform Your Practice?
+              </h2>
+              <p className="cta-description">
+                Join the future of Ayurvedic healthcare. Start your free trial today 
+                and experience the power of modern technology in traditional medicine.
+              </p>
+              
+              <div className="cta-benefits">
+                <div className="benefit">
+                  <span className="benefit-icon">✓</span>
+                  <span>30-day free trial</span>
+                </div>
+                <div className="benefit">
+                  <span className="benefit-icon">✓</span>
+                  <span>No credit card required</span>
+                </div>
+                <div className="benefit">
+                  <span className="benefit-icon">✓</span>
+                  <span>24/7 support included</span>
+                </div>
+              </div>
+            </div>
+            
             <div className="cta-actions">
-              <Link to="/auth" className="btn btn-primary btn-lg">
-                Book Your Consultation
+              <Link to="/auth" className="btn btn-primary btn-xl">
+                Start Free Trial
+                <span className="btn-arrow">→</span>
               </Link>
-              <Link to="/ayurveda-info" className="btn btn-outline btn-lg">
-                Learn More
-              </Link>
+              <button className="btn btn-glass-white">
+                Schedule Demo
+              </button>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="medical-footer">
+      <footer className="footer">
         <div className="container">
           <div className="footer-content">
-            <div className="footer-section">
-              <h5>AyurAhaar</h5>
-              <p>
-                Bridging ancient Ayurvedic wisdom with modern healthcare technology 
-                for personalized wellness solutions.
+            <div className="footer-brand">
+              <Link to="/" className="footer-logo">
+                <div className="brand-icon">
+                  <span className="icon-leaf">🌿</span>
+                </div>
+                <div className="brand-text">
+                  <h3 className="brand-name">AyurAhaar</h3>
+                  <span className="brand-subtitle">Digital Ayurveda Platform</span>
+                </div>
+              </Link>
+              <p className="footer-description">
+                Revolutionizing Ayurvedic healthcare with modern technology, 
+                intelligent insights, and seamless patient care.
               </p>
             </div>
             
-            <div className="footer-section">
-              <h6>Services</h6>
-              <ul>
-                <li><Link to="/doctors">Find Doctors</Link></li>
-                <li><Link to="/ayurveda-info">Ayurveda Info</Link></li>
-                <li><Link to="/body-constitution">Constitution Analysis</Link></li>
-                <li><Link to="/chatbot">AI Assistant</Link></li>
-              </ul>
-            </div>
-            
-            <div className="footer-section">
-              <h6>Support</h6>
-              <ul>
-                <li><a href="#help">Help Center</a></li>
-                <li><a href="#contact">Contact Us</a></li>
-                <li><a href="#privacy">Privacy Policy</a></li>
-                <li><a href="#terms">Terms of Service</a></li>
-              </ul>
-            </div>
-            
-            <div className="footer-section">
-              <h6>Connect</h6>
-              <div className="social-links">
-                <a href="#facebook" className="social-link">Facebook</a>
-                <a href="#twitter" className="social-link">Twitter</a>
-                <a href="#instagram" className="social-link">Instagram</a>
-                <a href="#linkedin" className="social-link">LinkedIn</a>
+            <div className="footer-links">
+              <div className="footer-section">
+                <h4>Platform</h4>
+                <ul>
+                  <li><a href="#features">Features</a></li>
+                  <li><a href="#platform">How it Works</a></li>
+                  <li><Link to="/auth">Pricing</Link></li>
+                  <li><Link to="/auth">API</Link></li>
+                </ul>
+              </div>
+              
+              <div className="footer-section">
+                <h4>Support</h4>
+                <ul>
+                  <li><a href="#contact">Help Center</a></li>
+                  <li><a href="#contact">Contact Us</a></li>
+                  <li><a href="#contact">Documentation</a></li>
+                  <li><a href="#contact">Training</a></li>
+                </ul>
+              </div>
+              
+              <div className="footer-section">
+                <h4>Company</h4>
+                <ul>
+                  <li><a href="#contact">About</a></li>
+                  <li><a href="#contact">Blog</a></li>
+                  <li><a href="#contact">Careers</a></li>
+                  <li><a href="#contact">Privacy</a></li>
+                </ul>
               </div>
             </div>
           </div>
           
           <div className="footer-bottom">
-            <p>&copy; 2024 AyurAhaar. All rights reserved. | Certified Ayurvedic Healthcare Platform</p>
+            <div className="footer-legal">
+              <p>&copy; 2024 AyurAhaar. All rights reserved.</p>
+              <div className="legal-links">
+                <a href="#privacy">Privacy Policy</a>
+                <a href="#terms">Terms of Service</a>
+              </div>
+            </div>
+            
+            <div className="footer-security">
+              <div className="security-badge">
+                <span className="security-icon">🔒</span>
+                <span>HIPAA Compliant</span>
+              </div>
+              <div className="security-badge">
+                <span className="security-icon">🛡️</span>
+                <span>SOC 2 Certified</span>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

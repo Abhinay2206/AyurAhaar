@@ -169,7 +169,25 @@ const MealPlanCreationScreen = () => {
       console.log('✅ Patient set successfully');
     } catch (error) {
       console.error('❌ Error fetching patient:', error);
-      alert(`Error fetching patient: ${error.message}`);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Error fetching patient information.';
+      
+      if (error.message) {
+        if (error.message.includes('404')) {
+          errorMessage = `Patient not found. The patient ID "${patientId}" does not exist in the system.`;
+        } else if (error.message.includes('401')) {
+          errorMessage = 'Authentication failed. Please login again.';
+        } else if (error.message.includes('403')) {
+          errorMessage = 'You do not have permission to view this patient.';
+        } else if (error.message.includes('500')) {
+          errorMessage = 'Server error while fetching patient. Please try again later.';
+        } else if (error.message.includes('Network')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        }
+      }
+      
+      alert(`❌ ${errorMessage}\n\nDetails: ${error.message || 'Unknown error'}\n\nPlease check the patient ID in the URL or contact support.`);
     }
   };
 
@@ -647,8 +665,28 @@ const MealPlanCreationScreen = () => {
       // window.location.href = '/meal-plans';
       
     } catch (error) {
-      console.error('Error saving meal plan:', error);
-      alert('Failed to save meal plan. Please try again.');
+      console.error('❌ Error saving meal plan:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to save meal plan. Please try again.';
+      
+      if (error.message) {
+        if (error.message.includes('401')) {
+          errorMessage = 'Authentication failed. Please login again.';
+        } else if (error.message.includes('403')) {
+          errorMessage = 'You do not have permission to create meal plans.';
+        } else if (error.message.includes('404')) {
+          errorMessage = 'Patient not found. Please verify the patient information.';
+        } else if (error.message.includes('400')) {
+          errorMessage = 'Invalid meal plan data. Please check all required fields.';
+        } else if (error.message.includes('500')) {
+          errorMessage = 'Server error. Please try again later or contact support.';
+        } else if (error.message.includes('Network')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        }
+      }
+      
+      alert(`❌ ${errorMessage}\n\nDetails: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }

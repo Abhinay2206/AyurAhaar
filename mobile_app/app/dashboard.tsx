@@ -450,7 +450,9 @@ export default function DashboardScreen() {
             <View style={styles.planInfo}>
               <Text style={styles.planTitle}>Your Ayurveda Plan</Text>
               <Text style={styles.planSubtitle}>
-                {currentPlan.planType === 'ai' ? 'AI Generated' : 'Doctor Prescribed'} • {(displayPatient as any).constitution || 'Vata-Pitta'}
+                {currentPlan.planType === 'ai' ? 'AI Generated' : 
+                 currentPlan.planType === 'meal-plan' ? 'Custom Meal Plan' : 
+                 'Doctor Prescribed'} • {(displayPatient as any).constitution || 'Vata-Pitta'}
               </Text>
             </View>
             <Ionicons name="sparkles" size={24} color="white" />
@@ -644,6 +646,111 @@ export default function DashboardScreen() {
                   <Text style={[styles.resetActionButtonText, { color: colors.softOrange }]}>
                     {isResettingPlan ? 'Resetting...' : 'Reset Plan'}
                   </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : currentPlan.planType === 'meal-plan' && currentPlan.plan?.mealPlanDetails ? (
+            <View>
+              <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 20 }]}>
+                📅 Day 1 Meal Plan - {currentPlan.plan.mealPlanDetails.title}
+              </Text>
+              {/* Day 1 Meals from Custom Meal Plan */}
+              {currentPlan.plan.mealPlanDetails.mealPlan && currentPlan.plan.mealPlanDetails.mealPlan.day1 && (
+                <View style={[styles.mealCard, { backgroundColor: colors.cardBackground }]}>
+                  <Text style={[styles.mealTitle, { color: colors.text }]}>
+                    🍽️ Day 1 Meals
+                  </Text>
+                  {['breakfast', 'lunch', 'dinner', 'snacks'].map((mealType) => {
+                    const meal = currentPlan.plan.mealPlanDetails.mealPlan.day1[mealType];
+                    if (meal && meal.length > 0) {
+                      const taskId = `meal-${mealType}-day1`;
+                      
+                      return (
+                        <View key={mealType} style={styles.mealSection}>
+                          <TouchableOpacity
+                            style={styles.taskItem}
+                            onPress={() => toggleTask(taskId)}
+                          >
+                            <Ionicons 
+                              name={completedTasks.has(taskId) ? "checkmark-circle" : "ellipse-outline"} 
+                              size={24} 
+                              color={completedTasks.has(taskId) ? colors.herbalGreen : colors.icon} 
+                            />
+                            <View style={styles.taskContent}>
+                              <Text style={[
+                                styles.taskTitle, 
+                                { color: colors.text },
+                                completedTasks.has(taskId) && styles.completedTask
+                              ]}>
+                                {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
+                              </Text>
+                              <View style={styles.foodItemsContainer}>
+                                {meal.map((foodItem: any, index: number) => (
+                                  <Text 
+                                    key={index} 
+                                    style={[
+                                      styles.foodItem, 
+                                      { color: colors.icon },
+                                      completedTasks.has(taskId) && styles.completedTask
+                                    ]}
+                                  >
+                                    • {foodItem.name} ({foodItem.quantity}) - {foodItem.calories} cal
+                                  </Text>
+                                ))}
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+                    return null;
+                  })}
+                </View>
+              )}
+
+              {/* Nutrition Summary */}
+              {currentPlan.plan.mealPlanDetails.nutritionSummary && (
+                <View style={[styles.mealCard, { backgroundColor: colors.cardBackground }]}>
+                  <Text style={[styles.mealTitle, { color: colors.text }]}>
+                    📊 Daily Nutrition Target
+                  </Text>
+                  <View style={styles.nutritionContainer}>
+                    <View style={styles.nutritionItem}>
+                      <Text style={[styles.nutritionValue, { color: colors.herbalGreen }]}>
+                        {currentPlan.plan.mealPlanDetails.nutritionSummary.totalCalories}
+                      </Text>
+                      <Text style={[styles.nutritionLabel, { color: colors.icon }]}>Calories</Text>
+                    </View>
+                    <View style={styles.nutritionItem}>
+                      <Text style={[styles.nutritionValue, { color: colors.softOrange }]}>
+                        {currentPlan.plan.mealPlanDetails.nutritionSummary.protein}g
+                      </Text>
+                      <Text style={[styles.nutritionLabel, { color: colors.icon }]}>Protein</Text>
+                    </View>
+                    <View style={styles.nutritionItem}>
+                      <Text style={[styles.nutritionValue, { color: colors.herbalGreen }]}>
+                        {currentPlan.plan.mealPlanDetails.nutritionSummary.carbs}g
+                      </Text>
+                      <Text style={[styles.nutritionLabel, { color: colors.icon }]}>Carbs</Text>
+                    </View>
+                    <View style={styles.nutritionItem}>
+                      <Text style={[styles.nutritionValue, { color: colors.softOrange }]}>
+                        {currentPlan.plan.mealPlanDetails.nutritionSummary.fats}g
+                      </Text>
+                      <Text style={[styles.nutritionLabel, { color: colors.icon }]}>Fats</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Action Buttons for Meal Plan */}
+              <View style={styles.actionButtonsContainer}>
+                <TouchableOpacity
+                  style={[styles.primaryActionButton, { backgroundColor: colors.herbalGreen }]}
+                  onPress={handleViewFullPlan}
+                >
+                  <Ionicons name="restaurant-outline" size={20} color="white" />
+                  <Text style={styles.primaryActionButtonText}>View Full Meal Plan</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1328,5 +1435,22 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  nutritionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 16,
+  },
+  nutritionItem: {
+    alignItems: 'center',
+  },
+  nutritionValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  nutritionLabel: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
