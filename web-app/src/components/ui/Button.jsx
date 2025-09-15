@@ -16,40 +16,40 @@ const Button = ({
   const getVariantStyles = () => {
     const styles = {
       primary: {
-        background: 'linear-gradient(135deg, var(--medical-primary) 0%, var(--medical-primary-light) 100%)',
-        color: 'var(--medical-white)',
-        boxShadow: 'var(--medical-shadow-md)',
-        border: '1px solid var(--medical-primary)',
+        background: 'linear-gradient(135deg, #3E8E5A 0%, #4A9D6A 100%)', // Herbal green gradient
+        color: 'white',
+        boxShadow: '0 4px 15px rgba(62, 142, 90, 0.25)',
+        border: '1px solid #3E8E5A',
       },
       secondary: {
-        background: 'var(--medical-white)',
-        color: 'var(--medical-primary)',
-        border: '2px solid var(--medical-primary)',
-        boxShadow: 'var(--medical-shadow-sm)',
+        background: '#FFFFFF',
+        color: '#3E8E5A', // Herbal green
+        border: '2px solid #3E8E5A',
+        boxShadow: '0 2px 8px rgba(62, 142, 90, 0.1)',
       },
       outline: {
         background: 'transparent',
-        color: 'var(--medical-gray-600)',
-        border: '2px solid var(--medical-gray-300)',
+        color: '#687076', // Icon color
+        border: '2px solid #E0E0E0',
         boxShadow: 'none',
       },
       success: {
-        background: 'linear-gradient(135deg, var(--medical-secondary) 0%, var(--medical-secondary-light) 100%)',
-        color: 'var(--medical-white)',
-        boxShadow: 'var(--medical-shadow-md)',
-        border: '1px solid var(--medical-secondary)',
+        background: 'linear-gradient(135deg, #3E8E5A 0%, #4A9D6A 100%)', // Same as primary - herbal green
+        color: 'white',
+        boxShadow: '0 4px 15px rgba(62, 142, 90, 0.25)',
+        border: '1px solid #3E8E5A',
       },
       danger: {
-        background: 'linear-gradient(135deg, var(--medical-accent) 0%, var(--medical-accent-light) 100%)',
-        color: 'var(--medical-white)',
-        boxShadow: 'var(--medical-shadow-md)',
-        border: '1px solid var(--medical-accent)',
+        background: 'linear-gradient(135deg, #DC3545 0%, #E74C3C 100%)',
+        color: 'white',
+        boxShadow: '0 4px 15px rgba(220, 53, 69, 0.25)',
+        border: '1px solid #DC3545',
       },
       warning: {
-        background: 'linear-gradient(135deg, var(--medical-warning) 0%, var(--medical-warning-light) 100%)',
-        color: 'var(--medical-white)',
-        boxShadow: 'var(--medical-shadow-md)',
-        border: '1px solid var(--medical-warning)',
+        background: 'linear-gradient(135deg, #F4A261 0%, #F5B17A 100%)', // Soft orange gradient
+        color: 'white',
+        boxShadow: '0 4px 15px rgba(244, 162, 97, 0.25)',
+        border: '1px solid #F4A261',
       }
     };
     return styles[variant] || styles.primary;
@@ -58,19 +58,19 @@ const Button = ({
   const getSizeStyles = () => {
     const styles = {
       small: {
-        padding: '0.5rem 1rem',
-        fontSize: '0.875rem',
-        minHeight: '2.25rem',
+        padding: '0.375rem 0.75rem', // Reduced from 0.5rem 1rem
+        fontSize: '0.8rem', // Reduced from 0.875rem
+        minHeight: '2rem', // Reduced from 2.25rem
       },
       medium: {
-        padding: '0.75rem 1.5rem',
-        fontSize: '0.9375rem',
-        minHeight: '2.75rem',
+        padding: '0.5rem 1rem', // Reduced from 0.75rem 1.5rem
+        fontSize: '0.875rem', // Reduced from 0.9375rem
+        minHeight: '2.25rem', // Reduced from 2.75rem
       },
       large: {
-        padding: '1rem 2rem',
-        fontSize: '1rem',
-        minHeight: '3.25rem',
+        padding: '0.75rem 1.5rem', // Reduced from 1rem 2rem
+        fontSize: '0.9375rem', // Reduced from 1rem
+        minHeight: '2.75rem', // Reduced from 3.25rem
       }
     };
     return styles[size] || styles.medium;
@@ -78,10 +78,10 @@ const Button = ({
 
   const buttonStyles = {
     fontFamily: 'var(--font-primary)',
-    fontWeight: '500',
+    fontWeight: '600',
     border: 'none',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: 'all var(--transition-base)',
+    transition: 'all 0.3s ease',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -91,10 +91,10 @@ const Button = ({
     width: fullWidth ? '100%' : 'auto',
     position: 'relative',
     overflow: 'hidden',
-    borderRadius: 'var(--radius-md)',
+    borderRadius: '8px', // Reduced from 12px
     letterSpacing: '0.025em',
     textTransform: 'none',
-    gap: '0.5rem',
+    gap: '0.375rem', // Reduced from 0.5rem
     ...getVariantStyles(),
     ...getSizeStyles()
   };

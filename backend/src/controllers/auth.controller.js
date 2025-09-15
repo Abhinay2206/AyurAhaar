@@ -85,11 +85,21 @@ async function register(req, res) {
 async function login(req, res) {
   try {
     const { email, password, role } = req.body;
-    if (!email || !password || !role) {
-      return res.status(400).json({ message: 'email, password, role required' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'email and password required' });
     }
 
-    const user = await User.findOne({ email, role });
+    // If role is not provided, try to find user with any role
+    let user;
+    if (role) {
+      user = await User.findOne({ email, role });
+    } else {
+      // Try to find user with any role, prioritizing super-admin, then admin, then doctor
+      user = await User.findOne({ email, role: 'super-admin' }) ||
+             await User.findOne({ email, role: 'admin' }) ||
+             await User.findOne({ email, role: 'doctor' });
+    }
+
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
     const match = await user.comparePassword(password);
@@ -97,16 +107,37 @@ async function login(req, res) {
 
     const token = signToken({ sub: user._id, role: user.role });
     
-    // For patients, include survey completion status
+    // Build response based on role
     const response = { user: pickUser(user), token };
-    if (role === 'patient') {
+    
+    // Add role-specific data
+    if (user.role === 'patient') {
       response.surveyCompleted = user.surveyCompleted || false;
     }
+    
+    // Add redirect path for frontend
+    response.redirectTo = getRedirectPath(user.role);
     
     res.json(response);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Helper function to determine redirect path based on role
+function getRedirectPath(role) {
+  switch (role) {
+    case 'super-admin':
+      return '/super-admin/dashboard';
+    case 'admin':
+      return '/admin/dashboard';
+    case 'doctor':
+      return '/app/dashboard';
+    case 'patient':
+      return '/patient/dashboard';
+    default:
+      return '/app/dashboard';
   }
 }
 

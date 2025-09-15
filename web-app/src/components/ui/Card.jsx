@@ -12,18 +12,18 @@ const Card = ({
 }) => {
   const getPaddingStyles = () => {
     const styles = {
-      small: '1rem',
-      medium: '1.5rem',
-      large: '2rem',
-      xl: '2.5rem'
+      small: '0.5rem', // Reduced from 1rem
+      medium: '0.75rem', // Reduced from 1.5rem
+      large: '1rem', // Reduced from 2rem
+      xl: '1.25rem' // Reduced from 2.5rem
     };
     return styles[padding] || padding;
   };
 
   const baseStyles = {
-    borderRadius: 'var(--radius-lg)',
+    borderRadius: '12px', // Reduced from 16px
     padding: getPaddingStyles(),
-    transition: 'all var(--transition-base)',
+    transition: 'all 0.3s ease',
     position: 'relative',
     overflow: 'hidden',
     fontFamily: 'var(--font-primary)',
@@ -31,46 +31,46 @@ const Card = ({
 
   const variants = {
     default: {
-      backgroundColor: 'var(--medical-white)',
-      boxShadow: 'var(--medical-shadow-md)',
-      border: '1px solid var(--medical-gray-200)',
+      backgroundColor: '#FFFFFF',
+      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.08)',
+      border: '1px solid #E0E0E0',
     },
     medical: {
-      background: 'linear-gradient(135deg, var(--medical-white) 0%, var(--medical-gray-50) 100%)',
+      background: 'linear-gradient(145deg, #FFFFFF 0%, #FAFAFA 100%)', // Card background gradient
       backdropFilter: 'blur(16px)',
-      border: '1px solid var(--medical-primary-light)',
-      boxShadow: 'var(--medical-shadow-lg)',
+      border: '1px solid #E0E0E0',
+      boxShadow: '0 8px 25px rgba(62, 142, 90, 0.12)', // Herbal green shadow
     },
     elevated: {
-      backgroundColor: 'var(--medical-white)',
-      boxShadow: 'var(--medical-shadow-xl)',
-      border: '1px solid var(--medical-gray-100)',
+      backgroundColor: '#FFFFFF',
+      boxShadow: '0 12px 40px rgba(0, 0, 0, 0.12)',
+      border: '1px solid #E0E0E0',
     },
     glass: {
       background: 'rgba(255, 255, 255, 0.85)',
       backdropFilter: 'blur(20px)',
       border: '1px solid rgba(255, 255, 255, 0.3)',
-      boxShadow: 'var(--medical-shadow-glass)',
+      boxShadow: '0 8px 32px rgba(62, 142, 90, 0.1)',
     },
     info: {
-      backgroundColor: 'var(--medical-info-light)',
-      border: '1px solid var(--medical-info)',
-      boxShadow: 'var(--medical-shadow-md)',
+      backgroundColor: '#D1ECF1',
+      border: '1px solid #17A2B8',
+      boxShadow: '0 4px 15px rgba(23, 162, 184, 0.15)',
     },
     success: {
-      backgroundColor: 'var(--medical-secondary-light)',
-      border: '1px solid var(--medical-secondary)',
-      boxShadow: 'var(--medical-shadow-md)',
+      backgroundColor: '#E8F5E8', // Light green background
+      border: '1px solid #3E8E5A', // Herbal green border
+      boxShadow: '0 4px 15px rgba(62, 142, 90, 0.15)',
     },
     warning: {
-      backgroundColor: 'var(--medical-warning-light)',
-      border: '1px solid var(--medical-warning)',
-      boxShadow: 'var(--medical-shadow-md)',
+      backgroundColor: '#FDF4E8', // Light orange background
+      border: '1px solid #F4A261', // Soft orange border
+      boxShadow: '0 4px 15px rgba(244, 162, 97, 0.15)',
     },
     danger: {
-      backgroundColor: 'var(--medical-accent-light)',
-      border: '1px solid var(--medical-accent)',
-      boxShadow: 'var(--medical-shadow-md)',
+      backgroundColor: '#F8D7DA',
+      border: '1px solid #DC3545',
+      boxShadow: '0 4px 15px rgba(220, 53, 69, 0.15)',
     }
   };
 
@@ -83,8 +83,8 @@ const Card = ({
   const handleMouseEnter = (e) => {
     if (hover) {
       const card = e.currentTarget;
-      card.style.transform = 'translateY(-4px)';
-      card.style.boxShadow = 'var(--medical-shadow-xl)';
+      card.style.transform = 'translateY(-6px)';
+      card.style.boxShadow = '0 15px 40px rgba(62, 142, 90, 0.18)'; // Enhanced herbal green shadow
       
       // Add subtle scale effect
       card.style.scale = '1.02';

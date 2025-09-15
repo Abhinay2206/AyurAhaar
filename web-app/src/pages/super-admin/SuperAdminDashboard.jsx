@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Card, Button } from '../../components';
-import './SuperAdminDashboard.css';
 
 const SuperAdminDashboard = () => {
   const [stats] = useState({
@@ -32,15 +31,58 @@ const SuperAdminDashboard = () => {
     activeUsers: 124
   });
 
+  // Professional styling consistent with doctor portal
+  const containerStyles = {
+    padding: '1rem',
+    backgroundColor: '#F8F9FA',
+    minHeight: '100vh',
+    fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  };
+
+  const headerStyles = {
+    padding: '1.5rem',
+    borderRadius: '12px',
+    marginBottom: '1rem',
+    background: 'linear-gradient(135deg, #3E8E5A 0%, #4A9D6A 100%)',
+    boxShadow: '0 4px 20px rgba(62, 142, 90, 0.2)'
+  };
+
+  const titleStyles = {
+    fontSize: '1.75rem',
+    fontWeight: '700',
+    color: 'white',
+    margin: 0,
+    marginBottom: '0.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  };
+
+  const subtitleStyles = {
+    fontSize: '1rem',
+    color: 'rgba(255, 255, 255, 0.9)',
+    margin: 0,
+    fontWeight: '400',
+    fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  };
+
+  const metricsGridStyles = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '1rem',
+    marginBottom: '1rem'
+  };
+
   const getActivityIcon = (type) => {
     const icons = {
-      doctor: '👨‍⚕️',
-      patient: '👤',
-      food: '🥗',
-      plan: '📋',
-      system: '⚙️'
+      doctor: '⚕',
+      patient: '●',
+      food: '■',
+      plan: '◉',
+      system: '⚙'
     };
-    return icons[type] || '📌';
+    return icons[type] || '▪';
   };
 
   const getStatusColor = (status) => {
@@ -48,187 +90,880 @@ const SuperAdminDashboard = () => {
   };
 
   return (
-    <div className="super-admin-dashboard">
-      <div className="page-header">
-        <div className="header-content">
-          <h1>🏛️ Super Admin Dashboard</h1>
-          <p>Complete system overview and management controls</p>
-        </div>
-        <div className="header-actions">
-          <Button variant="outline">📊 Generate Report</Button>
-          <Button variant="primary">⚙️ System Settings</Button>
+    <div style={containerStyles}>
+      <div style={headerStyles}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <h1 style={titleStyles}>
+              <span>⚡</span>
+              Super Admin Dashboard
+            </h1>
+            <p style={subtitleStyles}>
+              Complete system overview and management controls
+            </p>
+          </div>
+          <div style={{
+            display: 'flex',
+            gap: '0.75rem'
+          }}>
+            <Button variant="outline" style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)'
+            }}>
+              <span>■</span> Generate Report
+            </Button>
+            <Button variant="primary" style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)'
+            }}>
+              <span>⚙</span> System Settings
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="metrics-grid">
-        <Card className="metric-card doctors">
-          <div className="metric-header">
-            <span className="metric-icon">👨‍⚕️</span>
-            <div className="metric-info">
-              <h3>Doctors</h3>
-              <div className="metric-value">{stats.totalDoctors}</div>
-              <div className="metric-subtitle">{stats.activeDoctors} active</div>
+      <div style={metricsGridStyles}>
+        <Card style={{
+          padding: '1.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #E5E7EB',
+          backgroundColor: '#ffffff'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            <span style={{
+              fontSize: '2rem',
+              filter: 'brightness(1.1)',
+              color: '#3E8E5A'
+            }}>
+              ⚕
+            </span>
+            <div>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#2C5F41',
+                margin: 0,
+                marginBottom: '0.25rem',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                Doctors
+              </h3>
+              <div style={{
+                fontSize: '1.875rem',
+                fontWeight: '700',
+                color: '#374151',
+                marginBottom: '0.25rem',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {stats.totalDoctors}
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                color: '#687076',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {stats.activeDoctors} active
+              </div>
             </div>
           </div>
-          <div className="metric-trend positive">+5 this month</div>
+          <div style={{
+            padding: '0.5rem',
+            backgroundColor: '#D1FAE5',
+            borderRadius: '6px',
+            fontSize: '0.875rem',
+            color: '#065F46',
+            fontWeight: '500',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          }}>
+            +5 this month
+          </div>
         </Card>
 
-        <Card className="metric-card patients">
-          <div className="metric-header">
-            <span className="metric-icon">👥</span>
-            <div className="metric-info">
-              <h3>Patients</h3>
-              <div className="metric-value">{stats.totalPatients.toLocaleString()}</div>
-              <div className="metric-subtitle">{stats.activePatients} active</div>
+        <Card style={{
+          padding: '1.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #E5E7EB',
+          backgroundColor: '#ffffff'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            <span style={{
+              fontSize: '2rem',
+              filter: 'brightness(1.1)',
+              color: '#3E8E5A'
+            }}>
+              ●
+            </span>
+            <div>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#2C5F41',
+                margin: 0,
+                marginBottom: '0.25rem',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                Patients
+              </h3>
+              <div style={{
+                fontSize: '1.875rem',
+                fontWeight: '700',
+                color: '#374151',
+                marginBottom: '0.25rem',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {stats.totalPatients.toLocaleString()}
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                color: '#687076',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {stats.activePatients} active
+              </div>
             </div>
           </div>
-          <div className="metric-trend positive">+127 this month</div>
+          <div style={{
+            padding: '0.5rem',
+            backgroundColor: '#D1FAE5',
+            borderRadius: '6px',
+            fontSize: '0.875rem',
+            color: '#065F46',
+            fontWeight: '500',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          }}>
+            +127 this month
+          </div>
         </Card>
 
-        <Card className="metric-card food-items">
-          <div className="metric-header">
-            <span className="metric-icon">🥗</span>
-            <div className="metric-info">
-              <h3>Food Items</h3>
-              <div className="metric-value">{stats.totalFoodItems}</div>
-              <div className="metric-subtitle">{stats.verifiedFoodItems} verified</div>
+        <Card style={{
+          padding: '1.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #E5E7EB',
+          backgroundColor: '#ffffff'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            <span style={{
+              fontSize: '2rem',
+              filter: 'brightness(1.1)',
+              color: '#3E8E5A'
+            }}>
+              ■
+            </span>
+            <div>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#2C5F41',
+                margin: 0,
+                marginBottom: '0.25rem',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                Food Items
+              </h3>
+              <div style={{
+                fontSize: '1.875rem',
+                fontWeight: '700',
+                color: '#374151',
+                marginBottom: '0.25rem',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {stats.totalFoodItems}
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                color: '#687076',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {stats.verifiedFoodItems} verified
+              </div>
             </div>
           </div>
-          <div className="metric-trend neutral">Pending: {stats.totalFoodItems - stats.verifiedFoodItems}</div>
+          <div style={{
+            padding: '0.5rem',
+            backgroundColor: '#FEF3C7',
+            borderRadius: '6px',
+            fontSize: '0.875rem',
+            color: '#92400E',
+            fontWeight: '500',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          }}>
+            Pending: {stats.totalFoodItems - stats.verifiedFoodItems}
+          </div>
         </Card>
 
-        <Card className="metric-card plans">
-          <div className="metric-header">
-            <span className="metric-icon">📋</span>
-            <div className="metric-info">
-              <h3>Meal Plans</h3>
-              <div className="metric-value">{stats.totalPlans}</div>
-              <div className="metric-subtitle">{stats.activePlans} active</div>
+        <Card style={{
+          padding: '1.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #E5E7EB',
+          backgroundColor: '#ffffff'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            <span style={{
+              fontSize: '2rem',
+              filter: 'brightness(1.1)',
+              color: '#3E8E5A'
+            }}>
+              ◉
+            </span>
+            <div>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#2C5F41',
+                margin: 0,
+                marginBottom: '0.25rem',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                Meal Plans
+              </h3>
+              <div style={{
+                fontSize: '1.875rem',
+                fontWeight: '700',
+                color: '#374151',
+                marginBottom: '0.25rem',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {stats.totalPlans}
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                color: '#687076',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {stats.activePlans} active
+              </div>
             </div>
           </div>
-          <div className="metric-trend positive">+23 this week</div>
+          <div style={{
+            padding: '0.5rem',
+            backgroundColor: '#DBEAFE',
+            borderRadius: '6px',
+            fontSize: '0.875rem',
+            color: '#1E40AF',
+            fontWeight: '500',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          }}>
+            +23 this week
+          </div>
         </Card>
       </div>
 
-      {/* Revenue Overview */}
-      <div className="dashboard-row">
-        <Card className="revenue-card">
-          <h3>📈 Revenue Overview</h3>
-          <div className="revenue-stats">
-            <div className="revenue-item">
-              <span className="revenue-label">This Month</span>
-              <span className="revenue-value">₹{stats.revenueThisMonth.toLocaleString()}</span>
-              <span className="revenue-change positive">
+      {/* Revenue and System Health Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+        gap: '1rem',
+        marginBottom: '1rem'
+      }}>
+        <Card style={{
+          padding: '1.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #E5E7EB',
+          backgroundColor: '#ffffff'
+        }}>
+          <h3 style={{
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            color: '#2C5F41',
+            marginBottom: '1rem',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>▲</span> Revenue Overview
+          </h3>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '1rem',
+              backgroundColor: '#F9FAFB',
+              borderRadius: '8px'
+            }}>
+              <div>
+                <div style={{
+                  fontSize: '0.875rem',
+                  color: '#687076',
+                  marginBottom: '0.25rem',
+                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                }}>
+                  This Month
+                </div>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  color: '#374151',
+                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                }}>
+                  ₹{stats.revenueThisMonth.toLocaleString()}
+                </div>
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: '#22c55e',
+                padding: '0.25rem 0.5rem',
+                backgroundColor: '#D1FAE5',
+                borderRadius: '4px',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
                 +{Math.round(((stats.revenueThisMonth - stats.revenueLastMonth) / stats.revenueLastMonth) * 100)}%
-              </span>
+              </div>
             </div>
-            <div className="revenue-item">
-              <span className="revenue-label">Last Month</span>
-              <span className="revenue-value">₹{stats.revenueLastMonth.toLocaleString()}</span>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '1rem',
+              backgroundColor: '#F9FAFB',
+              borderRadius: '8px'
+            }}>
+              <div>
+                <div style={{
+                  fontSize: '0.875rem',
+                  color: '#687076',
+                  marginBottom: '0.25rem',
+                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                }}>
+                  Last Month
+                </div>
+                <div style={{
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  color: '#374151',
+                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                }}>
+                  ₹{stats.revenueLastMonth.toLocaleString()}
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="revenue-chart-placeholder">
-            <div className="chart-bars">
+            <div style={{
+              height: '80px',
+              display: 'flex',
+              alignItems: 'end',
+              gap: '4px',
+              padding: '1rem',
+              backgroundColor: '#F9FAFB',
+              borderRadius: '8px'
+            }}>
               {[65, 78, 85, 92, 88, 95, 100].map((height, index) => (
                 <div 
-                  key={index} 
-                  className="chart-bar" 
-                  style={{ height: `${height}%` }}
+                  key={index}
+                  style={{
+                    flex: 1,
+                    height: `${height}%`,
+                    backgroundColor: '#3E8E5A',
+                    borderRadius: '2px',
+                    opacity: 0.8
+                  }}
                 ></div>
               ))}
             </div>
           </div>
         </Card>
 
-        <Card className="system-health-card">
-          <h3>⚡ System Health</h3>
-          <div className="health-metrics">
-            <div className="health-item">
-              <span className="health-label">API Status</span>
-              <span className="health-status" style={{color: getStatusColor(systemHealth.apiStatus)}}>
+        <Card style={{
+          padding: '1.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #E5E7EB',
+          backgroundColor: '#ffffff'
+        }}>
+          <h3 style={{
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            color: '#2C5F41',
+            marginBottom: '1rem',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>●</span> System Health
+          </h3>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0.75rem',
+              backgroundColor: '#F9FAFB',
+              borderRadius: '8px'
+            }}>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                color: '#374151',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                API Status
+              </span>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: getStatusColor(systemHealth.apiStatus),
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem'
+              }}>
                 ● {systemHealth.apiStatus}
               </span>
             </div>
-            <div className="health-item">
-              <span className="health-label">Database</span>
-              <span className="health-status" style={{color: getStatusColor(systemHealth.databaseStatus)}}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0.75rem',
+              backgroundColor: '#F9FAFB',
+              borderRadius: '8px'
+            }}>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                color: '#374151',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                Database
+              </span>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: getStatusColor(systemHealth.databaseStatus),
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem'
+              }}>
                 ● {systemHealth.databaseStatus}
               </span>
             </div>
-            <div className="health-item">
-              <span className="health-label">Server Load</span>
-              <span className="health-value">{systemHealth.serverLoad}</span>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0.75rem',
+              backgroundColor: '#F9FAFB',
+              borderRadius: '8px'
+            }}>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                color: '#374151',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                Server Load
+              </span>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: '#374151',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {systemHealth.serverLoad}
+              </span>
             </div>
-            <div className="health-item">
-              <span className="health-label">Uptime</span>
-              <span className="health-value">{systemHealth.uptime}</span>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0.75rem',
+              backgroundColor: '#F9FAFB',
+              borderRadius: '8px'
+            }}>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                color: '#374151',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                Uptime
+              </span>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: '#22c55e',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {systemHealth.uptime}
+              </span>
             </div>
-            <div className="health-item">
-              <span className="health-label">Active Users</span>
-              <span className="health-value">{systemHealth.activeUsers}</span>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0.75rem',
+              backgroundColor: '#F9FAFB',
+              borderRadius: '8px'
+            }}>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                color: '#374151',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                Active Users
+              </span>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: '#374151',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              }}>
+                {systemHealth.activeUsers}
+              </span>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Recent Activities */}
-      <Card className="activities-card">
-        <div className="activities-header">
-          <h3>📋 Recent Activities</h3>
-          <Button variant="outline" size="small">View All</Button>
+      <Card style={{
+        padding: '1.5rem',
+        borderRadius: '12px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        border: '1px solid #E5E7EB',
+        backgroundColor: '#ffffff',
+        marginBottom: '1rem'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem'
+        }}>
+          <h3 style={{
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            color: '#2C5F41',
+            margin: 0,
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>■</span> Recent Activities
+          </h3>
+          <Button variant="outline" style={{
+            fontSize: '0.875rem',
+            padding: '0.5rem 1rem'
+          }}>
+            View All
+          </Button>
         </div>
-        <div className="activities-list">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem'
+        }}>
           {recentActivities.map(activity => (
-            <div key={activity.id} className="activity-item">
-              <span className="activity-icon">{getActivityIcon(activity.type)}</span>
-              <div className="activity-content">
-                <div className="activity-action">{activity.action}</div>
-                <div className="activity-details">
+            <div key={activity.id} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              padding: '1rem',
+              backgroundColor: '#F9FAFB',
+              borderRadius: '8px',
+              border: '1px solid #F3F4F6'
+            }}>
+              <span style={{
+                fontSize: '1.5rem',
+                color: '#3E8E5A',
+                minWidth: '2rem',
+                textAlign: 'center'
+              }}>
+                {getActivityIcon(activity.type)}
+              </span>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '0.25rem',
+                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                }}>
+                  {activity.action}
+                </div>
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: '#687076',
+                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                }}>
                   {activity.doctor && <span>by {activity.doctor}</span>}
                   {activity.patient && <span>for {activity.patient}</span>}
                   {activity.item && <span>{activity.item}</span>}
                 </div>
               </div>
-              <div className="activity-time">{activity.time}</div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: '#9CA3AF',
+                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                minWidth: 'fit-content'
+              }}>
+                {activity.time}
+              </div>
             </div>
           ))}
         </div>
       </Card>
 
       {/* Quick Actions */}
-      <Card className="quick-actions-card">
-        <h3>⚡ Quick Actions</h3>
-        <div className="quick-actions-grid">
-          <button className="quick-action-btn doctors">
-            <span className="action-icon">👨‍⚕️</span>
-            <span className="action-title">Manage Doctors</span>
-            <span className="action-desc">Add, edit, verify doctors</span>
+      <Card style={{
+        padding: '1.5rem',
+        borderRadius: '12px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        border: '1px solid #E5E7EB',
+        backgroundColor: '#ffffff'
+      }}>
+        <h3 style={{
+          fontSize: '1.25rem',
+          fontWeight: '600',
+          color: '#2C5F41',
+          marginBottom: '1rem',
+          fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span>▲</span> Quick Actions
+        </h3>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1rem'
+        }}>
+          <button style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '1.5rem',
+            backgroundColor: '#F9FAFB',
+            border: '1px solid #E5E7EB',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#F3F4F6';
+            e.target.style.borderColor = '#3E8E5A';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = '#F9FAFB';
+            e.target.style.borderColor = '#E5E7EB';
+          }}>
+            <span style={{ fontSize: '2rem', color: '#3E8E5A' }}>⚕</span>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>
+                Manage Doctors
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#687076' }}>
+                Add, edit, verify doctors
+              </div>
+            </div>
           </button>
-          <button className="quick-action-btn patients">
-            <span className="action-icon">👥</span>
-            <span className="action-title">View Patients</span>
-            <span className="action-desc">Patient records & analytics</span>
+          
+          <button style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '1.5rem',
+            backgroundColor: '#F9FAFB',
+            border: '1px solid #E5E7EB',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#F3F4F6';
+            e.target.style.borderColor = '#3E8E5A';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = '#F9FAFB';
+            e.target.style.borderColor = '#E5E7EB';
+          }}>
+            <span style={{ fontSize: '2rem', color: '#3E8E5A' }}>●</span>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>
+                View Patients
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#687076' }}>
+                Patient records & analytics
+              </div>
+            </div>
           </button>
-          <button className="quick-action-btn food">
-            <span className="action-icon">🥗</span>
-            <span className="action-title">Food Database</span>
-            <span className="action-desc">Manage food items & properties</span>
+          
+          <button style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '1.5rem',
+            backgroundColor: '#F9FAFB',
+            border: '1px solid #E5E7EB',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#F3F4F6';
+            e.target.style.borderColor = '#3E8E5A';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = '#F9FAFB';
+            e.target.style.borderColor = '#E5E7EB';
+          }}>
+            <span style={{ fontSize: '2rem', color: '#3E8E5A' }}>■</span>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>
+                Food Database
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#687076' }}>
+                Manage food items & properties
+              </div>
+            </div>
           </button>
-          <button className="quick-action-btn plans">
-            <span className="action-icon">📋</span>
-            <span className="action-title">Meal Plans</span>
-            <span className="action-desc">Review & approve plans</span>
+          
+          <button style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '1.5rem',
+            backgroundColor: '#F9FAFB',
+            border: '1px solid #E5E7EB',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#F3F4F6';
+            e.target.style.borderColor = '#3E8E5A';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = '#F9FAFB';
+            e.target.style.borderColor = '#E5E7EB';
+          }}>
+            <span style={{ fontSize: '2rem', color: '#3E8E5A' }}>◉</span>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>
+                Meal Plans
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#687076' }}>
+                Review & approve plans
+              </div>
+            </div>
           </button>
-          <button className="quick-action-btn reports">
-            <span className="action-icon">📊</span>
-            <span className="action-title">Analytics</span>
-            <span className="action-desc">Reports & insights</span>
+          
+          <button style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '1.5rem',
+            backgroundColor: '#F9FAFB',
+            border: '1px solid #E5E7EB',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#F3F4F6';
+            e.target.style.borderColor = '#3E8E5A';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = '#F9FAFB';
+            e.target.style.borderColor = '#E5E7EB';
+          }}>
+            <span style={{ fontSize: '2rem', color: '#3E8E5A' }}>▲</span>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>
+                Analytics
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#687076' }}>
+                Reports & insights
+              </div>
+            </div>
           </button>
-          <button className="quick-action-btn settings">
-            <span className="action-icon">⚙️</span>
-            <span className="action-title">System Settings</span>
-            <span className="action-desc">Configuration & preferences</span>
+          
+          <button style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '1.5rem',
+            backgroundColor: '#F9FAFB',
+            border: '1px solid #E5E7EB',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#F3F4F6';
+            e.target.style.borderColor = '#3E8E5A';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = '#F9FAFB';
+            e.target.style.borderColor = '#E5E7EB';
+          }}>
+            <span style={{ fontSize: '2rem', color: '#3E8E5A' }}>⚙</span>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>
+                System Settings
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#687076' }}>
+                Configuration & preferences
+              </div>
+            </div>
           </button>
         </div>
       </Card>

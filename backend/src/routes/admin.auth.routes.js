@@ -8,7 +8,8 @@ router.post('/register', (req, res, next) => {
 }, register);
 
 router.post('/login', (req, res, next) => {
-  req.body.role = 'admin';
+  // Don't force role - let the controller determine it automatically
+  // This allows both admin and super-admin to login through this endpoint
   next();
 }, login);
 

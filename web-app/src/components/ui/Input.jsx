@@ -54,10 +54,10 @@ const Input = ({
     display: 'block',
     marginBottom: '0.5rem',
     fontSize: '0.875rem',
-    fontWeight: '500',
-    color: error ? 'var(--medical-accent)' : success ? 'var(--medical-secondary)' : 'var(--medical-gray-700)',
+    fontWeight: '600',
+    color: error ? '#DC3545' : success ? '#3E8E5A' : '#2C5F41', // Section header color
     fontFamily: 'var(--font-primary)',
-    transition: 'all var(--transition-base)',
+    transition: 'all 0.3s ease',
     letterSpacing: '0.025em',
   };
 
@@ -68,26 +68,26 @@ const Input = ({
       fontFamily: 'var(--font-primary)',
       border: `2px solid ${
         error 
-          ? 'var(--medical-accent)' 
+          ? '#DC3545' 
           : success 
-            ? 'var(--medical-secondary)' 
+            ? '#3E8E5A' // Herbal green
             : isFocused 
-              ? 'var(--medical-primary)' 
-              : 'var(--medical-gray-300)'
+              ? '#3E8E5A' // Herbal green focus
+              : '#E0E0E0' // Input border
       }`,
-      borderRadius: 'var(--radius-md)',
+      borderRadius: '12px',
       outline: 'none',
-      transition: 'all var(--transition-base)',
-      backgroundColor: disabled ? 'var(--medical-gray-100)' : 'var(--medical-white)',
+      transition: 'all 0.3s ease',
+      backgroundColor: disabled ? '#F5F7FA' : '#FFFFFF',
       boxSizing: 'border-box',
       boxShadow: isFocused 
         ? error 
-          ? 'var(--medical-shadow-error)' 
+          ? '0 0 0 3px rgba(220, 53, 69, 0.1)' 
           : success 
-            ? 'var(--medical-shadow-success)' 
-            : 'var(--medical-shadow-focus)'
-        : 'var(--medical-shadow-sm)',
-      color: disabled ? 'var(--medical-gray-500)' : 'var(--medical-gray-800)',
+            ? '0 0 0 3px rgba(62, 142, 90, 0.1)' 
+            : '0 0 0 3px rgba(62, 142, 90, 0.1)' // Herbal green focus shadow
+        : '0 2px 4px rgba(0, 0, 0, 0.05)',
+      color: disabled ? '#687076' : '#11181C', // Icon color for disabled, text color for normal
       cursor: disabled ? 'not-allowed' : 'text',
       ...getSizeStyles()
     };

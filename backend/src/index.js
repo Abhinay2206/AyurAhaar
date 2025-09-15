@@ -16,6 +16,8 @@ const patientRoutes = require('./routes/patient.routes');
 const foodRoutes = require('./routes/food.routes');
 const prakritiRoutes = require('./routes/prakriti.routes');
 const chatRoutes = require('./routes/chat.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
+const prescriptionRoutes = require('./routes/prescription.routes');
 
 const app = express();
 
@@ -51,6 +53,8 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/prakriti', prakritiRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
 
 // 404 handler
 app.use((req, res) => {

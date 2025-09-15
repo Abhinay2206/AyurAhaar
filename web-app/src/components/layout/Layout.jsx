@@ -14,18 +14,18 @@ const Layout = () => {
   };
 
   const mainContentStyles = {
-    marginLeft: sidebarCollapsed ? '80px' : '280px',
-    marginTop: '80px',
+    marginLeft: sidebarCollapsed ? '60px' : '240px', // Updated to match new sidebar widths
+    marginTop: '60px', // Updated to match new navbar height
     flex: 1,
     padding: 0,
-    minHeight: 'calc(100vh - 80px)',
+    minHeight: 'calc(100vh - 60px)', // Updated to match new navbar height
     transition: 'margin-left var(--transition-base)',
     background: 'var(--bg-gradient-primary)',
     position: 'relative',
   };
 
   const contentWrapperStyles = {
-    padding: 'var(--space-6)',
+    padding: '1rem', // Reduced from var(--space-6) for minimal spacing
     maxWidth: '100%',
     margin: '0 auto',
   };
@@ -34,15 +34,15 @@ const Layout = () => {
   const responsiveStyles = `
     @media (max-width: 1024px) {
       .main-content {
-        margin-left: ${sidebarCollapsed ? '0' : '280px'} !important;
+        margin-left: ${sidebarCollapsed ? '0' : '240px'} !important; /* Updated to match new sidebar width */
       }
     }
     
     @media (max-width: 768px) {
       .main-content {
         margin-left: 0 !important;
-        margin-top: 70px !important;
-        padding: var(--space-4) !important;
+        margin-top: 60px !important; /* Updated to match new navbar height */
+        padding: 0.75rem !important; /* Reduced for minimal spacing */
       }
     }
   `;

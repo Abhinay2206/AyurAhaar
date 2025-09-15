@@ -49,22 +49,29 @@ class AuthService {
     try {
       let response;
       
-      // First try to login as doctor
+      // Use universal login to let backend determine the role
       try {
-        response = await ApiService.loginDoctor({
+        response = await ApiService.loginUniversal({
           email: credentials.email,
           password: credentials.password
         });
       } catch {
-        // If doctor login fails, try admin login
+        // If universal login fails, try specific role-based logins as fallback
         try {
-          response = await ApiService.loginAdmin({
+          response = await ApiService.loginDoctor({
             email: credentials.email,
             password: credentials.password
           });
         } catch {
-          // If both fail, throw the more specific error
-          throw new Error('Invalid email or password');
+          try {
+            response = await ApiService.loginSuperAdmin({
+              email: credentials.email,
+              password: credentials.password
+            });
+          } catch {
+            // If all fail, throw the original error
+            throw new Error('Invalid email or password');
+          }
         }
       }
 
@@ -76,7 +83,7 @@ class AuthService {
         success: true,
         user: response.user,
         token: response.token,
-        redirectTo: this.getRedirectPath(response.user.role)
+        redirectTo: response.redirectTo || this.getRedirectPath(response.user.role)
       };
     } catch (error) {
       console.error('Login error:', error);
@@ -147,6 +154,7 @@ class AuthService {
       case 'doctor':
         return '/app/dashboard';
       case 'admin':
+        return '/admin/dashboard';
       case 'super-admin':
         return '/super-admin/dashboard';
       default:

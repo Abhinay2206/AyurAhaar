@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import AuthService from '../../services/authService';
 
 const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   
   const [notifications] = useState([
     { 
@@ -34,62 +34,73 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
+  const handleSignOut = () => {
+    AuthService.logout();
+    window.location.href = '/auth';
+  };
+
   const styles = {
     navbar: {
-      height: '80px',
-      background: 'var(--bg-gradient-header)',
-      borderBottom: '1px solid var(--gray-200)',
+      height: '60px', // Reduced from 80px for minimal design
+      background: 'linear-gradient(135deg, #3E8E5A 0%, #4A9D6A 100%)', // Herbal green gradient
+      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 var(--space-6)',
+      padding: '0 1rem', // Reduced from 2rem for minimal design
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
-      zIndex: 'var(--z-50)',
-      boxShadow: 'var(--shadow-sm)',
+      zIndex: '50',
+      boxShadow: '0 4px 20px rgba(62, 142, 90, 0.15)',
       backdropFilter: 'blur(8px)',
     },
     
     leftSection: {
       display: 'flex',
       alignItems: 'center',
-      gap: 'var(--space-4)',
+      gap: '0.75rem', // Reduced from 1rem
     },
     
     menuButton: {
-      width: '44px',
-      height: '44px',
-      borderRadius: 'var(--radius-lg)',
-      border: '1px solid var(--gray-200)',
-      backgroundColor: 'var(--gray-50)',
+      width: '36px', // Reduced from 44px
+      height: '36px',
+      borderRadius: '8px', // Reduced from 12px
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       cursor: 'pointer',
-      transition: 'var(--transition-fast)',
-      fontSize: '18px',
+      transition: 'all 0.3s ease',
+      fontSize: '16px', // Reduced from 18px
+      color: 'white',
+      ':hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        transform: 'translateY(-1px)',
+      }
     },
     
     brandSection: {
       display: 'flex',
       alignItems: 'center',
-      gap: 'var(--space-3)',
+      gap: '8px', // Reduced from 12px
     },
     
     logo: {
-      width: '44px',
-      height: '44px',
-      background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))',
-      borderRadius: 'var(--radius-xl)',
+      width: '40px', // Reduced from 50px
+      height: '40px',
+      background: 'linear-gradient(135deg, #F4A261, #F5B17A)', // Orange gradient
+      borderRadius: '12px', // Reduced from 16px
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       color: 'white',
-      fontSize: '20px',
+      fontSize: '18px', // Reduced from 22px
       fontWeight: '700',
-      boxShadow: 'var(--shadow-sm)',
+      boxShadow: '0 4px 15px rgba(244, 162, 97, 0.3)',
+      border: '2px solid rgba(255, 255, 255, 0.2)',
     },
     
     brandText: {
@@ -98,25 +109,27 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
     },
     
     title: {
-      fontSize: 'var(--text-xl)',
+      fontSize: '1.5rem',
       fontWeight: '700',
-      color: 'var(--gray-900)',
-      fontFamily: 'var(--font-display)',
-      letterSpacing: 'var(--tracking-tight)',
+      color: 'white',
+      fontFamily: 'var(--font-heading)',
+      letterSpacing: '-0.02em',
       lineHeight: 1,
+      textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
     },
     
     subtitle: {
-      fontSize: 'var(--text-sm)',
-      color: 'var(--gray-500)',
+      fontSize: '0.875rem',
+      color: 'rgba(255, 255, 255, 0.8)',
       fontWeight: '500',
       lineHeight: 1,
+      marginTop: '2px',
     },
     
     centerSection: {
       flex: 1,
       maxWidth: '500px',
-      margin: '0 var(--space-8)',
+      margin: '0 2rem',
       position: 'relative',
     },
     
@@ -128,45 +141,59 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
     searchInput: {
       width: '100%',
       height: '44px',
-      padding: '0 var(--space-4) 0 var(--space-12)',
-      border: '1px solid var(--gray-200)',
-      borderRadius: 'var(--radius-xl)',
-      fontSize: 'var(--text-sm)',
-      backgroundColor: 'var(--gray-50)',
-      transition: 'var(--transition-fast)',
+      padding: '0 1rem 0 3rem',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      borderRadius: '24px',
+      fontSize: '0.875rem',
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+      backdropFilter: 'blur(8px)',
+      transition: 'all 0.3s ease',
       outline: 'none',
       fontFamily: 'var(--font-primary)',
+      color: 'white',
+      '::placeholder': {
+        color: 'rgba(255, 255, 255, 0.7)',
+      },
+      ':focus': {
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        borderColor: 'rgba(255, 255, 255, 0.4)',
+        boxShadow: '0 0 0 3px rgba(255, 255, 255, 0.1)',
+      }
     },
     
     searchIcon: {
       position: 'absolute',
-      left: 'var(--space-4)',
+      left: '1rem',
       top: '50%',
       transform: 'translateY(-50%)',
       fontSize: '18px',
-      color: 'var(--gray-400)',
+      color: 'rgba(255, 255, 255, 0.7)',
     },
     
     rightSection: {
       display: 'flex',
       alignItems: 'center',
-      gap: 'var(--space-3)',
+      gap: '0.75rem',
     },
     
     iconButton: {
       position: 'relative',
       width: '44px',
       height: '44px',
-      borderRadius: 'var(--radius-lg)',
-      border: '1px solid var(--gray-200)',
-      backgroundColor: 'var(--gray-50)',
+      borderRadius: '12px',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       cursor: 'pointer',
-      transition: 'var(--transition-fast)',
+      transition: 'all 0.3s ease',
       fontSize: '18px',
-      color: 'var(--gray-600)',
+      color: 'white',
+      ':hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        transform: 'translateY(-1px)',
+      }
     },
     
     notificationBadge: {
@@ -175,74 +202,84 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
       right: '-2px',
       width: '20px',
       height: '20px',
-      backgroundColor: 'var(--error-500)',
-      borderRadius: 'var(--radius-full)',
+      backgroundColor: '#F4A261', // Orange accent
+      borderRadius: '50%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontSize: 'var(--text-xs)',
+      border: '2px solid white',
+      boxShadow: '0 2px 8px rgba(244, 162, 97, 0.4)',
+      fontSize: '0.75rem',
       fontWeight: '600',
       color: 'white',
-      border: '2px solid white',
     },
     
     profileButton: {
       display: 'flex',
       alignItems: 'center',
-      gap: 'var(--space-3)',
-      padding: 'var(--space-2)',
-      borderRadius: 'var(--radius-lg)',
-      border: '1px solid var(--gray-200)',
-      backgroundColor: 'var(--gray-50)',
+      gap: '0.75rem',
+      padding: '0.5rem',
+      borderRadius: '12px',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
       cursor: 'pointer',
-      transition: 'var(--transition-fast)',
+      transition: 'all 0.3s ease',
       position: 'relative',
+      ':hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        transform: 'translateY(-1px)',
+      }
     },
     
     profileAvatar: {
       width: '36px',
       height: '36px',
-      borderRadius: 'var(--radius-full)',
-      background: 'linear-gradient(135deg, var(--ayurveda-sage), var(--ayurveda-kapha))',
+      borderRadius: '50%',
+      background: 'linear-gradient(135deg, #F4A261, #F5B17A)', // Orange gradient
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       color: 'white',
-      fontSize: 'var(--text-sm)',
+      fontSize: '0.875rem',
       fontWeight: '600',
+      border: '2px solid rgba(255, 255, 255, 0.3)',
+      boxShadow: '0 2px 8px rgba(244, 162, 97, 0.3)',
     },
     
     profileInfo: {
       display: 'flex',
       flexDirection: 'column',
-      textAlign: 'left',
+      alignItems: 'flex-start',
     },
     
     profileName: {
-      fontSize: 'var(--text-sm)',
+      fontSize: '0.875rem',
       fontWeight: '600',
-      color: 'var(--gray-900)',
+      color: 'white',
       lineHeight: 1.2,
+      textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
     },
     
     profileRole: {
-      fontSize: 'var(--text-xs)',
-      color: 'var(--gray-500)',
-      lineHeight: 1.2,
+      fontSize: '0.75rem',
+      color: 'rgba(255, 255, 255, 0.8)',
+      fontWeight: '400',
+      lineHeight: 1,
     },
     
     dropdown: {
       position: 'absolute',
       top: '100%',
       right: 0,
-      marginTop: 'var(--space-2)',
+      marginTop: '8px',
       background: 'white',
-      border: '1px solid var(--gray-200)',
-      borderRadius: 'var(--radius-xl)',
-      boxShadow: 'var(--shadow-lg)',
-      padding: 'var(--space-2)',
-      minWidth: '280px',
-      zIndex: 'var(--z-50)',
+      border: '1px solid #e5e7eb',
+      borderRadius: '8px',
+      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
+      padding: '0',
+      minWidth: '220px',
+      zIndex: '1000',
+      fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
     },
     
     notificationDropdown: {
@@ -285,18 +322,6 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
-  const handleSearchFocus = (e) => {
-    e.target.style.backgroundColor = 'white';
-    e.target.style.borderColor = 'var(--primary-500)';
-    e.target.style.boxShadow = '0 0 0 3px var(--primary-50)';
-  };
-
-  const handleSearchBlur = (e) => {
-    e.target.style.backgroundColor = 'var(--gray-50)';
-    e.target.style.borderColor = 'var(--gray-200)';
-    e.target.style.boxShadow = 'none';
-  };
-
   const handleIconHover = (e) => {
     e.target.style.backgroundColor = 'var(--primary-50)';
     e.target.style.borderColor = 'var(--primary-200)';
@@ -325,26 +350,11 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
         </button>
         
         <div style={styles.brandSection}>
-          <div style={styles.logo}>🌿</div>
+          <div style={styles.logo}>⚕</div>
           <div style={styles.brandText}>
             <div style={styles.title}>AyurAhaar</div>
             <div style={styles.subtitle}>Medical Portal</div>
           </div>
-        </div>
-      </div>
-
-      <div style={styles.centerSection}>
-        <div style={styles.searchContainer}>
-          <div style={styles.searchIcon}>🔍</div>
-          <input
-            type="text"
-            placeholder="Search patients, appointments, treatments..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={styles.searchInput}
-            onFocus={handleSearchFocus}
-            onBlur={handleSearchBlur}
-          />
         </div>
       </div>
 
@@ -355,7 +365,7 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           onMouseLeave={handleIconLeave}
           aria-label="Quick actions"
         >
-          ⚡
+          ■
         </button>
         
         <div style={{ position: 'relative' }}>
@@ -417,21 +427,116 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           
           {showProfileDropdown && (
             <div style={styles.dropdown}>
-              <div style={{ padding: 'var(--space-2)' }}>
-                <div style={{ fontSize: 'var(--text-sm)', fontWeight: '600', marginBottom: 'var(--space-2)' }}>
-                  Profile Menu
+              <div style={{ 
+                padding: '12px 16px', 
+                borderBottom: '1px solid #e5e7eb',
+                backgroundColor: '#f8f9fa'
+              }}>
+                <div style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '600', 
+                  color: '#2C5F41',
+                  marginBottom: '2px'
+                }}>
+                  Dr. Rajesh Kumar
                 </div>
-                <button style={{ width: '100%', textAlign: 'left', padding: 'var(--space-2)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: '#687076'
+                }}>
+                  Ayurvedic Physician
+                </div>
+              </div>
+              
+              <div style={{ padding: '8px 0' }}>
+                <button 
+                  style={{ 
+                    width: '100%', 
+                    textAlign: 'left', 
+                    padding: '10px 16px', 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#374151',
+                    display: 'flex',
+                    alignItems: 'center',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  <span style={{ marginRight: '8px' }}>👤</span>
                   Profile Settings
                 </button>
-                <button style={{ width: '100%', textAlign: 'left', padding: 'var(--space-2)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                
+                <button 
+                  style={{ 
+                    width: '100%', 
+                    textAlign: 'left', 
+                    padding: '10px 16px', 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#374151',
+                    display: 'flex',
+                    alignItems: 'center',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  <span style={{ marginRight: '8px' }}>⚙</span>
                   Preferences
                 </button>
-                <button style={{ width: '100%', textAlign: 'left', padding: 'var(--space-2)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                
+                <button 
+                  style={{ 
+                    width: '100%', 
+                    textAlign: 'left', 
+                    padding: '10px 16px', 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#374151',
+                    display: 'flex',
+                    alignItems: 'center',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  <span style={{ marginRight: '8px' }}>?</span>
                   Help & Support
                 </button>
-                <hr style={{ margin: 'var(--space-2) 0', border: 'none', borderTop: '1px solid var(--gray-200)' }} />
-                <button style={{ width: '100%', textAlign: 'left', padding: 'var(--space-2)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--error-600)' }}>
+                
+                <hr style={{ 
+                  margin: '8px 16px', 
+                  border: 'none', 
+                  borderTop: '1px solid #e5e7eb'
+                }} />
+                
+                <button 
+                  onClick={handleSignOut}
+                  style={{ 
+                    width: '100%', 
+                    textAlign: 'left', 
+                    padding: '10px 16px', 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#dc3545',
+                    display: 'flex',
+                    alignItems: 'center',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#fef2f2'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  <span style={{ marginRight: '8px' }}>⊗</span>
                   Sign Out
                 </button>
               </div>

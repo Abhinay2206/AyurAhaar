@@ -1,30 +1,48 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import AuthService from '../../services/authService';
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeItem, setActiveItem] = useState('dashboard');
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    // Get user role from AuthService
+    const user = AuthService.getUser();
+    if (user) {
+      setUserRole(user.role);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Set active item based on current location
+    const pathSegments = location.pathname.split('/');
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    setActiveItem(lastSegment || 'dashboard');
+  }, [location.pathname]);
 
   const sidebarStyles = {
-    width: collapsed ? '80px' : '280px',
+    width: collapsed ? '60px' : '240px',
     height: '100vh',
-    background: 'var(--bg-gradient-sidebar)',
-    borderRight: '1px solid var(--gray-200)',
+    background: 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)',
+    borderRight: '1px solid #E0E0E0',
     position: 'fixed',
-    top: '80px',
+    top: '60px',
     left: 0,
     zIndex: 40,
     overflowY: 'auto',
     overflowX: 'hidden',
-    transition: 'width var(--transition-base)',
-    boxShadow: 'var(--shadow-sm)',
+    transition: 'width 0.3s ease',
+    boxShadow: '4px 0 20px rgba(0, 0, 0, 0.05)',
   };
 
   const headerStyles = {
-    padding: collapsed ? 'var(--space-4) var(--space-3)' : 'var(--space-6) var(--space-6)',
-    borderBottom: '1px solid var(--gray-200)',
-    marginBottom: 'var(--space-4)',
-    background: 'var(--gray-25)',
+    padding: collapsed ? '0.75rem 0.5rem' : '1rem 1rem',
+    borderBottom: '1px solid #E0E0E0',
+    marginBottom: '0.75rem',
+    background: 'linear-gradient(135deg, #E8F5E8 0%, #FDF4E8 100%)',
   };
 
   const hospitalInfoStyles = {
@@ -33,132 +51,218 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   };
 
   const hospitalNameStyles = {
-    fontSize: 'var(--text-sm)',
+    fontSize: '0.875rem',
     fontWeight: '700',
-    color: 'var(--gray-900)',
-    marginBottom: 'var(--space-1)',
-    letterSpacing: 'var(--tracking-wide)',
+    color: '#2C5F41',
+    marginBottom: '0.25rem',
+    letterSpacing: '0.02em',
+    fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   };
 
   const departmentStyles = {
-    fontSize: 'var(--text-xs)',
-    color: 'var(--gray-500)',
+    fontSize: '0.75rem',
+    color: '#687076',
     fontWeight: '500',
     textTransform: 'uppercase',
-    letterSpacing: 'var(--tracking-wider)',
+    letterSpacing: '0.05em',
+    fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   };
 
-  const menuItems = [
-    { 
-      id: 'dashboard', 
-      icon: '📊', 
-      label: 'Dashboard', 
-      path: '/app/dashboard',
-      category: 'main'
-    },
-    { 
-      id: 'patients', 
-      icon: '👥', 
-      label: 'Patient Registry', 
-      path: '/app/patients',
-      category: 'main'
-    },
-    { 
-      id: 'appointments', 
-      icon: '📅', 
-      label: 'Appointments', 
-      path: '/app/appointments',
-      category: 'main'
-    },
-    { 
-      id: 'consultations', 
-      icon: '🩺', 
-      label: 'Consultations', 
-      path: '/app/consultations',
-      category: 'main'
-    },
-    { 
-      id: 'meal-plans', 
-      icon: '🍽️', 
-      label: 'Treatment Plans', 
-      path: '/app/meal-plans',
-      category: 'clinical'
-    },
-    { 
-      id: 'prescriptions', 
-      icon: '💊', 
-      label: 'Prescriptions', 
-      path: '/app/prescriptions',
-      category: 'clinical'
-    },
-    { 
-      id: 'reports', 
-      icon: '📋', 
-      label: 'Medical Reports', 
-      path: '/app/reports',
-      category: 'clinical'
-    },
-    { 
-      id: 'analytics', 
-      icon: '📈', 
-      label: 'Analytics', 
-      path: '/app/analytics',
-      category: 'insights'
-    },
-    { 
-      id: 'messages', 
-      icon: '💬', 
-      label: 'Messages', 
-      path: '/app/messages',
-      category: 'communication'
-    },
-    { 
-      id: 'settings', 
-      icon: '⚙️', 
-      label: 'Settings', 
-      path: '/app/settings',
-      category: 'system'
-    },
-  ];
-
-  const categoryLabels = {
-    main: 'Main',
-    clinical: 'Clinical',
-    insights: 'Insights',
-    communication: 'Communication',
-    system: 'System'
+  // Role-based menu items
+  const getMenuItems = () => {
+    if (userRole === 'super-admin') {
+      return [
+        { 
+          id: 'dashboard', 
+          icon: '■', 
+          label: 'Dashboard', 
+          path: '/super-admin/dashboard',
+          category: 'main'
+        },
+        { 
+          id: 'doctors', 
+          icon: '⚕', 
+          label: 'Doctor Management', 
+          path: '/super-admin/doctors',
+          category: 'main'
+        },
+        { 
+          id: 'patients', 
+          icon: '●', 
+          label: 'Patient Analytics', 
+          path: '/super-admin/patients',
+          category: 'main'
+        },
+        { 
+          id: 'food-database', 
+          icon: '■', 
+          label: 'Food Database', 
+          path: '/super-admin/food-database',
+          category: 'management'
+        },
+        { 
+          id: 'meal-plans', 
+          icon: '◉', 
+          label: 'Meal Plans', 
+          path: '/super-admin/meal-plans',
+          category: 'management'
+        },
+        { 
+          id: 'revenue', 
+          icon: '▲', 
+          label: 'Revenue Analytics', 
+          path: '/super-admin/revenue',
+          category: 'analytics'
+        },
+        { 
+          id: 'system-health', 
+          icon: '⚙', 
+          label: 'System Health', 
+          path: '/super-admin/system-health',
+          category: 'analytics'
+        },
+        { 
+          id: 'reports', 
+          icon: '■', 
+          label: 'Reports', 
+          path: '/super-admin/reports',
+          category: 'analytics'
+        },
+        { 
+          id: 'settings', 
+          icon: '⚙', 
+          label: 'System Settings', 
+          path: '/super-admin/settings',
+          category: 'system'
+        },
+      ];
+    } else {
+      // Regular admin/doctor menu items
+      return [
+        { 
+          id: 'dashboard', 
+          icon: '■', 
+          label: 'Dashboard', 
+          path: '/app/dashboard',
+          category: 'main'
+        },
+        { 
+          id: 'patients', 
+          icon: '●', 
+          label: 'Patient Registry', 
+          path: '/app/patients',
+          category: 'main'
+        },
+        { 
+          id: 'consultations', 
+          icon: '⚕', 
+          label: 'Consultations', 
+          path: '/app/consultations',
+          category: 'main'
+        },
+        { 
+          id: 'meal-plans', 
+          icon: '◉', 
+          label: 'Treatment Plans', 
+          path: '/app/meal-plans',
+          category: 'clinical'
+        },
+        { 
+          id: 'prescriptions', 
+          icon: '⚕', 
+          label: 'Prescriptions', 
+          path: '/app/prescriptions',
+          category: 'clinical'
+        },
+        { 
+          id: 'reports', 
+          icon: '■', 
+          label: 'Medical Reports', 
+          path: '/app/reports',
+          category: 'clinical'
+        },
+        { 
+          id: 'analytics', 
+          icon: '▲', 
+          label: 'Analytics', 
+          path: '/app/analytics',
+          category: 'insights'
+        },
+        { 
+          id: 'messages', 
+          icon: '●', 
+          label: 'Messages', 
+          path: '/app/messages',
+          category: 'communication'
+        },
+        { 
+          id: 'settings', 
+          icon: '⚙', 
+          label: 'Settings', 
+          path: '/app/settings',
+          category: 'system'
+        },
+      ];
+    }
   };
+
+  const menuItems = getMenuItems();
+
+  const getCategoryLabels = () => {
+    if (userRole === 'super-admin') {
+      return {
+        main: 'Overview',
+        management: 'Management',
+        analytics: 'Analytics',
+        system: 'System'
+      };
+    } else {
+      return {
+        main: 'Main',
+        clinical: 'Clinical',
+        insights: 'Insights',
+        communication: 'Communication',
+        system: 'System'
+      };
+    }
+  };
+
+  const categoryLabels = getCategoryLabels();
 
   const getMenuItemsByCategory = (category) => {
     return menuItems.filter(item => item.category === category);
   };
 
-  const categories = ['main', 'clinical', 'insights', 'communication', 'system'];
+  const categories = userRole === 'super-admin' 
+    ? ['main', 'management', 'analytics', 'system']
+    : ['main', 'clinical', 'insights', 'communication', 'system'];
 
   const menuItemStyles = (isActive) => ({
     display: 'flex',
     alignItems: 'center',
-    gap: collapsed ? '0' : 'var(--space-3)',
-    padding: collapsed ? 'var(--space-3)' : 'var(--space-3) var(--space-4)',
-    margin: `0 var(--space-3) var(--space-2) var(--space-3)`,
-    borderRadius: 'var(--radius-xl)',
-    color: isActive ? 'var(--primary-700)' : 'var(--gray-600)',
-    backgroundColor: isActive ? 'var(--primary-50)' : 'transparent',
-    border: isActive ? '1px solid var(--primary-200)' : '1px solid transparent',
+    gap: collapsed ? '0' : '0.5rem',
+    padding: collapsed ? '0.5rem' : '0.5rem 0.75rem',
+    margin: `0 0.5rem 0.25rem 0.5rem`,
+    borderRadius: '8px',
+    color: isActive ? '#2C5F41' : '#687076',
+    backgroundColor: isActive ? '#E8F5E8' : 'transparent',
+    border: isActive ? '1px solid #3E8E5A' : '1px solid transparent',
     cursor: 'pointer',
-    transition: 'var(--transition-fast)',
-    fontSize: 'var(--text-sm)',
+    transition: 'all 0.3s ease',
+    fontSize: '0.8rem',
     fontWeight: isActive ? '600' : '500',
     textDecoration: 'none',
     justifyContent: collapsed ? 'center' : 'flex-start',
     position: 'relative',
     overflow: 'hidden',
+    fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   });
 
   const iconStyles = {
     fontSize: '18px',
     minWidth: '20px',
     textAlign: 'center',
+    filter: 'grayscale(0.2)',
   };
 
   const labelStyles = {
@@ -169,35 +273,52 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   };
 
   const categoryHeaderStyles = {
-    padding: collapsed ? 'var(--space-2) var(--space-3)' : 'var(--space-4) var(--space-4) var(--space-2) var(--space-4)',
-    fontSize: 'var(--text-xs)',
+    padding: collapsed ? '0.25rem 0.5rem' : '0.75rem 0.75rem 0.25rem 0.75rem',
+    fontSize: '0.7rem',
     fontWeight: '700',
-    color: 'var(--gray-400)',
+    color: '#687076',
     textTransform: 'uppercase',
-    letterSpacing: 'var(--tracking-widest)',
+    letterSpacing: '0.05em',
     display: collapsed ? 'none' : 'block',
-    borderTop: '1px solid var(--gray-100)',
-    marginTop: 'var(--space-4)',
+    borderTop: '1px solid #E0E0E0',
+    marginTop: '0.75rem',
+    fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   };
 
   const collapseBtnStyles = {
     position: 'absolute',
-    bottom: 'var(--space-6)',
+    bottom: '1rem',
     left: '50%',
     transform: 'translateX(-50%)',
-    width: collapsed ? '44px' : '44px',
-    height: '44px',
-    borderRadius: 'var(--radius-full)',
-    border: '1px solid var(--gray-200)',
-    backgroundColor: 'var(--gray-50)',
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    border: '1px solid #E0E0E0',
+    backgroundColor: '#FFFFFF',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     fontSize: '16px',
-    color: 'var(--gray-600)',
-    transition: 'var(--transition-fast)',
-    boxShadow: 'var(--shadow-sm)',
+    color: '#3E8E5A',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+  };
+
+  const getDisplayTitle = () => {
+    if (userRole === 'super-admin') {
+      return 'AyurAhaar System';
+    } else {
+      return 'AyurAhaar Clinic';
+    }
+  };
+
+  const getDisplaySubtitle = () => {
+    if (userRole === 'super-admin') {
+      return 'Administration Portal';
+    } else {
+      return 'Ayurvedic Medicine';
+    }
   };
 
   const handleItemClick = (item) => {
@@ -205,34 +326,32 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     navigate(item.path);
   };
 
-  const handleItemHover = (e) => {
-    if (!e.target.classList.contains('active')) {
-      e.target.style.backgroundColor = 'var(--gray-50)';
-      e.target.style.borderColor = 'var(--gray-200)';
-      e.target.style.transform = 'translateX(2px)';
+  const handleItemHover = (e, isActive) => {
+    if (!isActive) {
+      e.target.style.backgroundColor = 'rgba(62, 142, 90, 0.05)';
+      e.target.style.color = '#3E8E5A';
+      e.target.style.transform = 'translateX(4px)';
     }
   };
 
-  const handleItemLeave = (e) => {
-    if (!e.target.classList.contains('active')) {
+  const handleItemLeave = (e, isActive) => {
+    if (!isActive) {
       e.target.style.backgroundColor = 'transparent';
-      e.target.style.borderColor = 'transparent';
+      e.target.style.color = '#687076';
       e.target.style.transform = 'translateX(0)';
     }
   };
 
   const handleCollapseHover = (e) => {
-    e.target.style.backgroundColor = 'var(--primary-50)';
-    e.target.style.borderColor = 'var(--primary-200)';
-    e.target.style.color = 'var(--primary-600)';
-    e.target.style.transform = 'translateX(-50%) scale(1.05)';
+    e.target.style.backgroundColor = '#E8F5E8';
+    e.target.style.transform = 'translateX(-50%) translateY(-2px)';
+    e.target.style.boxShadow = '0 6px 20px rgba(62, 142, 90, 0.2)';
   };
 
   const handleCollapseLeave = (e) => {
-    e.target.style.backgroundColor = 'var(--gray-50)';
-    e.target.style.borderColor = 'var(--gray-200)';
-    e.target.style.color = 'var(--gray-600)';
-    e.target.style.transform = 'translateX(-50%) scale(1)';
+    e.target.style.backgroundColor = '#FFFFFF';
+    e.target.style.transform = 'translateX(-50%) translateY(0)';
+    e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
   };
 
   return (
@@ -240,12 +359,14 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       <div style={headerStyles}>
         {!collapsed && (
           <div style={hospitalInfoStyles}>
-            <div style={hospitalNameStyles}>AyurAhaar Clinic</div>
-            <div style={departmentStyles}>Ayurvedic Medicine</div>
+            <div style={hospitalNameStyles}>{getDisplayTitle()}</div>
+            <div style={departmentStyles}>{getDisplaySubtitle()}</div>
           </div>
         )}
         {collapsed && (
-          <div style={{ textAlign: 'center', fontSize: '20px' }}>🌿</div>
+          <div style={{ textAlign: 'center', fontSize: '20px' }}>
+            {userRole === 'super-admin' ? '⚡' : '⚕'}
+          </div>
         )}
       </div>
 
@@ -261,30 +382,32 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                   {categoryLabels[category]}
                 </div>
               )}
-              {categoryItems.map(item => (
-                <div
-                  key={item.id}
-                  style={menuItemStyles(activeItem === item.id)}
-                  className={activeItem === item.id ? 'active' : ''}
-                  onClick={() => handleItemClick(item)}
-                  onMouseEnter={handleItemHover}
-                  onMouseLeave={handleItemLeave}
-                >
-                  <span style={iconStyles}>{item.icon}</span>
-                  <span style={labelStyles}>{item.label}</span>
-                  {activeItem === item.id && (
-                    <div style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: '3px',
-                      backgroundColor: 'var(--primary-600)',
-                      borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
-                    }} />
-                  )}
-                </div>
-              ))}
+              {categoryItems.map(item => {
+                const isActive = activeItem === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    style={menuItemStyles(isActive)}
+                    onClick={() => handleItemClick(item)}
+                    onMouseEnter={(e) => handleItemHover(e, isActive)}
+                    onMouseLeave={(e) => handleItemLeave(e, isActive)}
+                  >
+                    <span style={iconStyles}>{item.icon}</span>
+                    <span style={labelStyles}>{item.label}</span>
+                    {isActive && (
+                      <div style={{
+                        position: 'absolute',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: '3px',
+                        backgroundColor: '#3E8E5A',
+                        borderRadius: '0 4px 4px 0',
+                      }} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           );
         })}

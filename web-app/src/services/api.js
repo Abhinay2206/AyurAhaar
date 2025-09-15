@@ -18,10 +18,16 @@ class ApiService {
       ...options,
     };
 
+    console.log('🌐 ApiService: Making request to:', url);
+    console.log('🔑 ApiService: Auth headers:', this.getAuthHeaders());
+
     const response = await fetch(url, config);
+    
+    console.log('📡 ApiService: Response status:', response.status);
     
     if (!response.ok) {
       if (response.status === 401) {
+        console.log('🚫 ApiService: Unauthorized - redirecting to login');
         // Token expired or invalid, redirect to login
         localStorage.removeItem('ayur_ahaar_token');
         localStorage.removeItem('ayur_ahaar_user');
@@ -31,7 +37,9 @@ class ApiService {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    return response.json();
+    const data = await response.json();
+    console.log('📦 ApiService: Response data:', data);
+    return data;
   }
 
   // Auth endpoints
@@ -46,6 +54,25 @@ class ApiService {
     return this.request('/auth/admin/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
+    });
+  }
+
+  async loginSuperAdmin(credentials) {
+    return this.request('/auth/super-admin/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  // Universal login - try to login with any role
+  async loginUniversal(credentials) {
+    return this.request('/auth/admin/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: credentials.email,
+        password: credentials.password
+        // Don't send role to let backend determine it
+      }),
     });
   }
 
@@ -92,6 +119,28 @@ class ApiService {
     return this.request(`/meal-plans/${id}/approve`, {
       method: 'POST',
     });
+  }
+
+  // Dashboard endpoints
+  async getDashboardStats() {
+    console.log('🌐 ApiService: Calling GET /dashboard/stats');
+    return this.request('/dashboard/stats');
+  }
+
+  async getRecentActivities(limit = 5) {
+    console.log('🌐 ApiService: Calling GET /dashboard/recent-activities with limit:', limit);
+    return this.request(`/dashboard/recent-activities?limit=${limit}`);
+  }
+
+  async searchDashboard(query, limit = 10) {
+    const encodedQuery = encodeURIComponent(query);
+    console.log('🌐 ApiService: Calling GET /dashboard/search with query:', query);
+    return this.request(`/dashboard/search?query=${encodedQuery}&limit=${limit}`);
+  }
+
+  async getNotifications() {
+    console.log('🌐 ApiService: Calling GET /dashboard/notifications');
+    return this.request('/dashboard/notifications');
   }
 }
 
