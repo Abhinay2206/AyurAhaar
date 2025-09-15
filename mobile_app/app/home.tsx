@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { HelloWave } from '@/src/components/common/HelloWave';
+import { LanguageSelector } from '@/src/components/common/LanguageSelector';
 import ParallaxScrollView from '@/src/components/common/ParallaxScrollView';
 import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
@@ -10,6 +12,7 @@ import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
@@ -18,19 +21,28 @@ export default function HomeScreen() {
       headerBackgroundColor={{ light: '#f8fffe', dark: '#1a1a1a' }}
       headerImage={
         <ThemedView style={styles.headerContent}>
-          <View style={[styles.logoContainer, { backgroundColor: colors.herbalGreen }]}>
-            <Ionicons name="leaf" size={36} color="white" />
+          <View style={styles.headerTop}>
+            <View style={styles.logoAndTitle}>
+              <View style={[styles.logoContainer, { backgroundColor: colors.herbalGreen }]}>
+                <Ionicons name="leaf" size={36} color="white" />
+              </View>
+              <View>
+                <ThemedText style={[styles.headerTitle, { color: colors.text }]}>
+                  {t('home.title')}
+                </ThemedText>
+                <ThemedText style={[styles.headerSubtitle, { color: colors.icon }]}>
+                  {t('home.subtitle')}
+                </ThemedText>
+              </View>
+            </View>
+            <LanguageSelector compact={true} showLabel={false} />
           </View>
-          <ThemedText style={[styles.headerTitle, { color: colors.text }]}>AyurAhaar</ThemedText>
-          <ThemedText style={[styles.headerSubtitle, { color: colors.icon }]}>
-            Personalized wellness made simple
-          </ThemedText>
         </ThemedView>
       }>
       
       <ThemedView style={styles.welcomeContainer}>
         <ThemedText type="title" style={styles.welcomeTitle}>
-          Hello there
+          {t('home.welcome')}
         </ThemedText>
         <HelloWave />
       </ThemedView>
@@ -42,8 +54,8 @@ export default function HomeScreen() {
           onPress={() => router.push('/auth?mode=login')}
         >
           <Ionicons name="log-in" size={28} color="white" />
-          <ThemedText style={styles.primaryCardTitle}>Get Started</ThemedText>
-          <ThemedText style={styles.primaryCardSubtitle}>Sign in to access your wellness plan</ThemedText>
+          <ThemedText style={styles.primaryCardTitle}>{t('home.getStarted')}</ThemedText>
+          <ThemedText style={styles.primaryCardSubtitle}>{t('home.description')}</ThemedText>
         </TouchableOpacity>
 
         {/* Secondary Actions */}
@@ -54,7 +66,7 @@ export default function HomeScreen() {
           >
             <Ionicons name="restaurant" size={24} color={colors.softOrange} />
             <ThemedText style={[styles.secondaryCardTitle, { color: colors.text }]}>
-              Explore Foods
+              {t('home.actions.exploreFood')}
             </ThemedText>
           </TouchableOpacity>
 
@@ -64,7 +76,7 @@ export default function HomeScreen() {
           >
             <Ionicons name="person-add" size={24} color={colors.herbalGreen} />
             <ThemedText style={[styles.secondaryCardTitle, { color: colors.text }]}>
-              Register
+              {t('auth.register')}
             </ThemedText>
           </TouchableOpacity>
         </View>
@@ -73,7 +85,7 @@ export default function HomeScreen() {
       {/* Minimal Info Section */}
       <ThemedView style={styles.infoContainer}>
         <ThemedText style={[styles.infoText, { color: colors.icon }]}>
-          Ancient Ayurvedic wisdom meets modern nutrition science to create your perfect wellness plan.
+          {t('home.features.naturalHealingDesc')}
         </ThemedText>
       </ThemedView>
       
@@ -88,6 +100,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 50,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  logoAndTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   logoContainer: {
     width: 80,
     height: 80,
@@ -95,6 +119,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    marginRight: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,

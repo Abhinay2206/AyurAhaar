@@ -7,12 +7,12 @@
 
 export const API_CONFIG = {
   // Static server IP - change this to your development server's IP
-  SERVER_IP: '10.202.243.27', // Update this IP address as needed
+  SERVER_IP: '192.168.31.237', // Update this IP address as needed
   PORT: '4000',
   
   // Platform-specific localhost configurations for emulators/simulators
   ANDROID_LOCALHOST: '10.0.2.2', // Android emulator's localhost
-  IOS_LOCALHOST: '10.202.243.27',     // iOS simulator can use localhost
+  IOS_LOCALHOST: '192.168.31.237',     // iOS simulator can use localhost
   WEB_LOCALHOST: 'localhost',     // Web can use localhost
 };
 

@@ -15,8 +15,10 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
+import { LanguageSelector } from '@/src/components/common/LanguageSelector';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { AuthService } from '@/src/services/auth';
@@ -66,6 +68,7 @@ const specializationOptions = [
 ];
 
 export default function AuthScreen() {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const authContext = useAuth();
@@ -510,7 +513,7 @@ export default function AuthScreen() {
           end={{ x: 1, y: 0 }}
           style={styles.gradientButton}
         >
-          <Text style={styles.primaryButtonText}>Login</Text>
+          <Text style={styles.primaryButtonText}>{t('auth.login')}</Text>
           <Ionicons name="arrow-forward" size={20} color="white" />
         </LinearGradient>
       </TouchableOpacity>
@@ -764,13 +767,14 @@ export default function AuthScreen() {
               <Ionicons name="leaf" size={48} color={colors.herbalGreen} />
               <View style={styles.titleContainer}>
                 <Text style={[styles.appTitle, { color: colors.herbalGreen }]}>
-                  Ayurahaar
+                  {t('home.title')}
                 </Text>
                 <Text style={[styles.appSubtitle, { color: colors.sectionHeader }]}>
-                  Personalized Ayurveda Nutrition
+                  {t('home.subtitle')}
                 </Text>
               </View>
             </View>
+            <LanguageSelector compact={true} showLabel={false} />
           </View>
 
           {/* Auth Tabs */}

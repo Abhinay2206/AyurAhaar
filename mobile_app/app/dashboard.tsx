@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
 import { ThemedText } from '@/src/components/common/ThemedText';
@@ -24,6 +25,7 @@ import { PatientService, PatientProfile } from '@/src/services/patient';
 import { prakritiApi } from '@/src/services/api';
 
 export default function DashboardScreen() {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { patient, getToken } = useAuth();
@@ -151,27 +153,34 @@ export default function DashboardScreen() {
 
   // Fetch real appointment data and plan data
   const fetchAppointments = useCallback(async () => {
+    console.log('🔄 Fetching appointments for patient:', patient?._id, 'patientProfile:', patientProfile?._id);
     const patientId = patient?._id || patientProfile?._id;
     if (!patientId) {
+      console.log('❌ No patient ID found');
       setIsLoadingAppointments(false);
       return;
     }
 
     try {
       setIsLoadingAppointments(true);
+      console.log('📞 Calling AppointmentService.getPatientAppointments with ID:', patientId);
       const appointments = await AppointmentService.getPatientAppointments(patientId);
+      console.log('📅 Received appointments:', appointments.length, appointments);
       
       // Filter for upcoming appointments (exclude cancelled) and sort by date
       const upcoming = appointments
-        .filter(apt => 
-          new Date(apt.date) >= new Date() && 
-          apt.status !== 'cancelled'
-        )
+        .filter(apt => {
+          const isUpcoming = new Date(apt.date) >= new Date();
+          const isNotCancelled = apt.status !== 'cancelled';
+          console.log(`📋 Appointment ${apt._id}: upcoming=${isUpcoming}, not cancelled=${isNotCancelled}, status=${apt.status}, date=${apt.date}`);
+          return isUpcoming && isNotCancelled;
+        })
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       
+      console.log('✅ Filtered upcoming appointments:', upcoming.length, upcoming);
       setUpcomingAppointments(upcoming);
     } catch (error) {
-      console.error('Error fetching appointments:', error);
+      console.error('❌ Error fetching appointments:', error);
       // Keep empty array on error
       setUpcomingAppointments([]);
     } finally {
@@ -374,7 +383,7 @@ export default function DashboardScreen() {
           </View>
           <View style={styles.headerText}>
             <ThemedText style={[styles.welcomeText, { color: colors.icon }]}>
-              Welcome back,
+              {t('dashboard.welcome')},
             </ThemedText>
             <ThemedText style={[styles.userName, { color: colors.text }]}>
               {displayPatient.name}
@@ -687,7 +696,7 @@ export default function DashboardScreen() {
               >
                 <Ionicons name="sparkles" size={20} color="white" />
                 <Text style={styles.primaryActionButtonText}>
-                  {isGeneratingAIPlan ? 'Generating...' : 'Generate AI Plan'}
+                  {isGeneratingAIPlan ? t('common.loading') : t('dashboard.generatePlan')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -695,7 +704,7 @@ export default function DashboardScreen() {
                 onPress={() => router.push('/doctor-list' as any)}
               >
                 <Ionicons name="medical" size={20} color={colors.herbalGreen} />
-                <Text style={[styles.secondaryActionButtonText, { color: colors.herbalGreen }]}>Book Appointment</Text>
+                <Text style={[styles.secondaryActionButtonText, { color: colors.herbalGreen }]}>{t('dashboard.bookAppointment')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -706,10 +715,10 @@ export default function DashboardScreen() {
       <View style={[styles.appointmentsSection, { backgroundColor: colors.cardBackground }]}>
         <View style={styles.appointmentsHeader}>
           <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>
-            Upcoming Appointments
+            {t('dashboard.upcomingAppointments')}
           </ThemedText>
           <TouchableOpacity onPress={handleAppointments}>
-            <Text style={[styles.viewAllText, { color: colors.herbalGreen }]}>View All</Text>
+            <Text style={[styles.viewAllText, { color: colors.herbalGreen }]}>{t('dashboard.viewPlan')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -780,13 +789,13 @@ export default function DashboardScreen() {
           <View style={styles.noAppointmentsContainer}>
             <Ionicons name="calendar-outline" size={40} color={colors.icon} />
             <Text style={[styles.noAppointmentsText, { color: colors.icon }]}>
-              No upcoming appointments
+              {t('dashboard.noAppointments')}
             </Text>
             <TouchableOpacity
               style={[styles.bookNowButton, { backgroundColor: colors.herbalGreen }]}
               onPress={() => router.push('/doctor-list' as any)}
             >
-              <Text style={styles.bookNowButtonText}>Book Appointment</Text>
+              <Text style={styles.bookNowButtonText}>{t('dashboard.bookAppointment')}</Text>
             </TouchableOpacity>
           </View>
         )}

@@ -7,6 +7,10 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { PermissionsProvider } from '@/src/contexts/PermissionsContext';
 import { AuthProvider } from '@/src/contexts/AuthContext';
+import { LanguageProvider } from '@/src/contexts/LanguageContext';
+
+// Initialize i18n
+import '@/src/config/i18n';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -20,9 +24,10 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <PermissionsProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <LanguageProvider>
+      <AuthProvider>
+        <PermissionsProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen 
@@ -62,5 +67,6 @@ export default function RootLayout() {
         </ThemeProvider>
       </PermissionsProvider>
     </AuthProvider>
+  </LanguageProvider>
   );
 }

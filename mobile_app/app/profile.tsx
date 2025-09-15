@@ -10,7 +10,9 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
+import { LanguageSelector } from '@/src/components/common/LanguageSelector';
 import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
 import { Colors } from '@/src/constants/Colors';
@@ -19,6 +21,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { default as PatientService, PatientProfile } from '@/src/services/patient';
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { logout } = useAuth();
@@ -318,13 +321,32 @@ export default function ProfileScreen() {
           ))}
         </View>
 
+        {/* Settings Section */}
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {t('profile.settings')}
+          </Text>
+          
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Ionicons name="language" size={20} color={colors.herbalGreen} />
+              <Text style={[styles.settingLabel, { color: colors.text }]}>
+                {t('common.language')}
+              </Text>
+            </View>
+            <View style={styles.settingValue}>
+              <LanguageSelector compact={false} showLabel={false} />
+            </View>
+          </View>
+        </View>
+
         {/* Logout Button */}
         <TouchableOpacity 
           style={[styles.logoutButton, { borderColor: '#FF6B6B' }]}
           onPress={handleLogout}
         >
           <Ionicons name="log-out" size={20} color="#FF6B6B" />
-          <Text style={[styles.logoutText, { color: '#FF6B6B' }]}>Logout</Text>
+          <Text style={[styles.logoutText, { color: '#FF6B6B' }]}>{t('profile.logout')}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -578,5 +600,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     fontWeight: '500',
+  },
+  settingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  settingInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  settingLabel: {
+    marginLeft: 12,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  settingValue: {
+    minWidth: 150,
+    alignItems: 'flex-end',
   },
 });

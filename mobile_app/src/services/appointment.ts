@@ -73,13 +73,22 @@ export class AppointmentService {
 
   static async getPatientAppointments(patientId: string): Promise<Appointment[]> {
     try {
-      const response = await fetch(`${getApiBaseUrl()}/appointments/patient/${patientId}`);
+      console.log('DEBUG: AppointmentService.getPatientAppointments called with patientId:', patientId);
+      const apiUrl = `${getApiBaseUrl()}/appointments/patient/${patientId}`;
+      console.log('DEBUG: API URL:', apiUrl);
+      
+      const response = await fetch(apiUrl);
+      console.log('DEBUG: API response status:', response.status);
+      
       const result = await response.json();
+      console.log('DEBUG: API response result:', result);
 
       if (!result.success) {
+        console.log('DEBUG: API returned success=false, message:', result.message);
         throw new Error(result.message || 'Failed to fetch appointments');
       }
 
+      console.log('DEBUG: Returning appointments array:', result.appointments);
       return result.appointments;
     } catch (error) {
       console.error('Error fetching patient appointments:', error);
