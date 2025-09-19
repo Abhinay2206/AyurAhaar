@@ -99,13 +99,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 50,
+    paddingHorizontal: 20,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     width: '100%',
-    paddingHorizontal: 20,
   },
   logoAndTitle: {
     flexDirection: 'row',
@@ -118,7 +118,6 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
     marginRight: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -135,8 +134,6 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     opacity: 0.7,
-    textAlign: 'center',
-    paddingHorizontal: 20,
   },
   welcomeContainer: {
     flexDirection: 'row',
@@ -144,6 +141,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 32,
     gap: 12,
+    paddingHorizontal: 20,
   },
   welcomeTitle: {
     fontSize: 28,
@@ -152,6 +150,7 @@ const styles = StyleSheet.create({
   actionsGrid: {
     gap: 20,
     marginBottom: 40,
+    paddingHorizontal: 20,
   },
   primaryCard: {
     padding: 32,
@@ -205,6 +204,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: 'rgba(62, 142, 90, 0.05)',
     marginTop: 8,
+    marginHorizontal: 20,
   },
   infoText: {
     fontSize: 15,

@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
 import { LanguageSelector } from '@/src/components/common/LanguageSelector';
+import { LoadingAnimation } from '@/src/components/common/LoadingAnimation';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { AuthService } from '@/src/services/auth';
@@ -90,6 +91,10 @@ export default function AuthScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSpecializationDropdown, setShowSpecializationDropdown] = useState(false);
+  
+  // Loading states
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const [loginData, setLoginData] = useState<LoginData>({
     emailOrPhone: '',
@@ -153,6 +158,7 @@ export default function AuthScreen() {
 
     console.log('📤 Attempting login with:', loginData.emailOrPhone);
     try {
+      setIsLoggingIn(true);
       const success = await AuthService.handleLoginFlow(loginData.emailOrPhone, loginData.password, authContext);
       
       if (!success) {
@@ -162,6 +168,8 @@ export default function AuthScreen() {
     } catch (error) {
       console.error('❌ Login error:', error);
       Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -192,6 +200,7 @@ export default function AuthScreen() {
 
     console.log('📤 Attempting registration for:', email);
     try {
+      setIsRegistering(true);
       const userData = {
         name: fullName,
         phone: mobileNumber,
@@ -200,7 +209,7 @@ export default function AuthScreen() {
         role: 'patient'
       };
 
-      const success = await AuthService.handleRegistrationFlow(userData);
+      const success = await AuthService.handleRegistrationFlow(userData, authContext);
       
       if (!success) {
         Alert.alert('Registration Failed', 'Unable to create account. Please try again.');
@@ -209,6 +218,8 @@ export default function AuthScreen() {
     } catch (error) {
       console.error('❌ Registration error:', error);
       Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -804,6 +815,24 @@ export default function AuthScreen() {
           </View>
         </Animated.View>
       </ScrollView>
+
+      {/* Login Loading Overlay */}
+      <LoadingAnimation
+        type="pulse"
+        size="medium"
+        message="Signing you in...&#10;Please wait"
+        overlay={true}
+        visible={isLoggingIn}
+      />
+
+      {/* Registration Loading Overlay */}
+      <LoadingAnimation
+        type="ayurveda"
+        size="large"
+        message="Creating your account...&#10;Setting up your profile"
+        overlay={true}
+        visible={isRegistering}
+      />
     </KeyboardAvoidingView>
   );
 }

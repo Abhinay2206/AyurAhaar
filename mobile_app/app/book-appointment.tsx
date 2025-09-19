@@ -16,6 +16,7 @@ import {
 
 import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
+import { LoadingAnimation } from '@/src/components/common/LoadingAnimation';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -190,14 +191,15 @@ export default function BookAppointmentScreen() {
   if (isLoading || isDoctorLoading || isLoadingPatientData) {
     return (
       <ThemedView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.herbalGreen} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>
-            {isLoading ? 'Loading...' : 
-             isDoctorLoading ? 'Loading doctor information...' : 
-             'Loading patient data...'}
-          </Text>
-        </View>
+        <LoadingAnimation
+          type="dots"
+          size="large"
+          message={isLoading ? 'Authenticating...' : 
+                   isDoctorLoading ? 'Loading doctor information...&#10;Please wait' : 
+                   'Loading your patient profile...&#10;Setting up appointment form'}
+          overlay={false}
+          visible={true}
+        />
       </ThemedView>
     );
   }
@@ -866,6 +868,15 @@ export default function BookAppointmentScreen() {
           </ScrollView>
         </ThemedView>
       </Modal>
+
+      {/* Appointment Booking Loading Overlay */}
+      <LoadingAnimation
+        type="pulse"
+        size="large"
+        message="Processing your appointment...&#10;Confirming with doctor's schedule"
+        overlay={true}
+        visible={isProcessing}
+      />
     </ThemedView>
   );
 }

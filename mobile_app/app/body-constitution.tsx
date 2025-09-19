@@ -11,24 +11,15 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import Svg, { Path, Circle, Ellipse, G, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
+import HumanBodySvg, { BodyPart } from '@/src/components/common/HumanBodySvg';
+import { extendedBodyRegions, mapRegionsToBodyParts, getRegionFromBodyPart } from '@/src/components/common/BodyRegionMapping';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { prakritiApi } from '@/src/services/api';
 
 const { width } = Dimensions.get('window');
-
-interface BodyRegion {
-  id: string;
-  name: string;
-  doshas: string[];
-  description: string;
-  symptoms: string[];
-  problemKeywords: string[];
-  svgPath?: string;
-}
 
 interface AssessmentData {
   answers: any[];
@@ -44,82 +35,6 @@ export default function BodyConstitutionScreen() {
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-
-  // Enhanced body regions with problem detection
-  const bodyRegions: BodyRegion[] = [
-    {
-      id: 'head',
-      name: 'Head & Brain',
-      doshas: ['vata'],
-      description: 'Nervous system, mental activity, and sensory functions',
-      symptoms: ['Headaches', 'Mental fog', 'Anxiety', 'Insomnia', 'Memory issues'],
-      problemKeywords: ['headache', 'anxiety', 'insomnia', 'stress', 'worry', 'mental', 'memory', 'concentration'],
-    },
-    {
-      id: 'eyes',
-      name: 'Eyes',
-      doshas: ['pitta'],
-      description: 'Vision, eye health, and optical clarity',
-      symptoms: ['Dry eyes', 'Burning sensation', 'Poor vision', 'Eye strain'],
-      problemKeywords: ['eye', 'vision', 'sight', 'dry eyes', 'burning eyes'],
-    },
-    {
-      id: 'throat',
-      name: 'Throat & Neck',
-      doshas: ['kapha'],
-      description: 'Communication, breathing, and lymphatic system',
-      symptoms: ['Sore throat', 'Voice issues', 'Swollen glands', 'Neck tension'],
-      problemKeywords: ['throat', 'voice', 'neck', 'swallow', 'glands'],
-    },
-    {
-      id: 'chest',
-      name: 'Chest & Heart',
-      doshas: ['kapha', 'vata'],
-      description: 'Respiratory system, circulation, and emotional center',
-      symptoms: ['Chest congestion', 'Breathing issues', 'Heart palpitations', 'Cough'],
-      problemKeywords: ['chest', 'heart', 'breathing', 'cough', 'lung', 'asthma', 'palpitation'],
-    },
-    {
-      id: 'stomach',
-      name: 'Stomach & Liver',
-      doshas: ['pitta'],
-      description: 'Digestion, metabolism, and transformation',
-      symptoms: ['Acidity', 'Heartburn', 'Nausea', 'Digestive issues', 'Liver problems'],
-      problemKeywords: ['stomach', 'digestion', 'acid', 'heartburn', 'nausea', 'liver', 'bile'],
-    },
-    {
-      id: 'intestines',
-      name: 'Intestines',
-      doshas: ['vata', 'pitta'],
-      description: 'Absorption, elimination, and gut health',
-      symptoms: ['Constipation', 'Diarrhea', 'Bloating', 'Gas', 'IBS'],
-      problemKeywords: ['constipation', 'diarrhea', 'bloating', 'gas', 'bowel', 'intestine', 'gut'],
-    },
-    {
-      id: 'pelvis',
-      name: 'Pelvis & Reproductive',
-      doshas: ['vata', 'kapha'],
-      description: 'Reproductive health and elimination',
-      symptoms: ['Menstrual issues', 'Reproductive problems', 'Urinary issues'],
-      problemKeywords: ['menstrual', 'period', 'reproductive', 'urinary', 'bladder', 'sexual'],
-    },
-    {
-      id: 'joints',
-      name: 'Joints & Bones',
-      doshas: ['vata'],
-      description: 'Movement, flexibility, and skeletal system',
-      symptoms: ['Joint pain', 'Stiffness', 'Arthritis', 'Bone issues'],
-      problemKeywords: ['joint', 'bone', 'arthritis', 'stiff', 'pain', 'ache', 'muscle'],
-    },
-    {
-      id: 'skin',
-      name: 'Skin',
-      doshas: ['pitta'],
-      description: 'Protection, temperature regulation, and appearance',
-      symptoms: ['Rashes', 'Acne', 'Dryness', 'Inflammation', 'Allergies'],
-      problemKeywords: ['skin', 'rash', 'acne', 'eczema', 'dry skin', 'allergy', 'itching'],
-    },
-  ];
 
   useEffect(() => {
     fetchData();
@@ -151,47 +66,15 @@ export default function BodyConstitutionScreen() {
     }
   };
 
-  // Check if a region has problems based on assessment
-  const hasProblems = (regionId: string): boolean => {
-    if (!assessmentData) return false;
+  // Handler for body part clicks - similar to the reactjs-human-body example
+  const showBodyPart = (bodyPart: BodyPart) => {
+    console.log("Body part clicked:", bodyPart);
     
-    const region = bodyRegions.find(r => r.id === regionId);
-    if (!region) return false;
-
-    // Check if any symptoms match this region's problem keywords
-    return assessmentData.symptoms.some(symptom => 
-      region.problemKeywords.some(keyword => 
-        symptom.toLowerCase().includes(keyword.toLowerCase())
-      )
-    ) || assessmentData.problemAreas.includes(regionId);
-  };
-
-  // Get region color based on problems and dosha dominance
-  const getRegionColor = (region: BodyRegion): string => {
-    if (hasProblems(region.id)) {
-      return '#FF4444'; // Red for problem areas
+    // Find the region that corresponds to this body part
+    const region = getRegionFromBodyPart(bodyPart);
+    if (region) {
+      setSelectedRegion(selectedRegion === region.id ? null : region.id);
     }
-
-    if (!currentPrakriti) return '#E0E0E0';
-
-    const { primaryDosha, secondaryDosha } = currentPrakriti;
-    const userDoshas = [primaryDosha?.toLowerCase(), secondaryDosha?.toLowerCase()].filter(Boolean);
-    
-    // Check if this region is affected by user's dominant doshas
-    const regionDoshas = region.doshas.map(d => d.toLowerCase());
-    const hasMatch = regionDoshas.some(dosha => userDoshas.includes(dosha));
-    
-    if (hasMatch) {
-      if (regionDoshas.includes('vata') && userDoshas.includes('vata')) {
-        return '#8E4EC6'; // Purple for Vata
-      } else if (regionDoshas.includes('pitta') && userDoshas.includes('pitta')) {
-        return '#FF6B35'; // Orange for Pitta
-      } else if (regionDoshas.includes('kapha') && userDoshas.includes('kapha')) {
-        return '#4A90E2'; // Blue for Kapha
-      }
-    }
-    
-    return '#E0E0E0'; // Default gray
   };
 
   const getDoshaColor = (dosha: string) => {
@@ -207,295 +90,37 @@ export default function BodyConstitutionScreen() {
     }
   };
 
-  const getRegionOpacity = (region: BodyRegion): number => {
-    if (hasProblems(region.id)) {
-      return 0.8; // High opacity for problems
+  // Generate body parts input for the HumanBodySvg component
+  const getBodyPartsInput = () => {
+    if (!assessmentData) {
+      // Return default configuration to show all body parts
+      return {
+        head: { color: '#E5E7EB' },
+        eyes: { color: '#E5E7EB' },
+        ears: { color: '#E5E7EB' },
+        nose: { color: '#E5E7EB' },
+        oral_cavity: { color: '#E5E7EB' },
+        neck_or_throat: { color: '#E5E7EB' },
+        chest: { color: '#E5E7EB' },
+        upper_arm: { color: '#E5E7EB' },
+        upper_abdomen: { color: '#E5E7EB' },
+        forearm: { color: '#E5E7EB' },
+        mid_abdomen: { color: '#E5E7EB' },
+        lower_abdomen: { color: '#E5E7EB' },
+        hand: { color: '#E5E7EB' },
+        sexual_organs: { color: '#E5E7EB' },
+        thigh: { color: '#E5E7EB' },
+        knee: { color: '#E5E7EB' },
+        lower_leg: { color: '#E5E7EB' },
+        foot: { color: '#E5E7EB' },
+      };
     }
-    if (selectedRegion === region.id) {
-      return 0.8;
-    }
-    if (!currentPrakriti) return 0.3;
     
-    const { primaryDosha, secondaryDosha } = currentPrakriti;
-    const userDoshas = [primaryDosha?.toLowerCase(), secondaryDosha?.toLowerCase()].filter(Boolean);
-    const regionDoshas = region.doshas.map(d => d.toLowerCase());
-    const hasMatch = regionDoshas.some(dosha => userDoshas.includes(dosha));
-    
-    return hasMatch ? 0.7 : 0.3;
-  };
-
-  const renderHumanBody = () => {
-    return (
-      <View style={styles.bodyContainer}>
-        <Svg width={width - 40} height={600} viewBox="0 0 400 600">
-          <Defs>
-            {/* Simple gradient for body parts */}
-            <SvgLinearGradient id="bodyFill" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#F8F9FA" />
-              <Stop offset="100%" stopColor="#E9ECEF" />
-            </SvgLinearGradient>
-          </Defs>
-
-          {/* Anatomical Human Body Outline */}
-          <G>
-            {/* Main body outline - matching your reference image */}
-            <Path
-              d="M200 25
-                 C215 25, 235 30, 235 55
-                 C235 75, 230 85, 225 95
-                 C220 100, 215 105, 210 110
-                 C230 115, 250 125, 265 140
-                 C280 155, 290 175, 295 195
-                 C300 215, 295 235, 290 255
-                 C285 275, 280 295, 275 315
-                 C270 335, 265 355, 260 375
-                 C255 390, 250 400, 245 410
-                 C240 420, 235 430, 230 445
-                 C225 460, 220 480, 215 500
-                 C210 520, 205 540, 200 560
-                 C195 580, 190 590, 185 595
-                 L175 595
-                 C170 590, 165 580, 160 560
-                 C155 540, 150 520, 145 500
-                 C140 480, 135 460, 130 445
-                 C125 430, 120 420, 115 410
-                 C110 400, 105 390, 100 375
-                 C95 355, 90 335, 85 315
-                 C80 295, 75 275, 70 255
-                 C65 235, 60 215, 65 195
-                 C70 175, 80 155, 95 140
-                 C110 125, 130 115, 150 110
-                 C145 105, 140 100, 135 95
-                 C130 85, 125 75, 125 55
-                 C125 30, 145 25, 160 25
-                 L200 25 Z"
-              fill="url(#bodyFill)"
-              stroke="#666"
-              strokeWidth="2"
-            />
-
-            {/* Head region */}
-            <Circle
-              cx="180"
-              cy="55"
-              r="30"
-              fill={getRegionColor(bodyRegions.find(r => r.id === 'head')!)}
-              fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'head')!)}
-              stroke={selectedRegion === 'head' ? colors.herbalGreen : hasProblems('head') ? '#FF0000' : 'transparent'}
-              strokeWidth={selectedRegion === 'head' || hasProblems('head') ? 3 : 0}
-              onPress={() => setSelectedRegion(selectedRegion === 'head' ? null : 'head')}
-            />
-
-            {/* Eyes */}
-            <Circle cx="170" cy="50" r="3" 
-                    fill={getRegionColor(bodyRegions.find(r => r.id === 'eyes')!)} 
-                    fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'eyes')!)}
-                    stroke={hasProblems('eyes') ? '#FF0000' : selectedRegion === 'eyes' ? colors.herbalGreen : 'transparent'} 
-                    strokeWidth={hasProblems('eyes') || selectedRegion === 'eyes' ? 2 : 0}
-                    onPress={() => setSelectedRegion(selectedRegion === 'eyes' ? null : 'eyes')} />
-            <Circle cx="190" cy="50" r="3" 
-                    fill={getRegionColor(bodyRegions.find(r => r.id === 'eyes')!)} 
-                    fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'eyes')!)}
-                    stroke={hasProblems('eyes') ? '#FF0000' : selectedRegion === 'eyes' ? colors.herbalGreen : 'transparent'} 
-                    strokeWidth={hasProblems('eyes') || selectedRegion === 'eyes' ? 2 : 0}
-                    onPress={() => setSelectedRegion(selectedRegion === 'eyes' ? null : 'eyes')} />
-
-            {/* Neck/Throat */}
-            <Ellipse
-              cx="180"
-              cy="95"
-              rx="15"
-              ry="20"
-              fill={getRegionColor(bodyRegions.find(r => r.id === 'throat')!)}
-              fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'throat')!)}
-              stroke={selectedRegion === 'throat' ? colors.herbalGreen : hasProblems('throat') ? '#FF0000' : 'transparent'}
-              strokeWidth={selectedRegion === 'throat' || hasProblems('throat') ? 3 : 0}
-              onPress={() => setSelectedRegion(selectedRegion === 'throat' ? null : 'throat')}
-            />
-
-            {/* Chest area */}
-            <Ellipse
-              cx="180"
-              cy="160"
-              rx="45"
-              ry="40"
-              fill={getRegionColor(bodyRegions.find(r => r.id === 'chest')!)}
-              fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'chest')!)}
-              stroke={selectedRegion === 'chest' ? colors.herbalGreen : hasProblems('chest') ? '#FF0000' : 'transparent'}
-              strokeWidth={selectedRegion === 'chest' || hasProblems('chest') ? 3 : 0}
-              onPress={() => setSelectedRegion(selectedRegion === 'chest' ? null : 'chest')}
-            />
-
-            {/* Stomach */}
-            <Ellipse
-              cx="180"
-              cy="230"
-              rx="35"
-              ry="30"
-              fill={getRegionColor(bodyRegions.find(r => r.id === 'stomach')!)}
-              fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'stomach')!)}
-              stroke={selectedRegion === 'stomach' ? colors.herbalGreen : hasProblems('stomach') ? '#FF0000' : 'transparent'}
-              strokeWidth={selectedRegion === 'stomach' || hasProblems('stomach') ? 3 : 0}
-              onPress={() => setSelectedRegion(selectedRegion === 'stomach' ? null : 'stomach')}
-            />
-
-            {/* Intestines */}
-            <Ellipse
-              cx="180"
-              cy="295"
-              rx="40"
-              ry="25"
-              fill={getRegionColor(bodyRegions.find(r => r.id === 'intestines')!)}
-              fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'intestines')!)}
-              stroke={selectedRegion === 'intestines' ? colors.herbalGreen : hasProblems('intestines') ? '#FF0000' : 'transparent'}
-              strokeWidth={selectedRegion === 'intestines' || hasProblems('intestines') ? 3 : 0}
-              onPress={() => setSelectedRegion(selectedRegion === 'intestines' ? null : 'intestines')}
-            />
-
-            {/* Pelvis */}
-            <Ellipse
-              cx="180"
-              cy="355"
-              rx="35"
-              ry="20"
-              fill={getRegionColor(bodyRegions.find(r => r.id === 'pelvis')!)}
-              fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'pelvis')!)}
-              stroke={selectedRegion === 'pelvis' ? colors.herbalGreen : hasProblems('pelvis') ? '#FF0000' : 'transparent'}
-              strokeWidth={selectedRegion === 'pelvis' || hasProblems('pelvis') ? 3 : 0}
-              onPress={() => setSelectedRegion(selectedRegion === 'pelvis' ? null : 'pelvis')}
-            />
-
-            {/* Left arm */}
-            <Ellipse cx="120" cy="160" rx="10" ry="35" 
-                     fill={getRegionColor(bodyRegions.find(r => r.id === 'joints')!)}
-                     fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'joints')!)}
-                     stroke={selectedRegion === 'joints' ? colors.herbalGreen : hasProblems('joints') ? '#FF0000' : 'transparent'}
-                     strokeWidth={selectedRegion === 'joints' || hasProblems('joints') ? 3 : 0}
-                     onPress={() => setSelectedRegion(selectedRegion === 'joints' ? null : 'joints')} />
-            
-            {/* Left forearm */}
-            <Ellipse cx="105" cy="210" rx="8" ry="30" 
-                     fill={getRegionColor(bodyRegions.find(r => r.id === 'joints')!)}
-                     fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'joints')!)}
-                     stroke={selectedRegion === 'joints' ? colors.herbalGreen : hasProblems('joints') ? '#FF0000' : 'transparent'}
-                     strokeWidth={selectedRegion === 'joints' || hasProblems('joints') ? 3 : 0}
-                     onPress={() => setSelectedRegion(selectedRegion === 'joints' ? null : 'joints')} />
-
-            {/* Right arm */}
-            <Ellipse cx="240" cy="160" rx="10" ry="35" 
-                     fill={getRegionColor(bodyRegions.find(r => r.id === 'joints')!)}
-                     fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'joints')!)}
-                     stroke={selectedRegion === 'joints' ? colors.herbalGreen : hasProblems('joints') ? '#FF0000' : 'transparent'}
-                     strokeWidth={selectedRegion === 'joints' || hasProblems('joints') ? 3 : 0}
-                     onPress={() => setSelectedRegion(selectedRegion === 'joints' ? null : 'joints')} />
-            
-            {/* Right forearm */}
-            <Ellipse cx="255" cy="210" rx="8" ry="30" 
-                     fill={getRegionColor(bodyRegions.find(r => r.id === 'joints')!)}
-                     fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'joints')!)}
-                     stroke={selectedRegion === 'joints' ? colors.herbalGreen : hasProblems('joints') ? '#FF0000' : 'transparent'}
-                     strokeWidth={selectedRegion === 'joints' || hasProblems('joints') ? 3 : 0}
-                     onPress={() => setSelectedRegion(selectedRegion === 'joints' ? null : 'joints')} />
-
-            {/* Left leg */}
-            <Ellipse cx="160" cy="450" rx="12" ry="50" 
-                     fill={getRegionColor(bodyRegions.find(r => r.id === 'joints')!)}
-                     fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'joints')!)}
-                     stroke={selectedRegion === 'joints' ? colors.herbalGreen : hasProblems('joints') ? '#FF0000' : 'transparent'}
-                     strokeWidth={selectedRegion === 'joints' || hasProblems('joints') ? 3 : 0}
-                     onPress={() => setSelectedRegion(selectedRegion === 'joints' ? null : 'joints')} />
-
-            {/* Right leg */}
-            <Ellipse cx="200" cy="450" rx="12" ry="50" 
-                     fill={getRegionColor(bodyRegions.find(r => r.id === 'joints')!)}
-                     fillOpacity={getRegionOpacity(bodyRegions.find(r => r.id === 'joints')!)}
-                     stroke={selectedRegion === 'joints' ? colors.herbalGreen : hasProblems('joints') ? '#FF0000' : 'transparent'}
-                     strokeWidth={selectedRegion === 'joints' || hasProblems('joints') ? 3 : 0}
-                     onPress={() => setSelectedRegion(selectedRegion === 'joints' ? null : 'joints')} />
-
-            {/* Skin indication - body outline with dashed line if skin problems */}
-            <Path
-              d="M200 25
-                 C215 25, 235 30, 235 55
-                 C235 75, 230 85, 225 95
-                 C220 100, 215 105, 210 110
-                 C230 115, 250 125, 265 140
-                 C280 155, 290 175, 295 195
-                 C300 215, 295 235, 290 255
-                 C285 275, 280 295, 275 315
-                 C270 335, 265 355, 260 375
-                 C255 390, 250 400, 245 410
-                 C240 420, 235 430, 230 445
-                 C225 460, 220 480, 215 500
-                 C210 520, 205 540, 200 560
-                 C195 580, 190 590, 185 595
-                 L175 595
-                 C170 590, 165 580, 160 560
-                 C155 540, 150 520, 145 500
-                 C140 480, 135 460, 130 445
-                 C125 430, 120 420, 115 410
-                 C110 400, 105 390, 100 375
-                 C95 355, 90 335, 85 315
-                 C80 295, 75 275, 70 255
-                 C65 235, 60 215, 65 195
-                 C70 175, 80 155, 95 140
-                 C110 125, 130 115, 150 110
-                 C145 105, 140 100, 135 95
-                 C130 85, 125 75, 125 55
-                 C125 30, 145 25, 160 25
-                 L200 25 Z"
-              fill="transparent"
-              stroke={getRegionColor(bodyRegions.find(r => r.id === 'skin')!)}
-              strokeWidth={hasProblems('skin') ? 4 : selectedRegion === 'skin' ? 3 : 0}
-              strokeOpacity={selectedRegion === 'skin' || hasProblems('skin') ? 0.8 : 0}
-              strokeDasharray={hasProblems('skin') ? "8,4" : "0"}
-              onPress={() => setSelectedRegion(selectedRegion === 'skin' ? null : 'skin')}
-            />
-
-            {/* Problem indicators */}
-            {bodyRegions.map((region) => {
-              if (!hasProblems(region.id)) return null;
-              
-              let centerX = 180, centerY = 200;
-              switch (region.id) {
-                case 'head': centerX = 220; centerY = 40; break;
-                case 'eyes': centerX = 220; centerY = 50; break;
-                case 'throat': centerX = 210; centerY = 95; break;
-                case 'chest': centerX = 235; centerY = 140; break;
-                case 'stomach': centerX = 225; centerY = 210; break;
-                case 'intestines': centerX = 230; centerY = 280; break;
-                case 'pelvis': centerX = 220; centerY = 340; break;
-                case 'joints': centerX = 270; centerY = 180; break;
-                case 'skin': centerX = 280; centerY = 250; break;
-              }
-              
-              return (
-                <G key={`problem-${region.id}`}>
-                  <Circle
-                    cx={centerX}
-                    cy={centerY}
-                    r="12"
-                    fill="#FF4444"
-                    stroke="#FFFFFF"
-                    strokeWidth="2"
-                    onPress={() => setSelectedRegion(selectedRegion === region.id ? null : region.id)}
-                  />
-                  <SvgText
-                    x={centerX}
-                    y={centerY + 3}
-                    textAnchor="middle"
-                    fontSize="12"
-                    fill="#FFFFFF"
-                    fontWeight="bold"
-                  >
-                    !
-                  </SvgText>
-                </G>
-              );
-            })}
-          </G>
-        </Svg>
-      </View>
+    return mapRegionsToBodyParts(
+      extendedBodyRegions,
+      assessmentData.problemAreas,
+      currentPrakriti,
+      selectedRegion
     );
   };
 
@@ -546,7 +171,14 @@ export default function BodyConstitutionScreen() {
         </LinearGradient>
 
         {/* Body Visualization */}
-        {renderHumanBody()}
+        <View style={styles.bodyContainer}>
+          <HumanBodySvg
+            partsInput={getBodyPartsInput()}
+            onPartPress={showBodyPart}
+            width={width - 40}
+            height={600}
+          />
+        </View>
 
         {/* Legend */}
         <View style={[styles.legendCard, { backgroundColor: colors.cardBackground }]}>
@@ -602,7 +234,7 @@ export default function BodyConstitutionScreen() {
               </Text>
               <View style={styles.problemList}>
                 {assessmentData.problemAreas.map((areaId) => {
-                  const region = bodyRegions.find(r => r.id === areaId);
+                  const region = extendedBodyRegions.find(r => r.id === areaId);
                   return region ? (
                     <TouchableOpacity
                       key={areaId}
@@ -624,20 +256,22 @@ export default function BodyConstitutionScreen() {
         {selectedRegion && (
           <View style={[styles.detailCard, { backgroundColor: colors.cardBackground }]}>
             {(() => {
-              const region = bodyRegions.find(r => r.id === selectedRegion);
+              const region = extendedBodyRegions.find(r => r.id === selectedRegion);
               if (!region) return null;
+              
+              const hasProblems = assessmentData?.problemAreas.includes(region.id) || false;
               
               return (
                 <>
                   <Text style={[styles.detailTitle, { color: colors.text }]}>
                     {region.name}
-                    {hasProblems(region.id) && <Text style={{ color: '#FF4444' }}> ⚠️</Text>}
+                    {hasProblems && <Text style={{ color: '#FF4444' }}> ⚠️</Text>}
                   </Text>
                   <Text style={[styles.detailDescription, { color: colors.icon }]}>
                     {region.description}
                   </Text>
                   
-                  {hasProblems(region.id) && (
+                  {hasProblems && (
                     <View style={[styles.problemAlert, { backgroundColor: '#FFF5F5' }]}>
                       <Text style={[styles.problemAlertTitle, { color: '#D53F3F' }]}>
                         ⚠️ Attention Needed
@@ -653,7 +287,7 @@ export default function BodyConstitutionScreen() {
                       Governed by:
                     </Text>
                     <View style={styles.doshaChips}>
-                      {region.doshas.map((dosha) => (
+                      {region.doshas.map((dosha: string) => (
                         <View
                           key={dosha}
                           style={[
@@ -674,7 +308,7 @@ export default function BodyConstitutionScreen() {
                       Common symptoms:
                     </Text>
                     <View style={styles.symptomsList}>
-                      {region.symptoms.map((symptom, index) => (
+                      {region.symptoms.map((symptom: string, index: number) => (
                         <Text key={index} style={[styles.symptomItem, { color: colors.icon }]}>
                           • {symptom}
                         </Text>

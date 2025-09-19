@@ -14,27 +14,46 @@ import {
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
 import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
+import { LoadingAnimation } from '@/src/components/common/LoadingAnimation';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { PermissionsService } from '@/src/services/permissions';
 import { DoctorService } from '@/src/services/doctor';
 import { PlanService } from '@/src/services/plan';
-import { authApi } from '@/src/services/api';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function PlanSelectionScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const [isLoading, setIsLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const { patient, isAuthenticated } = useAuth();
 
   const handleAIPlan = async () => {
     try {
       setAiLoading(true);
       
-      // Get current user
-      const { user } = await authApi.getStoredAuth();
-      if (!user) {
-        Alert.alert('Error', 'Please login again to continue.');
+      // Debug logging
+      console.log('🔍 Plan Selection - Auth Check:', {
+        isAuthenticated,
+        hasPatient: !!patient,
+        patientId: patient?._id,
+        patientName: patient?.name
+      });
+      
+      // Check authentication using AuthContext
+      if (!isAuthenticated || !patient) {
+        console.log('❌ Plan Selection - Authentication failed');
+        Alert.alert('Authentication Required', 'Please login to continue.');
+        router.replace('/auth');
+        return;
+      }
+
+      // Also verify we have a valid patient ID
+      if (!patient._id) {
+        console.log('❌ Plan Selection - No patient ID');
+        Alert.alert('Error', 'Invalid user session. Please login again.');
+        router.replace('/auth');
         return;
       }
 
@@ -50,8 +69,10 @@ export default function PlanSelectionScreen() {
             text: 'Generate Plan',
             onPress: async () => {
               try {
-                const result = await PlanService.generateAIPlan((user as any).id || (user as any)._id);
+                setAiLoading(true);
+                await PlanService.generateAIPlan(patient._id);
                 
+                setAiLoading(false);
                 Alert.alert(
                   'Success!',
                   'Your personalized AI meal plan has been generated successfully.',
@@ -66,6 +87,7 @@ export default function PlanSelectionScreen() {
                   ]
                 );
               } catch (error) {
+                setAiLoading(false);
                 console.error('AI plan generation error:', error);
                 Alert.alert(
                   'Error',
@@ -234,6 +256,24 @@ export default function PlanSelectionScreen() {
           Both options will lead you to your personalized dashboard
         </ThemedText>
       </View>
+
+      {/* AI Plan Generation Loading Overlay */}
+      <LoadingAnimation
+        type="ayurveda"
+        size="large"
+        message="Generating your personalized AI meal plan...&#10;This may take a few moments"
+        overlay={true}
+        visible={aiLoading}
+      />
+
+      {/* Doctor Search Loading Overlay */}
+      <LoadingAnimation
+        type="shimmer"
+        size="medium"
+        message="Finding certified Ayurveda doctors near you...&#10;Searching for the best match"
+        overlay={true}
+        visible={isLoading}
+      />
     </ThemedView>
   );
 }

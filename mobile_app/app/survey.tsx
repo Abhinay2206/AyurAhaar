@@ -17,10 +17,12 @@ import {
 import Slider from '@react-native-community/slider';
 
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
+import { LoadingAnimation } from '@/src/components/common/LoadingAnimation';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { AuthService } from '@/src/services/auth';
 import { surveyApi, prakritiApi, PrakritiQuestion } from '@/src/services/api';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 interface SurveyData {
   fullName: string;
@@ -99,6 +101,7 @@ export default function SurveyScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const authContext = useAuth();
 
   // Survey step management
   const [currentStep, setCurrentStep] = useState<SurveyStep>(SurveyStep.BASIC_INFO);
@@ -346,7 +349,7 @@ export default function SurveyScreen() {
       setLoading(true);
       try {
         // Update survey completion status
-        await AuthService.handleSurveyCompletion();
+        await AuthService.handleSurveyCompletion(authContext);
         
         // Force navigate to plan selection
         console.log('🎯 Navigating to plan-selection...');
@@ -1027,6 +1030,20 @@ export default function SurveyScreen() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
+
+      {/* Survey & Assessment Loading Overlay */}
+      <LoadingAnimation
+        type="wave"
+        size="large"
+        message={currentStep === SurveyStep.BASIC_INFO 
+          ? "Submitting your health information...&#10;Please wait"
+          : currentStep === SurveyStep.PRAKRITI_ASSESSMENT
+          ? "Processing your Prakriti assessment...&#10;Analyzing your constitution"
+          : "Completing your comprehensive evaluation...&#10;Preparing your personalized plan"
+        }
+        overlay={true}
+        visible={loading}
+      />
     </View>
   );
 }

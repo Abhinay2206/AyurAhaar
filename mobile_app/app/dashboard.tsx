@@ -10,12 +10,14 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
 import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
+import { LoadingAnimation } from '@/src/components/common/LoadingAnimation';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -42,6 +44,7 @@ export default function DashboardScreen() {
   const [isGeneratingAIPlan, setIsGeneratingAIPlan] = useState(false);
   const scheduledAppointmentIds = useRef<Set<string>>(new Set());
   const [isResettingPlan, setIsResettingPlan] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // New state for daily task tracking
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
@@ -231,6 +234,26 @@ export default function DashboardScreen() {
       setIsLoadingPlan(false);
     }
   }, [patient?._id, patientProfile?._id]);
+
+  // Refresh function for pull-to-refresh
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      console.log('🔄 Refreshing dashboard data...');
+      // Refresh all data concurrently
+      await Promise.all([
+        fetchPatientProfile(),
+        fetchAppointments(),
+        fetchPlanData(),
+        fetchCurrentPrakriti(),
+      ]);
+      console.log('✅ Dashboard data refreshed successfully');
+    } catch (error) {
+      console.error('❌ Error refreshing dashboard data:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [fetchPatientProfile, fetchAppointments, fetchPlanData]);
 
   useEffect(() => {
     fetchPatientProfile();
@@ -436,6 +459,14 @@ export default function DashboardScreen() {
         style={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            colors={[colors.herbalGreen]}
+            tintColor={colors.herbalGreen}
+          />
+        }
       >
 
       {/* Plan Info Card - Only show if patient has an active plan */}
@@ -955,6 +986,24 @@ export default function DashboardScreen() {
           <Text style={[styles.navLabel, { color: colors.icon }]}>Profile</Text>
         </TouchableOpacity>
       </View>
+
+      {/* AI Plan Generation Loading Overlay */}
+      <LoadingAnimation
+        type="ayurveda"
+        size="large"
+        message="Generating your personalized AI meal plan...&#10;Analyzing your Prakriti and health data"
+        overlay={true}
+        visible={isGeneratingAIPlan}
+      />
+
+      {/* Plan Reset Loading Overlay */}
+      <LoadingAnimation
+        type="pulse"
+        size="medium"
+        message="Resetting your meal plan..."
+        overlay={true}
+        visible={isResettingPlan}
+      />
     </ThemedView>
   );
 }
