@@ -1,63 +1,129 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button } from '../../components';
+import messageService from '../../services/messageService';
 
 const MessagesScreen = () => {
-  const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
 
   useEffect(() => {
-    // Mock data for messages
-    setTimeout(() => {
-      setMessages([
-        {
-          id: 1,
-          sender: 'Priya Sharma',
-          subject: 'Question about prescribed herbs',
-          message: 'Dr. Sharma, I wanted to ask about the timing for taking Ashwagandha. Should I take it before or after meals?',
-          timestamp: '2025-09-15 14:30',
-          status: 'unread',
-          priority: 'normal',
-          type: 'patient'
-        },
-        {
-          id: 2,
-          sender: 'Dr. Mehta (Referral)',
-          subject: 'Patient referral - Raj Kumar',
-          message: 'I am referring Mr. Raj Kumar for Ayurvedic treatment. He has chronic digestive issues. Please find his medical history attached.',
-          timestamp: '2025-09-15 11:15',
-          status: 'read',
-          priority: 'high',
-          type: 'doctor'
-        },
-        {
-          id: 3,
-          sender: 'Sunita Devi',
-          subject: 'Appointment rescheduling request',
-          message: 'Hello Doctor, I need to reschedule my appointment from tomorrow to next week due to family emergency. Please let me know available slots.',
-          timestamp: '2025-09-14 16:45',
-          status: 'replied',
-          priority: 'normal',
-          type: 'patient'
-        },
-        {
-          id: 4,
-          sender: 'Lab Services',
-          subject: 'Lab results ready - Amit Patel',
-          message: 'Lab results for patient Amit Patel are now available. You can access them through the patient portal.',
-          timestamp: '2025-09-14 09:20',
-          status: 'read',
-          priority: 'normal',
-          type: 'system'
-        }
-      ]);
-      setIsLoading(false);
-    }, 1000);
+    fetchConversations();
   }, []);
 
-  const filteredMessages = messages.filter(message => 
-    activeFilter === 'all' || message.status === activeFilter
-  );
+  const fetchConversations = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await messageService.getConversations();
+      
+      if (response.success) {
+        setConversations(response.data);
+      } else {
+        setError('Failed to load conversations');
+      }
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+      setError(err.message || 'Failed to load conversations');
+      // Show demo data if API fails
+      setConversations([
+        {
+          conversationId: 'demo1',
+          otherUser: {
+            _id: '1',
+            name: 'Priya Sharma',
+            userType: 'patient'
+          },
+          lastMessage: {
+            _id: '1',
+            content: 'Dr. Sharma, I wanted to ask about the timing for taking Ashwagandha. Should I take it before or after meals?',
+            createdAt: '2025-09-15T14:30:00Z',
+            senderType: 'patient',
+            isRead: false
+          },
+          unreadCount: 1
+        },
+        {
+          conversationId: 'demo2',
+          otherUser: {
+            _id: '2',
+            name: 'Dr. Mehta',
+            userType: 'doctor',
+            specialization: 'Ayurveda'
+          },
+          lastMessage: {
+            _id: '2',
+            content: 'I am referring Mr. Raj Kumar for Ayurvedic treatment. He has chronic digestive issues.',
+            createdAt: '2025-09-15T11:15:00Z',
+            senderType: 'doctor',
+            isRead: true
+          },
+          unreadCount: 0
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredConversations = conversations.filter(conversation => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'unread') return conversation.unreadCount > 0;
+    if (activeFilter === 'read') return conversation.unreadCount === 0;
+    if (activeFilter === 'replied') return conversation.lastMessage.senderType !== getUserType();
+    return true;
+  });
+
+  // Helper function to get current user type (this should come from auth context)
+  const getUserType = () => {
+    // This should be replaced with actual auth context
+    return 'doctor'; // or 'patient' based on logged in user
+  };
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    if (diffInHours < 1) {
+      const diffInMinutes = Math.floor(diffInHours * 60);
+      return diffInMinutes <= 1 ? 'Just now' : `${diffInMinutes}m ago`;
+    } else if (diffInHours < 24) {
+      return `${Math.floor(diffInHours)}h ago`;
+    } else if (diffInHours < 168) { // 7 days
+      const days = Math.floor(diffInHours / 24);
+      return `${days}d ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  const handleMarkAsRead = async (conversationId) => {
+    try {
+      // In a real implementation, you'd mark the conversation messages as read
+      // For now, just update the local state
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.conversationId === conversationId 
+            ? { ...conv, unreadCount: 0 }
+            : conv
+        )
+      );
+    } catch (err) {
+      console.error('Error marking as read:', err);
+    }
+  };
+
+  const handleComposeMessage = () => {
+    // TODO: Open compose message modal or navigate to compose page
+    console.log('Compose message clicked');
+  };
+
+  const handleConversationClick = (conversation) => {
+    // TODO: Navigate to conversation detail view
+    console.log('Conversation clicked:', conversation);
+  };
 
   const containerStyles = {
     padding: '1.5rem',
@@ -85,24 +151,6 @@ const MessagesScreen = () => {
     marginBottom: '1.5rem'
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      unread: '#F4A261',
-      read: '#687076',
-      replied: '#3E8E5A'
-    };
-    return colors[status] || '#687076';
-  };
-
-  const getPriorityColor = (priority) => {
-    const colors = {
-      high: '#DC3545',
-      normal: '#687076',
-      low: '#17A2B8'
-    };
-    return colors[priority] || '#687076';
-  };
-
   const getTypeIcon = (type) => {
     const icons = {
       patient: '👤',
@@ -117,8 +165,33 @@ const MessagesScreen = () => {
     return (
       <div style={containerStyles}>
         <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <div style={{ fontSize: '1.125rem', color: '#687076' }}>Loading messages...</div>
+          <div style={{ fontSize: '1.125rem', color: '#687076' }}>Loading conversations...</div>
         </div>
+      </div>
+    );
+  }
+
+  if (error && conversations.length === 0) {
+    return (
+      <div style={containerStyles}>
+        <div style={headerStyles}>
+          <h1 style={titleStyles}>Messages</h1>
+          <Button variant="primary" size="medium" onClick={handleComposeMessage}>
+            Compose Message
+          </Button>
+        </div>
+        <Card medical={true} padding="large">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#2C5F41', marginBottom: '0.5rem' }}>
+              Connection Error
+            </h3>
+            <p style={{ color: '#687076', marginBottom: '1.5rem' }}>
+              {error}. Showing demo data instead.
+            </p>
+            <Button variant="primary" onClick={fetchConversations}>Retry</Button>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -127,9 +200,16 @@ const MessagesScreen = () => {
     <div style={containerStyles}>
       <div style={headerStyles}>
         <h1 style={titleStyles}>Messages</h1>
-        <Button variant="primary" size="medium">
-          Compose Message
-        </Button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {error && (
+            <Button variant="secondary" size="small" onClick={fetchConversations}>
+              Retry
+            </Button>
+          )}
+          <Button variant="primary" size="medium" onClick={handleComposeMessage}>
+            Compose Message
+          </Button>
+        </div>
       </div>
 
       <div style={filterStyles}>
@@ -146,102 +226,127 @@ const MessagesScreen = () => {
       </div>
 
       <div style={{ display: 'grid', gap: '1rem' }}>
-        {filteredMessages.map(message => (
-          <Card key={message.id} medical={true} padding="medium" hover={true}>
+        {filteredConversations.map(conversation => (
+          <Card 
+            key={conversation.conversationId} 
+            medical={true} 
+            padding="medium" 
+            hover={true}
+            style={{ cursor: 'pointer' }}
+            onClick={() => handleConversationClick(conversation)}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{ fontSize: '1.5rem' }}>
-                  {getTypeIcon(message.type)}
+                  {getTypeIcon(conversation.otherUser.userType)}
                 </div>
                 <div>
                   <h3 style={{ 
                     fontSize: '1.125rem', 
-                    fontWeight: message.status === 'unread' ? '700' : '600', 
+                    fontWeight: conversation.unreadCount > 0 ? '700' : '600', 
                     color: '#2C5F41', 
                     margin: '0 0 0.25rem 0' 
                   }}>
-                    {message.sender}
+                    {conversation.otherUser.name}
+                    {conversation.otherUser.userType === 'doctor' && conversation.otherUser.specialization && 
+                      ` (${conversation.otherUser.specialization})`
+                    }
                   </h3>
                   <div style={{ fontSize: '0.875rem', color: '#687076' }}>
-                    {message.timestamp} • {message.type}
+                    {formatTimestamp(conversation.lastMessage.createdAt)} • {conversation.otherUser.userType}
                   </div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                {message.priority === 'high' && (
+                {conversation.unreadCount > 0 && (
                   <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: getPriorityColor(message.priority)
-                  }} />
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '12px',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    backgroundColor: '#F4A26120',
+                    color: '#F4A261'
+                  }}>
+                    {conversation.unreadCount} NEW
+                  </div>
                 )}
                 <div style={{
                   padding: '0.25rem 0.75rem',
                   borderRadius: '12px',
                   fontSize: '0.75rem',
                   fontWeight: '600',
-                  backgroundColor: `${getStatusColor(message.status)}20`,
-                  color: getStatusColor(message.status)
+                  backgroundColor: conversation.unreadCount > 0 ? '#F4A26120' : '#3E8E5A20',
+                  color: conversation.unreadCount > 0 ? '#F4A261' : '#3E8E5A'
                 }}>
-                  {message.status.toUpperCase()}
+                  {conversation.unreadCount > 0 ? 'UNREAD' : 'READ'}
                 </div>
               </div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <h4 style={{ 
-                fontSize: '0.875rem', 
-                fontWeight: '600', 
-                color: '#2C5F41', 
-                marginBottom: '0.5rem'
-              }}>
-                {message.subject}
-              </h4>
               <div style={{ 
                 fontSize: '0.875rem', 
                 color: '#687076',
                 lineHeight: '1.5',
-                backgroundColor: message.status === 'unread' ? '#FDF4E8' : '#E8F5E8',
+                backgroundColor: conversation.unreadCount > 0 ? '#FDF4E8' : '#E8F5E8',
                 padding: '0.75rem',
                 borderRadius: '8px',
-                border: `1px solid ${message.status === 'unread' ? '#F4A261' : '#3E8E5A'}30`
+                border: `1px solid ${conversation.unreadCount > 0 ? '#F4A261' : '#3E8E5A'}30`
               }}>
-                {message.message}
+                <strong>
+                  {conversation.lastMessage.senderType === getUserType() ? 'You: ' : ''}
+                </strong>
+                {conversation.lastMessage.content.length > 100 
+                  ? `${conversation.lastMessage.content.substring(0, 100)}...`
+                  : conversation.lastMessage.content
+                }
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <Button variant="outline" size="small">
-                Reply
+              <Button 
+                variant="outline" 
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleConversationClick(conversation);
+                }}
+              >
+                View Chat
               </Button>
-              <Button variant="secondary" size="small">
-                Forward
-              </Button>
-              {message.status === 'unread' && (
-                <Button variant="success" size="small">
+              {conversation.unreadCount > 0 && (
+                <Button 
+                  variant="success" 
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMarkAsRead(conversation.conversationId);
+                  }}
+                >
                   Mark as Read
                 </Button>
               )}
-              <Button variant="warning" size="small">
-                Archive
-              </Button>
             </div>
           </Card>
         ))}
       </div>
 
-      {filteredMessages.length === 0 && (
+      {filteredConversations.length === 0 && (
         <Card medical={true} padding="large">
           <div style={{ textAlign: 'center', padding: '2rem' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💬</div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#2C5F41', marginBottom: '0.5rem' }}>
-              No messages found
+              No conversations found
             </h3>
             <p style={{ color: '#687076', marginBottom: '1.5rem' }}>
-              No messages match the selected filter.
+              {activeFilter === 'all' 
+                ? 'You don\'t have any conversations yet.'
+                : `No conversations match the "${activeFilter}" filter.`
+              }
             </p>
-            <Button variant="primary">Compose New Message</Button>
+            <Button variant="primary" onClick={handleComposeMessage}>
+              Start New Conversation
+            </Button>
           </div>
         </Card>
       )}

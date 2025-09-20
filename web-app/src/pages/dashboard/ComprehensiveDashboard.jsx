@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Button, DashboardSearch } from '../../components';
-import { AuthService, DashboardService, PatientService, AppointmentService, MealPlanService } from '../../services';
+import { AuthService, DashboardService, PatientService, AppointmentService, MealPlanService, ApiService } from '../../services';
 
 const ComprehensiveDashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [doctor, setDoctor] = useState(null);
+  const [isOnline, setIsOnline] = useState(false);
+  const [isStatusLoading, setIsStatusLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     stats: {
       totalPatients: 0,
@@ -32,7 +36,34 @@ const ComprehensiveDashboard = () => {
     const user = AuthService.getUser();
     setDoctor(user);
     loadDashboardData();
+    loadAvailabilityStatus();
   }, []);
+
+  const loadAvailabilityStatus = async () => {
+    try {
+      const availabilityData = await ApiService.getAvailabilitySettings();
+      setIsOnline(availabilityData.data?.isOnline || false);
+    } catch (error) {
+      console.error('❌ Dashboard: Error loading availability status:', error);
+      // Fallback to offline status
+      setIsOnline(false);
+    }
+  };
+
+  const handleToggleOnlineStatus = async () => {
+    setIsStatusLoading(true);
+    try {
+      const newStatus = !isOnline;
+      await ApiService.updateOnlineStatus(newStatus);
+      setIsOnline(newStatus);
+      console.log(`✅ Dashboard: Status updated to ${newStatus ? 'online' : 'offline'}`);
+    } catch (error) {
+      console.error('❌ Dashboard: Error updating online status:', error);
+      alert('Failed to update status. Please try again.');
+    } finally {
+      setIsStatusLoading(false);
+    }
+  };
 
   const loadDashboardData = async () => {
     setIsLoading(true);
@@ -422,6 +453,66 @@ const ComprehensiveDashboard = () => {
         {/* Dashboard Search */}
         <div style={{ marginTop: '0.75rem' }}>
           <DashboardSearch onResultSelect={handleSearchResultSelect} />
+        </div>
+
+        {/* Availability Status Toggle */}
+        <div style={{ 
+          marginTop: '1rem', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          padding: '0.75rem',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 255, 255, 0.2)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: isOnline ? '#10B981' : '#EF4444',
+              boxShadow: isOnline ? '0 0 8px rgba(16, 185, 129, 0.5)' : '0 0 8px rgba(239, 68, 68, 0.5)'
+            }} />
+            <span style={{ 
+              fontSize: '0.875rem', 
+              fontWeight: '600',
+              color: 'white'
+            }}>
+              Status: {isOnline ? 'Online' : 'Offline'}
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <Button
+              variant={isOnline ? 'secondary' : 'success'}
+              size="small"
+              onClick={handleToggleOnlineStatus}
+              disabled={isStatusLoading}
+              style={{
+                backgroundColor: isOnline ? 'rgba(255, 255, 255, 0.2)' : '#10B981',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                fontSize: '0.75rem',
+                padding: '0.375rem 0.75rem'
+              }}
+            >
+              {isStatusLoading ? '...' : isOnline ? 'Go Offline' : 'Go Online'}
+            </Button>
+            <Button
+              variant="outline"
+              size="small"
+              onClick={() => navigate('/app/settings', { state: { activeTab: 'availability' } })}
+              style={{
+                backgroundColor: 'transparent',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                fontSize: '0.75rem',
+                padding: '0.375rem 0.75rem'
+              }}
+            >
+              ⚙️ Availability Settings
+            </Button>
+          </div>
         </div>
       </div>
 

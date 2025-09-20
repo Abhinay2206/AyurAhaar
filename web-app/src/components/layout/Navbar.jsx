@@ -1,42 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AuthService from '../../services/authService';
+import { DashboardService } from '../../services';
 
 const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
+  const navigate = useNavigate();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [user, setUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   
-  const [notifications] = useState([
-    { 
-      id: 1, 
-      message: 'New patient registration: Priya Sharma', 
-      time: '5 min ago', 
-      type: 'patient', 
-      unread: true,
-      priority: 'normal'
-    },
-    { 
-      id: 2, 
-      message: 'Lab results ready for Amit Patel', 
-      time: '15 min ago', 
-      type: 'lab', 
-      unread: true,
-      priority: 'high'
-    },
-    { 
-      id: 3, 
-      message: 'Appointment rescheduled by Sunita Devi', 
-      time: '1 hour ago', 
-      type: 'appointment', 
-      unread: false,
-      priority: 'normal'
-    },
-  ]);
-
   const unreadCount = notifications.filter(n => n.unread).length;
+
+  // Load user data and notifications on component mount
+  useEffect(() => {
+    const userData = AuthService.getUser();
+    if (userData) {
+      setUser(userData);
+    }
+    
+    // Load notifications
+    loadNotifications();
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      const notificationsData = await DashboardService.getNotifications();
+      if (notificationsData && Array.isArray(notificationsData)) {
+        setNotifications(notificationsData);
+      }
+    } catch (error) {
+      console.error('❌ Navbar: Error loading notifications:', error);
+      // Fallback to demo data if API fails
+      setNotifications([
+        { 
+          id: 1, 
+          message: 'New patient registration', 
+          time: '5 min ago', 
+          type: 'patient', 
+          unread: true,
+          priority: 'normal'
+        },
+        { 
+          id: 2, 
+          message: 'Lab results ready', 
+          time: '15 min ago', 
+          type: 'lab', 
+          unread: true,
+          priority: 'high'
+        }
+      ]);
+    }
+  };
 
   const handleSignOut = () => {
     AuthService.logout();
     window.location.href = '/auth';
+  };
+
+  const handleProfileSettings = () => {
+    setShowProfileDropdown(false);
+    navigate('/app/settings', { state: { activeTab: 'profile' } });
+  };
+
+  const handlePreferences = () => {
+    setShowProfileDropdown(false);
+    navigate('/app/settings', { state: { activeTab: 'preferences' } });
   };
 
   const styles = {
@@ -417,10 +446,12 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
             style={styles.profileButton}
             onClick={() => setShowProfileDropdown(!showProfileDropdown)}
           >
-            <div style={styles.profileAvatar}>DR</div>
+            <div style={styles.profileAvatar}>
+              {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'DR'}
+            </div>
             <div style={styles.profileInfo}>
-              <div style={styles.profileName}>Dr. Rajesh Kumar</div>
-              <div style={styles.profileRole}>Ayurvedic Physician</div>
+              <div style={styles.profileName}>{user?.name || 'Loading...'}</div>
+              <div style={styles.profileRole}>{user?.specialization || 'Ayurvedic Physician'}</div>
             </div>
             <div style={{ fontSize: '12px', color: 'var(--gray-400)' }}>▼</div>
           </button>
@@ -438,18 +469,29 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                   color: '#2C5F41',
                   marginBottom: '2px'
                 }}>
-                  Dr. Rajesh Kumar
+                  {user?.name || 'Loading...'}
                 </div>
                 <div style={{ 
                   fontSize: '12px', 
-                  color: '#687076'
+                  color: '#687076',
+                  marginBottom: '4px'
                 }}>
-                  Ayurvedic Physician
+                  {user?.specialization || 'Ayurvedic Physician'}
                 </div>
+                {user?.email && (
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: '#9CA3AF',
+                    fontStyle: 'italic'
+                  }}>
+                    {user.email}
+                  </div>
+                )}
               </div>
               
               <div style={{ padding: '8px 0' }}>
                 <button 
+                  onClick={handleProfileSettings}
                   style={{ 
                     width: '100%', 
                     textAlign: 'left', 
@@ -471,6 +513,7 @@ const Navbar = ({ sidebarCollapsed, setSidebarCollapsed }) => {
                 </button>
                 
                 <button 
+                  onClick={handlePreferences}
                   style={{ 
                     width: '100%', 
                     textAlign: 'left', 

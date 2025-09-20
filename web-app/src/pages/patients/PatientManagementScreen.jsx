@@ -482,6 +482,7 @@ const PatientManagementScreen = () => {
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [filterCriteria, setFilterCriteria] = useState({
     prakriti: 'all',
     healthCondition: 'all',
@@ -1037,297 +1038,499 @@ const PatientManagementScreen = () => {
 
       <div style={{
         backgroundColor: 'white',
-        padding: '12px',
-        borderRadius: '6px',
+        padding: '16px',
+        borderRadius: '8px',
         border: '1px solid #e5e7eb',
-        marginBottom: '12px'
+        marginBottom: '16px'
       }}>
-        <div style={{marginBottom: '12px'}}>
-          <Input
-            type="text"
-            placeholder="Search patients by name, ID, phone, or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            icon="⌕"
-          />
+        {/* Search Bar */}
+        <div style={{ marginBottom: '12px' }}>
+          <div style={{ position: 'relative', maxWidth: '400px' }}>
+            <input
+              type="text"
+              placeholder="Search patients..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px 8px 36px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontFamily: "'Inter', sans-serif",
+                backgroundColor: '#f8fafc',
+                outline: 'none',
+                transition: 'border-color 0.2s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#6366f1';
+                e.target.style.backgroundColor = 'white';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#d1d5db';
+                e.target.style.backgroundColor = '#f8fafc';
+              }}
+            />
+            <div style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#9ca3af',
+              fontSize: '14px'
+            }}>
+              🔍
+            </div>
+          </div>
         </div>
 
+        {/* Controls Row */}
         <div style={{
           display: 'flex',
-          gap: '8px',
-          flexWrap: 'wrap',
-          alignItems: 'center'
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap'
         }}>
-          <select
-            value={filterCriteria.prakriti}
-            onChange={(e) => setFilterCriteria({...filterCriteria, prakriti: e.target.value})}
-            style={{
-              padding: '8px 10px', // Increased padding
-              border: '1px solid #e5e7eb',
-              borderRadius: '4px',
-              fontSize: '14px', // Increased from 12px
-              backgroundColor: 'white',
-              color: '#374151',
-              outline: 'none',
-              fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            }}
-          >
-            <option value="all">All Prakriti</option>
-            <option value="Vata">Vata</option>
-            <option value="Pitta">Pitta</option>
-            <option value="Kapha">Kapha</option>
-            <option value="Mixed">Mixed</option>
-          </select>
+          {/* Filters */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '8px', 
+            alignItems: 'center',
+            flex: 1,
+            minWidth: '300px'
+          }}>
+            <select
+              value={filterCriteria.prakriti}
+              onChange={(e) => setFilterCriteria({...filterCriteria, prakriti: e.target.value})}
+              style={{
+                padding: '6px 8px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '12px',
+                backgroundColor: 'white',
+                color: '#374151',
+                outline: 'none',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
+              <option value="all">All Prakriti</option>
+              <option value="Vata">Vata</option>
+              <option value="Pitta">Pitta</option>
+              <option value="Kapha">Kapha</option>
+              <option value="Mixed">Mixed</option>
+            </select>
 
-          <select
-            value={filterCriteria.healthCondition}
-            onChange={(e) => setFilterCriteria({...filterCriteria, healthCondition: e.target.value})}
-            style={{
-              padding: '8px 10px', // Increased padding
-              border: '1px solid #e5e7eb',
-              borderRadius: '4px',
-              fontSize: '14px', // Increased from 12px
-              backgroundColor: 'white',
-              color: '#374151',
-              outline: 'none',
-              fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            }}
-          >
-            <option value="all">All Conditions</option>
-            <option value="none">No Conditions</option>
-            <option value="diabetes">Diabetes</option>
-            <option value="hypertension">Hypertension</option>
-            <option value="obesity">Obesity</option>
-            <option value="kidney">Kidney Issues</option>
-          </select>
+            <select
+              value={filterCriteria.ageGroup}
+              onChange={(e) => setFilterCriteria({...filterCriteria, ageGroup: e.target.value})}
+              style={{
+                padding: '6px 8px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '12px',
+                backgroundColor: 'white',
+                color: '#374151',
+                outline: 'none',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
+              <option value="all">All Ages</option>
+              <option value="young">Under 30</option>
+              <option value="middle">30-50</option>
+              <option value="senior">Over 50</option>
+            </select>
 
-          <select
-            value={filterCriteria.ageGroup}
-            onChange={(e) => setFilterCriteria({...filterCriteria, ageGroup: e.target.value})}
-            style={{
-              padding: '8px 10px', // Increased padding
-              border: '1px solid #e5e7eb',
-              borderRadius: '4px',
-              fontSize: '14px', // Increased from 12px
-              backgroundColor: 'white',
-              color: '#374151',
-              outline: 'none',
-              fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            }}
-          >
-            <option value="all">All Ages</option>
-            <option value="young">Under 30</option>
-            <option value="middle">30-50</option>
-            <option value="senior">Over 50</option>
-          </select>
+            <select
+              value={filterCriteria.lifestyle}
+              onChange={(e) => setFilterCriteria({...filterCriteria, lifestyle: e.target.value})}
+              style={{
+                padding: '6px 8px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                fontSize: '12px',
+                backgroundColor: 'white',
+                color: '#374151',
+                outline: 'none',
+                fontFamily: "'Inter', sans-serif"
+              }}
+            >
+              <option value="all">All Lifestyles</option>
+              <option value="sedentary">Sedentary</option>
+              <option value="moderate">Moderate</option>
+              <option value="active">Active</option>
+            </select>
+          </div>
 
-          <select
-            value={filterCriteria.lifestyle}
-            onChange={(e) => setFilterCriteria({...filterCriteria, lifestyle: e.target.value})}
-            style={{
-              padding: '8px 10px', // Increased padding
-              border: '1px solid #e5e7eb',
-              borderRadius: '4px',
-              fontSize: '14px', // Increased from 12px
-              backgroundColor: 'white',
-              color: '#374151',
-              outline: 'none',
-              fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            }}
-          >
-            <option value="all">All Lifestyles</option>
-            <option value="sedentary">Sedentary</option>
-            <option value="moderate">Moderate</option>
-            <option value="active">Active</option>
-          </select>
+          {/* View Toggle */}
+          <div style={{ display: 'flex', gap: '2px', backgroundColor: '#f9fafb', borderRadius: '6px', padding: '2px' }}>
+            <button
+              onClick={() => setViewMode('grid')}
+              style={{
+                padding: '6px 12px',
+                backgroundColor: viewMode === 'grid' ? '#e2e8f0' : 'transparent',
+                color: viewMode === 'grid' ? '#374151' : '#6b7280',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontFamily: "'Inter', sans-serif",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              ⚏ Grid
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              style={{
+                padding: '6px 12px',
+                backgroundColor: viewMode === 'list' ? '#e2e8f0' : 'transparent',
+                color: viewMode === 'list' ? '#374151' : '#6b7280',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontFamily: "'Inter', sans-serif",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              ☰ List
+            </button>
+          </div>
         </div>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: '12px'
-      }}>
-        {filteredPatients.map(patient => (
-          <Card 
-            key={patient.patient_id} 
-            style={{
-              padding: '16px', // Increased padding
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              border: '1px solid #e5e7eb',
-              ':hover': {
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                borderColor: '#3E8E5A'
-              }
-            }}
-            onClick={() => handlePatientSelect(patient)}
-          >
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '8px'
-            }}>
-              <div>
-                <h3 style={{
-                  margin: '0 0 4px 0', // Increased margin
-                  fontSize: '16px', // Increased from 14px
-                  fontWeight: '600',
-                  color: '#2C5F41',
-                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                }}>{patient.name}</h3>
-                <p style={{
-                  margin: 0,
-                  fontSize: '13px', // Increased from 11px
-                  color: '#687076',
-                  fontFamily: 'monospace'
-                }}>{patient.patient_id}</p>
-              </div>
+      {/* Patient Display */}
+      {viewMode === 'grid' ? (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gap: '12px'
+        }}>
+          {filteredPatients.map(patient => (
+            <Card 
+              key={patient.patient_id} 
+              style={{
+                padding: '16px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                border: '1px solid #e5e7eb',
+                ':hover': {
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  borderColor: '#3E8E5A'
+                }
+              }}
+              onClick={() => handlePatientSelect(patient)}
+            >
               <div style={{
-                backgroundColor: getStatusColor(patient.treatment_status),
-                color: 'white',
-                padding: '4px 8px', // Increased padding
-                borderRadius: '4px',
-                fontSize: '12px', // Increased from 10px
-                fontWeight: '500',
-                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              }}>
-                {patient.treatment_status}
-              </div>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px' // Increased gap
-            }}>
-              <div style={{
-                fontSize: '13px', // Increased from 11px
-                color: '#687076',
                 display: 'flex',
                 justifyContent: 'space-between',
-                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                alignItems: 'flex-start',
+                marginBottom: '8px'
               }}>
-                <span>Age: {patient.age} | {patient.gender === 'M' ? 'Male' : 'Female'}</span>
-              </div>
-              <div style={{
-                fontSize: '13px', // Increased from 11px
-                color: '#687076',
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              }}>
-                <span>BMI: {patient.BMI} ({getBMICategory(patient.BMI)})</span>
-              </div>
-              <div style={{
-                fontSize: '13px', // Increased from 11px
-                color: '#687076',
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: '4px', // Increased margin
-                fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              }}>
-                <span style={{color: getPrakritiColor(patient.prakriti), fontWeight: '500'}}>
-                  Prakriti: {patient.prakriti}
-                </span>
-              </div>
-              <div style={{
-                fontSize: '11px',
-                color: '#687076',
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: '2px'
-              }}>
-                <span>Conditions: {patient.health_conditions}</span>
-              </div>
-              <div style={{
-                fontSize: '11px',
-                color: '#687076',
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: '2px'
-              }}>
-                <span>Last Visit: {formatDate(patient.last_visit)}</span>
-              </div>
-              {patient.next_appointment && (
+                <div>
+                  <h3 style={{
+                    margin: '0 0 4px 0',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: '#2C5F41',
+                    fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                  }}>{patient.name}</h3>
+                  <p style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: '#687076',
+                    fontFamily: 'monospace'
+                  }}>{patient.patient_id}</p>
+                </div>
                 <div style={{
-                  fontSize: '11px',
-                  color: '#3E8E5A',
+                  backgroundColor: getStatusColor(patient.treatment_status),
+                  color: 'white',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                }}>
+                  {patient.treatment_status}
+                </div>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+              }}>
+                <div style={{
+                  fontSize: '13px',
+                  color: '#687076',
                   display: 'flex',
                   justifyContent: 'space-between',
+                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                }}>
+                  <span>Age: {patient.age} | {patient.gender === 'M' ? 'Male' : 'Female'}</span>
+                </div>
+                <div style={{
+                  fontSize: '13px',
+                  color: '#687076',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                }}>
+                  <span>BMI: {patient.BMI} ({getBMICategory(patient.BMI)})</span>
+                </div>
+                <div style={{
+                  fontSize: '13px',
+                  color: '#687076',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '4px',
+                  fontFamily: "'Inter', 'Open Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                }}>
+                  <span style={{color: getPrakritiColor(patient.prakriti), fontWeight: '500'}}>
+                    Prakriti: {patient.prakriti}
+                  </span>
+                </div>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#687076',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '2px'
+                }}>
+                  <span>Conditions: {patient.health_conditions}</span>
+                </div>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#687076',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '2px'
+                }}>
+                  <span>Last Visit: {formatDate(patient.last_visit)}</span>
+                </div>
+                {patient.next_appointment && (
+                  <div style={{
+                    fontSize: '11px',
+                    color: '#3E8E5A',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontWeight: '500'
+                  }}>
+                    <span>Next: {formatDate(patient.next_appointment)}</span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{
+                display: 'flex',
+                gap: '4px',
+                marginTop: '8px',
+                paddingTop: '8px',
+                borderTop: '1px solid #f3f4f6'
+              }}>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewPlan(patient);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '4px 6px',
+                    fontSize: '10px',
+                    backgroundColor: '#3E8E5A',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '3px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  View Plan
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleScheduleAppointment(patient);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '4px 6px',
+                    fontSize: '10px',
+                    backgroundColor: '#F4A261',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '3px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Appointment
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewHistory(patient);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '4px 6px',
+                    fontSize: '10px',
+                    backgroundColor: '#687076',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '3px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  History
+                </button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          border: '1px solid #e5e7eb',
+          overflow: 'hidden'
+        }}>
+          {filteredPatients.map((patient, index) => (
+            <div
+              key={patient.patient_id}
+              onClick={() => handlePatientSelect(patient)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '12px 16px',
+                borderBottom: index < filteredPatients.length - 1 ? '1px solid #f3f4f6' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                ':hover': {
+                  backgroundColor: '#f8fafc'
+                }
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#f8fafc';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'transparent';
+              }}
+            >
+              {/* Avatar */}
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: '#3E8E5A',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: '600',
+                marginRight: '12px',
+                flexShrink: 0
+              }}>
+                {patient.name.charAt(0).toUpperCase()}
+              </div>
+
+              {/* Main Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '2px'
+                }}>
+                  <h3 style={{
+                    margin: 0,
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    color: '#2C5F41',
+                    fontFamily: "'Inter', sans-serif"
+                  }}>
+                    {patient.name}
+                  </h3>
+                  <span style={{
+                    fontSize: '11px',
+                    color: '#9ca3af',
+                    fontFamily: 'monospace'
+                  }}>
+                    {patient.patient_id}
+                  </span>
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: '#6b7280',
+                  fontFamily: "'Inter', sans-serif"
+                }}>
+                  {patient.age}y • {patient.gender === 'M' ? 'Male' : 'Female'} • BMI: {patient.BMI} • {patient.prakriti}
+                </div>
+              </div>
+
+              {/* Status & Actions */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                flexShrink: 0
+              }}>
+                <div style={{
+                  backgroundColor: getStatusColor(patient.treatment_status),
+                  color: 'white',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontSize: '10px',
                   fontWeight: '500'
                 }}>
-                  <span>Next: {formatDate(patient.next_appointment)}</span>
+                  {patient.treatment_status}
                 </div>
-              )}
+                
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewPlan(patient);
+                    }}
+                    style={{
+                      padding: '4px 8px',
+                      fontSize: '10px',
+                      backgroundColor: 'transparent',
+                      color: '#6b7280',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Plan
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleScheduleAppointment(patient);
+                    }}
+                    style={{
+                      padding: '4px 8px',
+                      fontSize: '10px',
+                      backgroundColor: '#3E8E5A',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Schedule
+                  </button>
+                </div>
+              </div>
             </div>
-
-            <div style={{
-              display: 'flex',
-              gap: '4px',
-              marginTop: '8px',
-              paddingTop: '8px',
-              borderTop: '1px solid #f3f4f6'
-            }}>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewPlan(patient);
-                }}
-                style={{
-                  flex: 1,
-                  padding: '4px 6px',
-                  fontSize: '10px',
-                  backgroundColor: '#3E8E5A',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer'
-                }}
-              >
-                View Plan
-              </button>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleScheduleAppointment(patient);
-                }}
-                style={{
-                  flex: 1,
-                  padding: '4px 6px',
-                  fontSize: '10px',
-                  backgroundColor: '#F4A261',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer'
-                }}
-              >
-                Appointment
-              </button>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewHistory(patient);
-                }}
-                style={{
-                  flex: 1,
-                  padding: '4px 6px',
-                  fontSize: '10px',
-                  backgroundColor: '#687076',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer'
-                }}
-              >
-                History
-              </button>
-            </div>
-          </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Loading State */}
       {loading && (

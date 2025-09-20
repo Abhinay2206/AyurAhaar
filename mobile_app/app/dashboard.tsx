@@ -18,6 +18,7 @@ import { AyurvedaPattern } from '@/src/components/common/AyurvedaPattern';
 import { ThemedText } from '@/src/components/common/ThemedText';
 import { ThemedView } from '@/src/components/common/ThemedView';
 import { LoadingAnimation } from '@/src/components/common/LoadingAnimation';
+import { FloatingCommunicationButton } from '@/src/components/common/FloatingCommunicationButton';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -280,10 +281,6 @@ export default function DashboardScreen() {
 
   const handleProfile = () => {
     router.push('/profile' as any);
-  };
-
-  const handleChatbot = () => {
-    router.push('/chatbot' as any);
   };
 
   const handleAyurvedaInfo = () => {
@@ -976,16 +973,14 @@ export default function DashboardScreen() {
           <Text style={[styles.navLabel, { color: colors.icon }]}>Appointments</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.navItem} onPress={handleChatbot}>
-          <Ionicons name="chatbubble-ellipses" size={24} color={colors.icon} />
-          <Text style={[styles.navLabel, { color: colors.icon }]}>Chat</Text>
-        </TouchableOpacity>
-        
         <TouchableOpacity style={styles.navItem} onPress={handleProfile}>
           <Ionicons name="person" size={24} color={colors.icon} />
           <Text style={[styles.navLabel, { color: colors.icon }]}>Profile</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Floating Communication Button */}
+      <FloatingCommunicationButton style={{ bottom: 80 }} />
 
       {/* AI Plan Generation Loading Overlay */}
       <LoadingAnimation

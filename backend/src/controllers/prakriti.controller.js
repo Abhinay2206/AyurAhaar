@@ -363,7 +363,8 @@ module.exports = {
   getAssessmentProgress,
   getPrakritiHistory,
   getCurrentPrakriti,
-  getPatientPrakritiData
+  getPatientPrakritiData,
+  getPatientPrakritiResponses
 };
 
 // Get patient Prakriti data by patient ID (admin/doctor route)
@@ -381,31 +382,56 @@ async function getPatientPrakritiData(req, res) {
 
     // Get the latest assessment
     const latestAssessment = await PrakritiAssessment.findOne({ 
-      patient: patientId,
+      patientId: patientId,
       isCompleted: true 
     })
     .sort({ completedAt: -1 })
-    .populate('responses.question');
+    .populate('responses');
+
+    if (!latestAssessment) {
+      return res.json({
+        success: true,
+        data: {
+          prakritiCompleted: false,
+          currentPrakriti: null,
+          assessmentData: null
+        }
+      });
+    }
+
+    // Get questions for each response
+    const responsePromises = latestAssessment.responses.map(async (responseId) => {
+      const response = await PrakritiResponse.findById(responseId);
+      const question = await PrakritiQuestion.findOne({ questionNumber: response.questionNumber });
+      
+      return {
+        questionNumber: response.questionNumber,
+        questionText: question?.questionText || 'Question not found',
+        category: question?.category || 'Unknown',
+        selectedOption: response.selectedOption,
+        answerText: question?.options[response.selectedOption]?.optionText || 'Answer not found',
+        vataScore: response.vataScore,
+        pittaScore: response.pittaScore,
+        kaphaScore: response.kaphaScore
+      };
+    });
+
+    const detailedResponses = await Promise.all(responsePromises);
 
     res.json({
       success: true,
       data: {
         prakritiCompleted: patient.prakritiCompleted || false,
         currentPrakriti: patient.currentPrakriti || null,
-        assessmentData: latestAssessment ? {
+        assessmentData: {
           id: latestAssessment._id,
           completedAt: latestAssessment.completedAt,
-          scores: latestAssessment.scores,
-          dominantDosha: latestAssessment.dominantDosha,
-          prakritiType: latestAssessment.prakritiType,
-          characteristics: latestAssessment.characteristics,
-          responses: latestAssessment.responses.map(response => ({
-            questionText: response.question.questionText,
-            category: response.question.category,
-            selectedAnswer: response.selectedAnswer,
-            answerText: response.question.options[response.selectedAnswer]?.optionText
-          }))
-        } : null
+          scores: latestAssessment.prakritiType?.percentages || latestAssessment.totalScores,
+          dominantDosha: latestAssessment.prakritiType?.primary || 'Unknown',
+          prakritiType: latestAssessment.prakritiType?.primary || 'Unknown',
+          characteristics: latestAssessment.characteristics || [],
+          responses: detailedResponses.sort((a, b) => a.questionNumber - b.questionNumber)
+        }
       }
     });
   } catch (error) {
@@ -413,6 +439,85 @@ async function getPatientPrakritiData(req, res) {
     res.status(500).json({
       success: false,
       message: 'Server error while retrieving Prakriti data'
+    });
+  }
+}
+
+// Get detailed patient Prakriti responses (admin/doctor route)
+async function getPatientPrakritiResponses(req, res) {
+  try {
+    const { patientId } = req.params;
+    
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found'
+      });
+    }
+
+    // Get the latest completed assessment
+    const latestAssessment = await PrakritiAssessment.findOne({ 
+      patientId: patientId,
+      isCompleted: true 
+    })
+    .sort({ completedAt: -1 })
+    .populate('responses');
+
+    if (!latestAssessment) {
+      return res.json({
+        success: true,
+        data: {
+          prakritiCompleted: false,
+          responses: []
+        }
+      });
+    }
+
+    // Get all responses with questions
+    const responses = await PrakritiResponse.find({
+      patientId: patientId,
+      assessmentId: latestAssessment._id
+    }).sort({ questionNumber: 1 });
+
+    const detailedResponses = await Promise.all(
+      responses.map(async (response) => {
+        const question = await PrakritiQuestion.findOne({ 
+          questionNumber: response.questionNumber 
+        });
+        
+        return {
+          questionNumber: response.questionNumber,
+          questionText: question?.questionText || 'Question not found',
+          category: question?.category || 'Unknown',
+          selectedOption: response.selectedOption,
+          answerText: question?.options[response.selectedOption]?.optionText || 'Answer not found',
+          allOptions: question?.options?.map(opt => opt.optionText) || [],
+          scores: {
+            vata: response.vataScore,
+            pitta: response.pittaScore,
+            kapha: response.kaphaScore
+          }
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: {
+        prakritiCompleted: true,
+        assessmentId: latestAssessment._id,
+        completedAt: latestAssessment.completedAt,
+        totalScores: latestAssessment.totalScores,
+        prakritiType: latestAssessment.prakritiType,
+        responses: detailedResponses
+      }
+    });
+  } catch (error) {
+    console.error('Error getting patient Prakriti responses:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while retrieving Prakriti responses'
     });
   }
 }

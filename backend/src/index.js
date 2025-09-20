@@ -21,6 +21,9 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const prescriptionRoutes = require('./routes/prescription.routes');
 const treatmentPlanRoutes = require('./routes/treatmentPlan.routes');
 const mealPlanRoutes = require('./routes/mealPlan.routes');
+const analyticsRoutes = require('./routes/analytics.routes');
+const settingsRoutes = require('./routes/settings.routes');
+const messageRoutes = require('./routes/message.routes');
 
 const app = express();
 
@@ -61,6 +64,9 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/treatment-plans', treatmentPlanRoutes);
 app.use('/api/meal-plans', mealPlanRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/messages', messageRoutes);
 
 // 404 handler
 app.use((req, res) => {

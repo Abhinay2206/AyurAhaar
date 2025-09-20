@@ -9,6 +9,7 @@ const TreatmentPlansScreen = () => {
   const [treatmentPlans, setTreatmentPlans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('patients'); // patients, plans
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [showFoodDetails, setShowFoodDetails] = useState(false);
@@ -21,6 +22,18 @@ const TreatmentPlansScreen = () => {
     planType: 'all',
     search: ''
   });
+
+  // Helper function to determine if patient has scheduled appointment
+  const hasScheduledAppointment = (patient) => {
+    return patient.appointments && patient.appointments.some(apt => 
+      apt.status === 'scheduled' && new Date(apt.date) >= new Date()
+    );
+  };
+
+  // Helper function to check if patient has existing treatment plans
+  const hasExistingPlans = (patient) => {
+    return patient.hasTreatmentPlans || patient.totalPlans > 0;
+  };
 
   // Fetch patients with consultations and treatment plans
   const fetchPatients = useCallback(async () => {
@@ -91,8 +104,15 @@ const TreatmentPlansScreen = () => {
 
   const handleEditPlan = (plan) => {
     // Navigate to meal plan creation in edit mode
-    const url = `/meal-plan-creation?patientId=${plan.patientId}&planId=${plan.id}&mode=edit`;
-    window.open(url, '_blank');
+    if (plan.patientId && !plan.id) {
+      // This is a patient object, find their latest plan or create new one
+      const url = `/meal-plan-creation?patientId=${plan.patientId}&mode=edit`;
+      window.open(url, '_blank');
+    } else {
+      // This is a plan object with id
+      const url = `/meal-plan-creation?patientId=${plan.patientId}&planId=${plan.id}&mode=edit`;
+      window.open(url, '_blank');
+    }
   };
 
   const handleDeletePlan = async (planId) => {
@@ -281,10 +301,31 @@ const TreatmentPlansScreen = () => {
   });
 
   const filterStyles = {
-    display: 'flex',
-    gap: '1rem',
+    backgroundColor: 'white',
+    borderRadius: '8px',
+    padding: '12px',
     marginBottom: '1rem',
-    alignItems: 'center'
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    border: '1px solid #e5e7eb',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    flexWrap: 'wrap'
+  };
+
+  const searchWrapperStyle = {
+    position: 'relative',
+    flex: '1',
+    minWidth: '240px'
+  };
+
+  const searchIconStyle = {
+    position: 'absolute',
+    left: '12px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    color: '#9CA3AF',
+    fontSize: '16px'
   };
 
   const selectStyle = {
@@ -292,17 +333,45 @@ const TreatmentPlansScreen = () => {
     border: '1px solid #d1d5db',
     borderRadius: '6px',
     fontSize: '14px',
-    backgroundColor: 'white'
+    backgroundColor: 'white',
+    minWidth: '120px',
+    color: '#374151'
   };
 
   const searchInputStyle = {
-    padding: '8px 12px',
+    padding: '8px 12px 8px 36px',
     border: '1px solid #d1d5db',
     borderRadius: '6px',
     fontSize: '14px',
     backgroundColor: 'white',
-    minWidth: '200px'
+    width: '100%',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    ':focus': {
+      borderColor: '#3E8E5A',
+      boxShadow: '0 0 0 2px rgba(62, 142, 90, 0.1)'
+    }
   };
+
+  const viewModeButtonStyle = (isActive) => ({
+    padding: '8px 12px',
+    backgroundColor: isActive ? '#3E8E5A' : 'transparent',
+    color: isActive ? 'white' : '#6B7280',
+    border: '1px solid',
+    borderColor: isActive ? '#3E8E5A' : '#d1d5db',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    fontFamily: "'Inter', sans-serif",
+    fontWeight: '500',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    transition: 'all 0.2s',
+    ':hover': {
+      backgroundColor: isActive ? '#2D6A42' : '#F9FAFB'
+    }
+  });
 
   const cardStyle = {
     backgroundColor: 'white',
@@ -405,13 +474,16 @@ const TreatmentPlansScreen = () => {
 
       {/* Filters */}
       <div style={filterStyles}>
-        <input
-          type="text"
-          placeholder="Search..."
-          value={filters.search}
-          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-          style={searchInputStyle}
-        />
+        <div style={searchWrapperStyle}>
+          <div style={searchIconStyle}>🔍</div>
+          <input
+            type="text"
+            placeholder="Search patients, plans, or doctors..."
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            style={searchInputStyle}
+          />
+        </div>
         
         {activeTab === 'plans' && (
           <>
@@ -439,6 +511,23 @@ const TreatmentPlansScreen = () => {
             </select>
           </>
         )}
+
+        <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }}>
+          <button
+            onClick={() => setViewMode('grid')}
+            style={viewModeButtonStyle(viewMode === 'grid')}
+            title="Grid View"
+          >
+            ⊞ Grid
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            style={viewModeButtonStyle(viewMode === 'list')}
+            title="List View"
+          >
+            ☰ List
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -464,101 +553,204 @@ const TreatmentPlansScreen = () => {
             }}>
               No patients with consultations found.
             </div>
-          ) : (
-            patients.map((patient) => (
-              <div key={patient._id} style={cardStyle}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ 
-                      margin: '0 0 8px 0', 
-                      fontSize: '18px', 
-                      fontWeight: '600', 
-                      color: '#2C5F41' 
-                    }}>
-                      {patient.name}
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
-                      <div><strong>Email:</strong> {patient.email}</div>
-                      <div><strong>Phone:</strong> {patient.phone}</div>
-                      <div><strong>Total Consultations:</strong> {patient.totalConsultations}</div>
-                      <div><strong>Treatment Plans:</strong> {patient.totalPlans}</div>
+          ) : viewMode === 'grid' ? (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
+              gap: '1rem'
+            }}>
+              {patients.map((patient) => (
+                <div key={patient._id} style={{
+                  ...cardStyle,
+                  height: 'fit-content'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ 
+                        margin: '0 0 8px 0', 
+                        fontSize: '18px', 
+                        fontWeight: '600', 
+                        color: '#2C5F41' 
+                      }}>
+                        {patient.name}
+                      </h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                        <div style={{ fontSize: '14px', color: '#687076' }}>{patient.email}</div>
+                        <div style={{ fontSize: '14px', color: '#687076' }}>{patient.phone}</div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                        {patient.hasConsultationInProgress && (
+                          <span style={badgeStyle('active')}>Consulting</span>
+                        )}
+                        {hasScheduledAppointment(patient) && (
+                          <span style={badgeStyle('AI')}>Scheduled</span>
+                        )}
+                        {hasExistingPlans(patient) && (
+                          <span style={badgeStyle('completed')}>Has Plans</span>
+                        )}
+                      </div>
                     </div>
                     
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                      {patient.hasCompletedConsultations && (
-                        <span style={badgeStyle('completed')}>Has Completed Consultations</span>
-                      )}
-                      {patient.hasConsultationInProgress && (
-                        <span style={badgeStyle('active')}>Currently Consulting</span>
-                      )}
-                      {(patient.hasTreatmentPlans || patient.hasAIPlan) && (
-                        <span style={badgeStyle('AI')}>Has Treatment Plans</span>
-                      )}
-                      {patient.hasAIPlan && (
-                        <span style={badgeStyle('AI')}>AI Plan Available</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {patient.hasConsultationInProgress ? (
+                        <>
+                          <button 
+                            style={buttonStyle}
+                            onClick={() => handleViewConsultation(patient)}
+                          >
+                            View Consultation
+                          </button>
+                          <button 
+                            style={buttonStyle}
+                            onClick={() => hasExistingPlans(patient) ? handleEditPlan({ patientId: patient._id }) : handleCreatePlan(patient._id)}
+                          >
+                            {hasExistingPlans(patient) ? 'Edit Plan' : 'Create Plan'}
+                          </button>
+                          <button 
+                            style={dangerButtonStyle}
+                            onClick={() => handleCompleteConsultation(patient._id)}
+                          >
+                            Complete
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {hasScheduledAppointment(patient) && (
+                            <button 
+                              style={buttonStyle}
+                              onClick={() => handleStartConsultation(patient)}
+                            >
+                              Start Consulting
+                            </button>
+                          )}
+                          <button 
+                            style={buttonStyle}
+                            onClick={() => hasExistingPlans(patient) ? handleEditPlan({ patientId: patient._id }) : handleCreatePlan(patient._id)}
+                          >
+                            {hasExistingPlans(patient) ? 'Edit Plan' : 'Create Plan'}
+                          </button>
+                          <button 
+                            style={{...buttonStyle, backgroundColor: '#6B7280'}}
+                            onClick={() => {
+                              setActiveTab('plans');
+                              setFilters({ ...filters, search: patient.name });
+                            }}
+                          >
+                            View Plans
+                          </button>
+                        </>
                       )}
                     </div>
-
-                    {patient.latestConsultation && (
-                      <div style={{ fontSize: '14px', color: '#687076' }}>
-                        <strong>Latest Consultation:</strong> {new Date(patient.latestConsultation.date).toLocaleDateString()} - {patient.latestConsultation.status}
-                      </div>
-                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              border: '1px solid #e5e7eb',
+              overflow: 'hidden'
+            }}>
+              {patients.map((patient, index) => (
+                <div key={patient._id} style={{
+                  padding: '16px',
+                  borderBottom: index < patients.length - 1 ? '1px solid #e5e7eb' : 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  transition: 'background-color 0.2s',
+                  ':hover': {
+                    backgroundColor: '#F9FAFB'
+                  }
+                }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    backgroundColor: '#3E8E5A',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    flexShrink: 0
+                  }}>
+                    {patient.name.charAt(0).toUpperCase()}
                   </div>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <button 
-                      style={buttonStyle}
-                      onClick={() => {
-                        // View patient treatment plans
-                        setActiveTab('plans');
-                        setFilters({ ...filters, search: patient.name });
-                      }}
-                    >
-                      View Plans
-                    </button>
-                    
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                      <h3 style={{ 
+                        margin: 0, 
+                        fontSize: '16px', 
+                        fontWeight: '600', 
+                        color: '#2C5F41' 
+                      }}>
+                        {patient.name}
+                      </h3>
+                      {patient.hasConsultationInProgress && (
+                        <span style={badgeStyle('active')}>Consulting</span>
+                      )}
+                      {hasScheduledAppointment(patient) && (
+                        <span style={badgeStyle('AI')}>Scheduled</span>
+                      )}
+                      {hasExistingPlans(patient) && (
+                        <span style={badgeStyle('completed')}>Has Plans</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#687076', marginBottom: '4px' }}>
+                      {patient.email} • {patient.phone}
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                     {patient.hasConsultationInProgress ? (
                       <>
                         <button 
-                          style={buttonStyle}
+                          style={{...buttonStyle, fontSize: '12px', padding: '4px 8px'}}
                           onClick={() => handleViewConsultation(patient)}
                         >
                           View Consultation
                         </button>
                         <button 
-                          style={buttonStyle}
-                          onClick={() => handleCreatePlan(patient._id)}
+                          style={{...buttonStyle, fontSize: '12px', padding: '4px 8px'}}
+                          onClick={() => hasExistingPlans(patient) ? handleEditPlan({ patientId: patient._id }) : handleCreatePlan(patient._id)}
                         >
-                          Create Plan
+                          {hasExistingPlans(patient) ? 'Edit Plan' : 'Create Plan'}
                         </button>
                         <button 
-                          style={dangerButtonStyle}
+                          style={{...dangerButtonStyle, fontSize: '12px', padding: '4px 8px'}}
                           onClick={() => handleCompleteConsultation(patient._id)}
                         >
-                          Complete Consultation
+                          Complete
                         </button>
                       </>
                     ) : (
                       <>
+                        {hasScheduledAppointment(patient) && (
+                          <button 
+                            style={{...buttonStyle, fontSize: '12px', padding: '4px 8px'}}
+                            onClick={() => handleStartConsultation(patient)}
+                          >
+                            Start Consulting
+                          </button>
+                        )}
                         <button 
-                          style={buttonStyle}
-                          onClick={() => handleStartConsultation(patient)}
+                          style={{...buttonStyle, fontSize: '12px', padding: '4px 8px'}}
+                          onClick={() => hasExistingPlans(patient) ? handleEditPlan({ patientId: patient._id }) : handleCreatePlan(patient._id)}
                         >
-                          Start Consulting
-                        </button>
-                        <button 
-                          style={buttonStyle}
-                          onClick={() => handleCreatePlan(patient._id)}
-                        >
-                          Create Plan
+                          {hasExistingPlans(patient) ? 'Edit Plan' : 'Create Plan'}
                         </button>
                       </>
                     )}
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       ) : (
@@ -571,15 +763,129 @@ const TreatmentPlansScreen = () => {
             }}>
               No treatment plans found.
             </div>
+          ) : viewMode === 'grid' ? (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
+              gap: '1rem'
+            }}>
+              {treatmentPlans.map((plan) => (
+                <div key={plan.id} style={{
+                  ...cardStyle,
+                  height: 'fit-content'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <h3 style={{ 
+                          margin: 0, 
+                          fontSize: '18px', 
+                          fontWeight: '600', 
+                          color: '#2C5F41' 
+                        }}>
+                          {plan.title}
+                        </h3>
+                        <span style={badgeStyle(plan.planType)}>{plan.planType}</span>
+                        <span style={badgeStyle(plan.status)}>{plan.status}</span>
+                      </div>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                        <div><strong>Patient:</strong> {plan.patientName}</div>
+                        <div><strong>Doctor:</strong> {plan.doctorName}</div>
+                        <div><strong>Duration:</strong> {plan.duration}</div>
+                        <div><strong>Version:</strong> {plan.version}</div>
+                      </div>
+
+                      {plan.description && (
+                        <p style={{ 
+                          margin: '8px 0', 
+                          color: '#687076', 
+                          fontSize: '14px',
+                          lineHeight: '1.4'
+                        }}>
+                          {plan.description}
+                        </p>
+                      )}
+
+                      {plan.diagnosis && (
+                        <div style={{ fontSize: '14px', color: '#DC2626', marginBottom: '8px' }}>
+                          <strong>Diagnosis:</strong> {plan.diagnosis}
+                        </div>
+                      )}
+
+                      <div style={{ fontSize: '14px', color: '#687076' }}>
+                        Created: {new Date(plan.createdAt).toLocaleDateString()}
+                        {plan.updatedAt !== plan.createdAt && (
+                          <span> | Updated: {new Date(plan.updatedAt).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <button 
+                        style={buttonStyle}
+                        onClick={() => handleViewPlan(plan)}
+                      >
+                        View Details
+                      </button>
+                      <button 
+                        style={buttonStyle}
+                        onClick={() => handleEditPlan(plan)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        style={dangerButtonStyle}
+                        onClick={() => handleDeletePlan(plan.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
-            treatmentPlans.map((plan) => (
-              <div key={plan.id} style={cardStyle}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              border: '1px solid #e5e7eb',
+              overflow: 'hidden'
+            }}>
+              {treatmentPlans.map((plan, index) => (
+                <div key={plan.id} style={{
+                  padding: '16px',
+                  borderBottom: index < treatmentPlans.length - 1 ? '1px solid #e5e7eb' : 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  transition: 'background-color 0.2s',
+                  ':hover': {
+                    backgroundColor: '#F9FAFB'
+                  }
+                }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    backgroundColor: plan.planType === 'AI' ? '#3B82F6' : plan.planType === 'Doctor' ? '#10B981' : '#F59E0B',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    flexShrink: 0
+                  }}>
+                    {plan.planType === 'AI' ? '🤖' : plan.planType === 'Doctor' ? '👨‍⚕️' : '🔄'}
+                  </div>
+                  
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
                       <h3 style={{ 
                         margin: 0, 
-                        fontSize: '18px', 
+                        fontSize: '16px', 
                         fontWeight: '600', 
                         color: '#2C5F41' 
                       }}>
@@ -588,62 +894,37 @@ const TreatmentPlansScreen = () => {
                       <span style={badgeStyle(plan.planType)}>{plan.planType}</span>
                       <span style={badgeStyle(plan.status)}>{plan.status}</span>
                     </div>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
-                      <div><strong>Patient:</strong> {plan.patientName}</div>
-                      <div><strong>Doctor:</strong> {plan.doctorName}</div>
-                      <div><strong>Duration:</strong> {plan.duration}</div>
-                      <div><strong>Version:</strong> {plan.version}</div>
+                    <div style={{ fontSize: '14px', color: '#687076', marginBottom: '4px' }}>
+                      Patient: {plan.patientName} • Doctor: {plan.doctorName}
                     </div>
-
-                    {plan.description && (
-                      <p style={{ 
-                        margin: '8px 0', 
-                        color: '#687076', 
-                        fontSize: '14px',
-                        lineHeight: '1.4'
-                      }}>
-                        {plan.description}
-                      </p>
-                    )}
-
-                    {plan.diagnosis && (
-                      <div style={{ fontSize: '14px', color: '#DC2626', marginBottom: '8px' }}>
-                        <strong>Diagnosis:</strong> {plan.diagnosis}
-                      </div>
-                    )}
-
-                    <div style={{ fontSize: '14px', color: '#687076' }}>
-                      Created: {new Date(plan.createdAt).toLocaleDateString()}
-                      {plan.updatedAt !== plan.createdAt && (
-                        <span> | Updated: {new Date(plan.updatedAt).toLocaleDateString()}</span>
-                      )}
+                    <div style={{ fontSize: '12px', color: '#9CA3AF' }}>
+                      Duration: {plan.duration} • Version: {plan.version} • Created: {new Date(plan.createdAt).toLocaleDateString()}
                     </div>
                   </div>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                     <button 
-                      style={buttonStyle}
+                      style={{...buttonStyle, fontSize: '12px', padding: '4px 8px'}}
                       onClick={() => handleViewPlan(plan)}
                     >
-                      View Details
+                      View
                     </button>
                     <button 
-                      style={buttonStyle}
+                      style={{...buttonStyle, fontSize: '12px', padding: '4px 8px'}}
                       onClick={() => handleEditPlan(plan)}
                     >
                       Edit
                     </button>
                     <button 
-                      style={dangerButtonStyle}
+                      style={{...dangerButtonStyle, fontSize: '12px', padding: '4px 8px'}}
                       onClick={() => handleDeletePlan(plan.id)}
                     >
                       Delete
                     </button>
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       )}

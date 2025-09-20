@@ -264,6 +264,11 @@ class ApiService {
     return this.request(`/admin/patients/${patientId}/prakriti`);
   }
 
+  async getPatientPrakritiResponses(patientId) {
+    console.log('🌐 ApiService: Calling GET /admin/patients/' + patientId + '/prakriti/responses');
+    return this.request(`/admin/patients/${patientId}/prakriti/responses`);
+  }
+
   // Treatment Plan endpoints
   async getAllTreatmentPlans(filters = {}) {
     const queryParams = new URLSearchParams(filters).toString();
@@ -359,6 +364,201 @@ class ApiService {
   async getFoodById(foodId) {
     console.log('🌐 ApiService: Calling GET /foods/' + foodId);
     return this.request(`/foods/${foodId}`);
+  }
+
+  // Analytics endpoints
+  async getAnalytics(period = 'month') {
+    console.log('🌐 ApiService: Calling GET /analytics with period:', period);
+    return this.request(`/analytics?period=${period}`);
+  }
+
+  async getPatientAnalytics(period = 'month') {
+    console.log('🌐 ApiService: Calling GET /analytics/patients with period:', period);
+    return this.request(`/analytics/patients?period=${period}`);
+  }
+
+  async getConsultationAnalytics(period = 'month') {
+    console.log('🌐 ApiService: Calling GET /analytics/consultations with period:', period);
+    return this.request(`/analytics/consultations?period=${period}`);
+  }
+
+  async getTreatmentAnalytics(period = 'month') {
+    console.log('🌐 ApiService: Calling GET /analytics/treatments with period:', period);
+    return this.request(`/analytics/treatments?period=${period}`);
+  }
+
+  async getRevenueAnalytics(period = 'month') {
+    console.log('🌐 ApiService: Calling GET /analytics/revenue with period:', period);
+    return this.request(`/analytics/revenue?period=${period}`);
+  }
+
+  async exportAnalyticsReport(period = 'month', format = 'pdf') {
+    console.log('🌐 ApiService: Calling GET /analytics/export with period:', period, 'format:', format);
+    
+    const url = `${API_BASE_URL}/analytics/export?period=${period}&format=${format}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        ...this.getAuthHeaders(),
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return response.blob(); // Return blob for file download
+  }
+
+  // Settings endpoints
+  async getSettings() {
+    console.log('🌐 ApiService: Calling GET /settings');
+    return this.request('/settings');
+  }
+
+  async updateSettings(settings) {
+    console.log('🌐 ApiService: Calling PUT /settings');
+    return this.request('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+  }
+
+  async getProfile() {
+    console.log('🌐 ApiService: Calling GET /settings/profile');
+    return this.request('/settings/profile');
+  }
+
+  async updateProfile(profileData) {
+    console.log('🌐 ApiService: Calling PUT /settings/profile');
+    return this.request('/settings/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  }
+
+  async getNotificationSettings() {
+    console.log('🌐 ApiService: Calling GET /settings/notifications');
+    return this.request('/settings/notifications');
+  }
+
+  async updateNotificationSettings(notificationSettings) {
+    console.log('🌐 ApiService: Calling PUT /settings/notifications');
+    return this.request('/settings/notifications', {
+      method: 'PUT',
+      body: JSON.stringify(notificationSettings),
+    });
+  }
+
+  async getPreferences() {
+    console.log('🌐 ApiService: Calling GET /settings/preferences');
+    return this.request('/settings/preferences');
+  }
+
+  async updatePreferences(preferences) {
+    console.log('🌐 ApiService: Calling PUT /settings/preferences');
+    return this.request('/settings/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(preferences),
+    });
+  }
+
+  async getSecuritySettings() {
+    console.log('🌐 ApiService: Calling GET /settings/security');
+    return this.request('/settings/security');
+  }
+
+  async updateSecuritySettings(securitySettings) {
+    console.log('🌐 ApiService: Calling PUT /settings/security');
+    return this.request('/settings/security', {
+      method: 'PUT',
+      body: JSON.stringify(securitySettings),
+    });
+  }
+
+  async changePassword(passwordData) {
+    console.log('🌐 ApiService: Calling PUT /settings/security/password');
+    return this.request('/settings/security/password', {
+      method: 'PUT',
+      body: JSON.stringify(passwordData),
+    });
+  }
+
+  async enableTwoFactor() {
+    console.log('🌐 ApiService: Calling POST /settings/security/2fa/enable');
+    return this.request('/settings/security/2fa/enable', {
+      method: 'POST',
+    });
+  }
+
+  async disableTwoFactor() {
+    console.log('🌐 ApiService: Calling POST /settings/security/2fa/disable');
+    return this.request('/settings/security/2fa/disable', {
+      method: 'POST',
+    });
+  }
+
+  // ====== AVAILABILITY METHODS ======
+  async getAvailabilitySettings() {
+    console.log('🌐 ApiService: Calling GET /settings/availability');
+    return this.request('/settings/availability');
+  }
+
+  async updateAvailabilitySettings(availabilityData) {
+    console.log('🌐 ApiService: Calling PUT /settings/availability');
+    return this.request('/settings/availability', {
+      method: 'PUT',
+      body: JSON.stringify(availabilityData),
+    });
+  }
+
+  async updateOnlineStatus(isOnline) {
+    console.log('🌐 ApiService: Calling PUT /settings/availability/status');
+    return this.request('/settings/availability/status', {
+      method: 'PUT',
+      body: JSON.stringify({ isOnline }),
+    });
+  }
+
+  // ====== MESSAGE METHODS ======
+  async getConversations() {
+    console.log('🌐 ApiService: Calling GET /messages/conversations');
+    return this.request('/messages/conversations');
+  }
+
+  async sendMessage(messageData) {
+    console.log('🌐 ApiService: Calling POST /messages/send');
+    return this.request('/messages/send', {
+      method: 'POST',
+      body: JSON.stringify(messageData),
+    });
+  }
+
+  async markMessageAsRead(messageId) {
+    console.log('🌐 ApiService: Calling PATCH /messages/' + messageId + '/read');
+    return this.request(`/messages/${messageId}/read`, {
+      method: 'PATCH',
+    });
+  }
+
+  async deleteMessage(messageId) {
+    console.log('🌐 ApiService: Calling DELETE /messages/' + messageId);
+    return this.request(`/messages/${messageId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async replyToMessage(messageId, replyData) {
+    console.log('🌐 ApiService: Calling POST /messages/' + messageId + '/reply');
+    return this.request(`/messages/${messageId}/reply`, {
+      method: 'POST',
+      body: JSON.stringify(replyData),
+    });
+  }
+
+  async getAvailableContacts() {
+    console.log('🌐 ApiService: Calling GET /messages/available-contacts');
+    return this.request('/messages/available-contacts');
   }
 }
 

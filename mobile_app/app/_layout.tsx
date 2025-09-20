@@ -9,6 +9,7 @@ import { PermissionsProvider } from '@/src/contexts/PermissionsContext';
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { LanguageProvider } from '@/src/contexts/LanguageContext';
 import { NotificationProvider } from '@/src/contexts/NotificationContext';
+import { MessageProvider } from '@/src/contexts/MessageContext';
 
 // Initialize i18n
 import '@/src/config/i18n';
@@ -27,10 +28,11 @@ export default function RootLayout() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <NotificationProvider>
-          <PermissionsProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
+        <MessageProvider>
+          <NotificationProvider>
+            <PermissionsProvider>
+              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen 
               name="home" 
@@ -62,6 +64,8 @@ export default function RootLayout() {
             <Stack.Screen name="full-plan-details" options={{ headerShown: false }} />
             <Stack.Screen name="ayurveda-info" options={{ headerShown: false }} />
             <Stack.Screen name="comprehensive-survey" options={{ headerShown: false }} />
+            <Stack.Screen name="doctor-messages" options={{ headerShown: false }} />
+            <Stack.Screen name="conversation" options={{ headerShown: false }} />
             <Stack.Screen name="dev-tools" options={{ headerShown: true, title: 'Dev Tools' }} />
             <Stack.Screen name="+not-found" />
           </Stack>
@@ -69,7 +73,8 @@ export default function RootLayout() {
         </ThemeProvider>
       </PermissionsProvider>
     </NotificationProvider>
-  </AuthProvider>
+  </MessageProvider>
+</AuthProvider>
 </LanguageProvider>
   );
 }

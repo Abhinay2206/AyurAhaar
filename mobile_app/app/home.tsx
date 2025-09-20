@@ -17,7 +17,8 @@ export default function HomeScreen() {
   const colors = Colors[colorScheme ?? 'light'];
 
   return (
-    <ParallaxScrollView
+    <View style={{ flex: 1 }}>
+      <ParallaxScrollView
       headerBackgroundColor={{ light: '#f8fffe', dark: '#1a1a1a' }}
       headerImage={
         <ThemedView style={styles.headerContent}>
@@ -90,6 +91,8 @@ export default function HomeScreen() {
       </ThemedView>
       
     </ParallaxScrollView>
+    
+    </View>
   );
 }
 

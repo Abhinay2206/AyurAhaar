@@ -20,7 +20,8 @@ async function authenticateToken(req, res, next) {
 
     // Attach user info to request
     req.user = {
-      userId: user._id,
+      id: user._id,
+      userId: user._id, // Keep both for compatibility
       email: user.email,
       role: user.role
     };

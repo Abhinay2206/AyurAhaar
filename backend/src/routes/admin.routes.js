@@ -2,7 +2,7 @@ const express = require('express');
 const { getAllPatients, getPatientById } = require('../controllers/patient.controller');
 const { getAllAppointments } = require('../controllers/appointment.controller');
 const { getPatientSurveyData } = require('../controllers/survey.controller');
-const { getPatientPrakritiData } = require('../controllers/prakriti.controller');
+const { getPatientPrakritiData, getPatientPrakritiResponses } = require('../controllers/prakriti.controller');
 const { authenticateToken, requireAdminRole } = require('../middleware/auth.middleware');
 
 const router = express.Router();
@@ -25,5 +25,8 @@ router.get('/patients/:patientId/survey', getPatientSurveyData);
 
 // Get patient prakriti assessment data
 router.get('/patients/:patientId/prakriti', getPatientPrakritiData);
+
+// Get detailed patient prakriti responses
+router.get('/patients/:patientId/prakriti/responses', getPatientPrakritiResponses);
 
 module.exports = router;
